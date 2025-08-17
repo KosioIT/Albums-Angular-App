@@ -57,9 +57,9 @@ export class AlbumService {
     if (producers.length === 0) {
       return 'Unknown';
     } else if (producers.length === 1) {
-      return "Producer: " + producers[0];
+      return 'Producer: ' + producers[0];
     } else {
-      return "Producers: " + producers.join(', ');
+      return 'Producers: ' + producers.join(', ');
     }
   }
 

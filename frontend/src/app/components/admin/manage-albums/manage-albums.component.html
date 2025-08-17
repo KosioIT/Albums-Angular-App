@@ -1,7 +1,10 @@
-<div
-  class="d-flex justify-content-center align-items-center flex-row"
->
-  <button type="button" class="btn admin-btn" style="background-color: green">
+<div id="topDiv" class="d-flex justify-content-center align-items-center">
+  <button
+    type="button"
+    class="btn admin-btn"
+    routerLink="/album-create"
+    style="background-color: green"
+  >
     Add album
   </button>
 </div>
@@ -25,25 +28,62 @@
           />
         </div>
       </a>
+
       <div class="album-info">
-        <h3>{{ album.title }}</h3>
-        <div class="caption-line">Release Date: {{album.release_date}}</div>
-        <div class="caption-line">Genre: {{album.genre}}</div>
-        <div class="caption-line">{{albumService.getProducersString(album.producers)}}</div>
-        <div class="album-menu d-flex justify-content-center align-items-center">
+        <h3 *ngIf="!isEditing(album._id)">{{ album.title }}</h3>
+        <input
+          *ngIf="isEditing(album._id)"
+          type="text"
+          [(ngModel)]="album.title"
+          class="form-control edit-input"
+        />
+
+        <div *ngIf="!isEditing(album._id)" class="caption-line">
+          Release Date: {{ album.release_date }}
+        </div>
+        <input
+          *ngIf="isEditing(album._id)"
+          type="text"
+          [(ngModel)]="album.release_date"
+          class="form-control edit-input"
+        />
+
+        <div *ngIf="!isEditing(album._id)" class="caption-line">
+          Genre: {{ album.genre }}
+        </div>
+        <input
+          *ngIf="isEditing(album._id)"
+          type="text"
+          [(ngModel)]="album.genre"
+          class="form-control edit-input"
+        />
+
+        <div *ngIf="!isEditing(album._id)" class="caption-line">
+          {{ albumService.getProducersString(album.producers) }}
+        </div>
+        <textarea
+          *ngIf="isEditing(album._id)"
+          [(ngModel)]="album.producers"
+          (ngModelChange)="onInputChange()"
+          class="form-control edit-input"
+        ></textarea>
+
+        <div
+          class="album-menu d-flex justify-content-center align-items-center"
+        >
           <button
             type="button"
             id="editBtn"
             class="btn album-btn"
-            style="background-color: blue;"
-            
+            [style.background-color]="isEditing(album._id) ? 'green' : 'blue'"
+            (click)="toggleEdit(album._id)"
           >
-            Edit
+            {{ isEditing(album._id) ? "Save" : "Edit" }}
           </button>
           <button
             type="button"
             class="btn album-btn"
-            style="background-color: red;"
+            style="background-color: red"
             (click)="deleteAlbum(album._id)"
           >
             Delete

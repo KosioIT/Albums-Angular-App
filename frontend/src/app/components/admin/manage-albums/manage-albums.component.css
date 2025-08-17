@@ -1,3 +1,7 @@
+#topDiv{
+  margin-top: 80px;
+}
+
 .album-container {
   margin-top: 90px;
   gap: 80px;
@@ -13,10 +17,14 @@
   gap: 15px;
 }
 
-.album-btn {
-  font-size: 19px;
+button {
+  font-size: 20px;
   color: white;
 }
+
+/* .album-btn {
+  color: white;
+} */
 
 #editBtn {
   border-radius: 25px;
