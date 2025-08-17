@@ -1,0 +1,27 @@
+h2 {
+  color: gold;
+  text-align: center;
+  margin-top: 50px;
+  font-size: 32px;
+}
+
+.album-card {
+  flex: 0 0 calc((100% - 90px) / 3); /* 3 per row + 2*gap */
+}
+
+.album-container {
+  margin-top: 60px;
+  gap: 45px;
+  row-gap: 70px;
+}
+
+.loginLink {
+  font-size: 24px;
+  color: yellow;
+  text-decoration: none;
+  margin-bottom: 15px;
+}
+
+.loginLink:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,86 @@
+/* Wrapper for albums */
+.album-wrapper {
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: visible; /* ensures no internal scrollbars */
+}
+
+/* Container for albums */
+.album-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+
+  padding: 0 20px; /* only horizontal padding */
+  box-sizing: border-box;
+}
+
+/* Album card */
+.album-card {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Image wrapper */
+.albumImg-wrapper {
+  width: 220px;
+  height: 220px;
+  border: 7px solid transparent;
+  border-radius: 15px;
+  transition: transform 0.7s ease;
+  transform-origin: center center;
+  position: relative;
+  z-index: 1;
+}
+
+.albumImg-wrapper:hover {
+  transform: scale(1.6);
+  z-index: 10;
+}
+
+/* Album image */
+.albumImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 15px;
+}
+
+/* Responsive: tablet */
+@media (max-width: 992px) {
+  .album-card {
+    flex: 0 0 calc((100% - 45px) / 2); /* 2 per row */
+  }
+}
+
+/* Responsive: mobile */
+@media (max-width: 600px) {
+  .album-card {
+    flex: 0 0 100%; /* 1 per row */
+  }
+}
+
+.album-info {
+  text-align: center;
+  color: white;
+  font-size: 23px;
+}
+
+h3 {
+  margin-top: 10px;
+  margin-bottom: 15px;
+  font-size: 26px;
+  color: lime;
+}
+
+h3, .album-info{
+  font-weight: 700;
+}

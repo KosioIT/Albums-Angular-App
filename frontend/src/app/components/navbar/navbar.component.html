@@ -1,0 +1,83 @@
+<nav class="navbar navbar-expand-md navbar-dark bg-primary">
+  <a *ngIf="!isInHomePage" class="navbar-brand" routerLink="/">Home</a>
+  <button
+    class="navbar-toggler"
+    type="button"
+    (click)="isNavbarCollapsed = !isNavbarCollapsed"
+    aria-controls="navbarsDefault"
+    [attr.aria-expanded]="!isNavbarCollapsed"
+    aria-label="Toggle navigation"
+  >
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div
+    [ngbCollapse]="isNavbarCollapsed"
+    class="collapse navbar-collapse"
+    id="navbarsDefault"
+  >
+    <ul class="navbar-nav mr-auto">
+      <!-- Rock bands -->
+      <li
+        class="nav-item dropdown"
+        (mouseenter)="onMouseEnter('rock')"
+        (mouseleave)="onMouseLeave('rock')"
+        (click)="onClick('rock')"
+        [class.show]="(dropdownService.getState('rock') | async) === true"
+      >
+        <a
+          class="nav-link dropdown-toggle"
+          id="rockDropdown"
+          role="button"
+          aria-haspopup="true"
+          [attr.aria-expanded]="(dropdownService.getState('rock') | async) === true"
+          style="cursor: pointer"
+        >
+          Rock bands
+        </a>
+        <div
+          class="dropdown-menu"
+          [class.show]="(dropdownService.getState('rock') | async) === true"
+          aria-labelledby="rockDropdown"
+        >
+          <a class="dropdown-item" [routerLink]="['/albums-list']" [queryParams]="{ band: albumService.encode('AC/DC') }">AC/DC</a>
+          <a class="dropdown-item" [routerLink]="['/albums-list']" [queryParams]="{ band: albumService.encode('Guns N Roses') }">Guns N' Roses</a>
+          <a class="dropdown-item" [routerLink]="['/albums-list']" [queryParams]="{ band: albumService.encode('Scorpions') }">Scorpions</a>
+        </div>
+      </li>
+
+      <!-- Metal bands -->
+      <li
+        class="nav-item dropdown"
+        (mouseenter)="onMouseEnter('metal')"
+        (mouseleave)="onMouseLeave('metal')"
+        (click)="onClick('metal')"
+        [class.show]="(dropdownService.getState('metal') | async) === true"
+      >
+        <a
+          class="nav-link dropdown-toggle"
+          id="metalDropdown"
+          role="button"
+          aria-haspopup="true"
+          [attr.aria-expanded]="(dropdownService.getState('metal') | async) === true"
+          style="cursor: pointer"
+        >
+          Metal bands
+        </a>
+        <div
+          class="dropdown-menu"
+          [class.show]="(dropdownService.getState('metal') | async) === true"
+          aria-labelledby="metalDropdown"
+        >
+          <a class="dropdown-item" [routerLink]="['/albums-list']" [queryParams]="{ band: albumService.encode('Iron Maiden') }">Iron Maiden</a>
+          <a class="dropdown-item" [routerLink]="['/albums-list']" [queryParams]="{ band: albumService.encode('Judas Priest') }">Judas Priest</a>
+          <a class="dropdown-item" [routerLink]="['/albums-list']" [queryParams]="{ band: albumService.encode('Metallica') }">Metallica</a>
+        </div>
+      </li>
+    </ul>
+
+    <ul class="navbar-nav ms-auto" style="margin-right: 100px;">
+      <app-login-status></app-login-status>
+    </ul>
+  </div>
+</nav>

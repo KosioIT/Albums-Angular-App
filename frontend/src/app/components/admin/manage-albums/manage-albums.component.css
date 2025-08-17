@@ -1,0 +1,23 @@
+.album-container {
+  margin-top: 90px;
+  gap: 80px;
+  row-gap: 100px;
+}
+
+.album-card {
+  flex: 0 0 300px; /* 4 albums per row */
+}
+
+.album-menu {
+  margin-top: 25px;
+  gap: 15px;
+}
+
+.album-btn {
+  font-size: 19px;
+  color: white;
+}
+
+#editBtn {
+  border-radius: 25px;
+}

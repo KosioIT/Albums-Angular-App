@@ -1,0 +1,20 @@
+/* You can add global styles to this file, and also import other style files */
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background-image: url("https://t3.ftcdn.net/jpg/02/23/60/54/360_F_223605406_nGKtPp42ZRx4ZxvrcVeT3Ek6V5Uw4ETh.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  font-family: Harrington;
+}
+
+app-root {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}

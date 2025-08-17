@@ -1,0 +1,31 @@
+.navbar {
+  border-radius: 10px;
+  margin-top: 15px;
+}
+
+.navbar,
+.navbar-brand {
+  font-size: 25px;
+}
+
+.navbar-brand {
+  margin-left: 20px;
+}
+
+.dropdown-menu {
+  font-size: 22px;
+  text-align: center;
+  /* background-color: rgb(17, 236, 247) !important; */
+}
+
+a {
+  cursor: pointer;
+}
+
+a.nav-link {
+  color: white;
+}
+
+.navbar-nav .nav-item {
+  margin-right: 20px;
+}

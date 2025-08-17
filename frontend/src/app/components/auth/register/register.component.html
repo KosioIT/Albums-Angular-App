@@ -1,0 +1,76 @@
+<div class="col-md-6 col-lg-4 mx-auto mt-5">
+  <div class="card shadow-sm form-container" style="margin-top: 55px;">
+    <div class="card-body">
+      <h5 class="card-title mb-4 text-center">Sign up</h5>
+      <form
+        [formGroup]="registerForm"
+        (ngSubmit)="submitRegisterForm()"
+      >
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="username"
+            formControlName="username"
+            required
+            (blur)="validationService.onBlur('username')"
+          />
+          <div
+            *ngIf="validationService.isFieldInvalid('username')"
+            class="text-danger"
+          >
+            {{ validationService.getErrorMessage("username") }}
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input
+            type="email"
+            class="form-control"
+            id="email"
+            formControlName="email"
+            required
+            (blur)="validationService.onBlur('email')"
+          />
+          <div
+            *ngIf="validationService.isFieldInvalid('email')"
+            class="text-danger"
+          >
+            {{ validationService.getErrorMessage("email") }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input
+            type="password"
+            class="form-control"
+            id="password"
+            formControlName="password"
+            required
+            (blur)="validationService.onBlur('password')"
+          />
+          <div
+            *ngIf="validationService.isFieldInvalid('password')"
+            class="text-danger"
+          >
+            {{ validationService.getErrorMessage("password") }}
+          </div>
+        </div>
+
+        <div
+          class="d-flex justify-content-center align-items-center flex-column"
+        >
+          <button
+            type="submit"
+            class="btn submit-btn"
+            [disabled]="registerForm.invalid"
+          >
+            Sign in
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

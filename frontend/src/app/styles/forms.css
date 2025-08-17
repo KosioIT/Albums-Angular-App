@@ -1,0 +1,51 @@
+* {
+  font-size: 22px;
+}
+
+.form-container {
+  margin-top: 60px;
+  width: 500px;
+  max-height: 180px;
+}
+
+.card-body {
+  background-image: url("https://images.pexels.com/photos/1047442/pexels-photo-1047442.jpeg?cs=srgb&dl=pexels-annamw-1047442.jpg&fm=jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.form-container,
+.card-body {
+  border-radius: 30px;
+}
+
+h5 {
+  font-size: 26px;
+}
+
+.text-danger {
+  color: yellow !important;
+  font-weight: bold;
+}
+
+/* .text-danger:last-child {
+  color: yellow !important;
+} */
+
+button {
+  text-align: center;
+}
+
+.submit-btn {
+  margin-top: 20px;
+  background-color: blue;
+  color: white;
+}
+
+.submit-btn:hover {
+  background-color: rgb(64, 26, 255);
+}
+
+a {
+  text-decoration: none;
+}

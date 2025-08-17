@@ -1,0 +1,11 @@
+hr{
+  visibility: hidden;
+}
+
+h1 {
+  margin-top: 8px;
+  color: lime;
+  font-size: 48px;
+  font-weight: bold;
+  text-align: center;
+}

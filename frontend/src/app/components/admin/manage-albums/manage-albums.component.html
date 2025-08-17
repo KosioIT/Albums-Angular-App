@@ -1,0 +1,55 @@
+<div
+  class="d-flex justify-content-center align-items-center flex-row"
+>
+  <button type="button" class="btn admin-btn" style="background-color: green">
+    Add album
+  </button>
+</div>
+<div class="album-wrapper">
+  <div class="album-container">
+    <div *ngFor="let album of albums" class="album-card">
+      <a
+        [routerLink]="['/albums-list']"
+        [queryParams]="{ band: albumService.encode(album.artist) }"
+      >
+        <div
+          class="albumImg-wrapper"
+          [ngStyle]="{
+            'border-color': albumService.getBorderColor(album.rank)
+          }"
+        >
+          <img
+            class="albumImg"
+            [src]="album.cover_img_url + '?t=' + timestamp"
+            alt="{{ album.title.toLowerCase() }}"
+          />
+        </div>
+      </a>
+      <div class="album-info">
+        <h3>{{ album.title }}</h3>
+        <div class="caption-line">Release Date: {{album.release_date}}</div>
+        <div class="caption-line">Genre: {{album.genre}}</div>
+        <div class="caption-line">{{albumService.getProducersString(album.producers)}}</div>
+        <div class="album-menu d-flex justify-content-center align-items-center">
+          <button
+            type="button"
+            id="editBtn"
+            class="btn album-btn"
+            style="background-color: blue;"
+            
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            class="btn album-btn"
+            style="background-color: red;"
+            (click)="deleteAlbum(album._id)"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
