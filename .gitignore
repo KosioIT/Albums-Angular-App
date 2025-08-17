@@ -1,3 +1,5 @@
+admin_user.txt
+
 # Angular specific
 /dist/
 /out-tsc/
@@ -8,12 +10,13 @@
 .angular/
 
 # Node modules and dependency files
-/node_modules/
-/package-lock.json
+node_modules/
+package-lock.json
 /yarn.lock
 
 # Environment files
-/.env
+.env
+environments
 
 # Angular CLI and build artefacts
 /.angular-cli.json
@@ -26,3 +29,34 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Scripts folder (custom backend logic)
+scripts/
+
+# Express specific
+/build/
+/public/uploads/
+*.sqlite
+*.db
+*.pem
+*.key
+*.crt
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE/editor configs
+.vscode
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Build output
+build/
+dist/
+
+# Misc
+*.bak
+*.tmp
+*.swp
