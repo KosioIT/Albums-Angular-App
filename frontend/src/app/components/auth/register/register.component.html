@@ -13,15 +13,10 @@
             class="form-control"
             id="username"
             formControlName="username"
+            [appValidationMessage]="'username'"
             required
-            (blur)="validationService.onBlur('username')"
+            (blur)="formHelperService.onBlur('username')"
           />
-          <div
-            *ngIf="validationService.isFieldInvalid('username')"
-            class="text-danger"
-          >
-            {{ validationService.getErrorMessage("username") }}
-          </div>
         </div>
         <div class="form-group">
           <label for="email">Email:</label>
@@ -30,15 +25,10 @@
             class="form-control"
             id="email"
             formControlName="email"
+            [appValidationMessage]="'email'"
             required
-            (blur)="validationService.onBlur('email')"
+            (blur)="formHelperService.onBlur('email')"
           />
-          <div
-            *ngIf="validationService.isFieldInvalid('email')"
-            class="text-danger"
-          >
-            {{ validationService.getErrorMessage("email") }}
-          </div>
         </div>
 
         <div class="form-group">
@@ -48,15 +38,10 @@
             class="form-control"
             id="password"
             formControlName="password"
+            [appValidationMessage]="'password'"
             required
-            (blur)="validationService.onBlur('password')"
+            (blur)="formHelperService.onBlur('password')"
           />
-          <div
-            *ngIf="validationService.isFieldInvalid('password')"
-            class="text-danger"
-          >
-            {{ validationService.getErrorMessage("password") }}
-          </div>
         </div>
 
         <div
@@ -67,7 +52,7 @@
             class="btn submit-btn"
             [disabled]="registerForm.invalid"
           >
-            Sign in
+            Sign up
           </button>
         </div>
       </form>

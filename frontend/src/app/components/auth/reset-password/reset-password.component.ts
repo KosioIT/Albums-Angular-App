@@ -1,21 +1,24 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import {
+  Form,
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
 import { ValidationService } from '../../../services/validation.service';
-import { passwordStrengthValidator } from '../../../validators/passwordStrengthen';
+import { passwordStrengthValidator } from '../../../validators/auth/passwordStrengthen';
 import { AuthService } from '../../../services/auth.service';
-import { resetCodeExistsValidator } from '../../../validators/resetCodeExists';
+import { resetCodeExistsValidator } from '../../../validators/auth/resetCodeExists';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ValidationMessageDirective } from '../../../directives/validation-message.directive';
+import { FormHelperService } from '../../../services/form-helper.service';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule, ValidationMessageDirective],
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.css', '../../../styles/forms.css'],
 })
@@ -27,7 +30,7 @@ export class ResetPasswordComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public validationService: ValidationService,
+    public formHelperService: FormHelperService,
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute
@@ -61,7 +64,7 @@ export class ResetPasswordComponent implements OnInit {
       }
     });
     
-    this.validationService.init(this.resetPasswordForm);
+    this.formHelperService.init(this.resetPasswordForm);
     const codeControl = this.resetPasswordForm.get('code');
     codeControl?.setAsyncValidators(
       resetCodeExistsValidator(this.authService, this.email)
@@ -69,9 +72,8 @@ export class ResetPasswordComponent implements OnInit {
   }
 
   onPasswordReset() {
-    const formData = this.validationService.submit();
-    if (!formData) return;
-
+    const formData = this.formHelperService.submit<{ code: string; newPassword: string }>();
+    
     this.authService
       .resetPassword(this.email, formData.code, formData.newPassword)
       .subscribe({

@@ -7,15 +7,16 @@ import {
   Validators,
 } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
-import { emailExistsValidator } from '../../../validators/emailExists';
+import { emailExistsValidator } from '../../../validators/auth/emailExists';
 import { Router } from '@angular/router';
 import { CodeStatus } from '../../../models/codeStatus';
-import { ValidationService } from '../../../services/validation.service';
+import { ValidationMessageDirective } from '../../../directives/validation-message.directive';
+import { FormHelperService } from '../../../services/form-helper.service';
 
 @Component({
   selector: 'app-forgotten-password',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule, ValidationMessageDirective],
   templateUrl: './forgotten-password.component.html',
   styleUrls: ['./forgotten-password.component.css', '../../../styles/forms.css'],
 })
@@ -31,7 +32,7 @@ export class ForgottenPasswordComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    public validationService: ValidationService
+    public formHelperService: FormHelperService
   ) {
     this.forgotForm = this.fb.group({
       email: [
@@ -44,25 +45,24 @@ export class ForgottenPasswordComponent implements OnInit {
 
   ngOnInit(): void {
     this.codeStatus = CodeStatus.initial;
-    this.validationService.init(this.forgotForm);
+    this.formHelperService.init(this.forgotForm);
   }
 
   onSendResetCode() {
-    const formData = this.validationService.submit();
-    if (!formData) return;
+    const formData = this.formHelperService.submit<{ email: string }>();
 
     this.codeStatus = CodeStatus.sending;
     this.message = '';
     this.error = '';
 
     this.authService
-      .sendResetCodeViaEmail(this.forgotForm.value.email)
+      .sendResetCodeViaEmail(formData.email)
       .subscribe({
         next: () => {
           this.codeSent = true;
           this.codeStatus = CodeStatus.sent;
           this.router.navigate(['/reset-password'], {
-            queryParams: { email: this.forgotForm.value.email },
+            queryParams: { email: formData.email },
           });
         },
         error: (err) => {

@@ -1,5 +1,5 @@
 import { AbstractControl, AsyncValidatorFn } from '@angular/forms';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../../services/auth.service';
 import { map, first, of } from 'rxjs';
 
 export function passwordMatchesValidator(authService: AuthService): AsyncValidatorFn {

@@ -5,10 +5,11 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { ValidationService } from '../../../services/validation.service';
 import { AuthService } from '../../../services/auth.service';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormHelperService } from '../../../services/form-helper.service';
+
 
 @Component({
   selector: 'app-login',
@@ -22,7 +23,7 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public validationService: ValidationService,
+    public formHelperService: FormHelperService,
     private authService: AuthService,
     private router: Router
   ) {
@@ -33,13 +34,12 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.validationService.init(this.loginForm);
+    this.formHelperService.init(this.loginForm);
   }
 
   submitLoginForm() {
-    const formData = this.validationService.submit();
-    if (!formData) return;
-
+    const formData = this.formHelperService.submit<{ email: string; password: string }>();
+    
     this.authService.login(formData.email, formData.password).subscribe({
       next: () => this.router.navigate(['/']),
       error: (err) => alert(err.error?.message || 'Login failed!'),

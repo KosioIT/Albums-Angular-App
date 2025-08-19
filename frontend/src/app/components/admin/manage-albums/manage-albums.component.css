@@ -2,6 +2,11 @@
   margin-top: 80px;
 }
 
+#addBtn:hover{
+  background-color: rgb(5, 108, 5) !important;
+  color: white !important;
+}
+
 .album-container {
   margin-top: 90px;
   gap: 80px;
@@ -22,10 +27,15 @@ button {
   color: white;
 }
 
-/* .album-btn {
-  color: white;
-} */
-
 #editBtn {
   border-radius: 25px;
+}
+
+input{
+  margin: 10px auto;
+  scroll-behavior: auto;
+}
+
+input, .edit-label, textarea{
+  font-size: 22px;
 }

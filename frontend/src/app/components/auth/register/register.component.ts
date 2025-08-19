@@ -7,18 +7,19 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { ValidationService } from '../../../services/validation.service';
 import { AuthService } from '../../../services/auth.service';
-import { passwordStrengthValidator } from '../../../validators/passwordStrengthen';
-import { emailExistsValidator } from '../../../validators/emailExists';
-import { usernameExistsValidator } from '../../../validators/usernameExists';
-import { usernameMinLengthValidator } from '../../../validators/usernameMinLength';
-import { passwordMinLengthValidator } from '../../../validators/passwordMinLength';
+import { passwordStrengthValidator } from '../../../validators/auth/passwordStrengthen';
+import { emailExistsValidator } from '../../../validators/auth/emailExists';
+import { usernameExistsValidator } from '../../../validators/auth/usernameExists';
+import { usernameMinLengthValidator } from '../../../validators/auth/usernameMinLength';
+import { multiFieldMinLengthValidator } from '../../../validators/multiFieldLength';
+import { ValidationMessageDirective } from '../../../directives/validation-message.directive';
+import { FormHelperService } from '../../../services/form-helper.service';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, RouterModule],
+  imports: [ReactiveFormsModule, CommonModule, RouterModule, ValidationMessageDirective],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css', '../../../styles/forms.css'],
 })
@@ -27,39 +28,45 @@ export class RegisterComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public validationService: ValidationService,
+    public formHelperService: FormHelperService,
     private authService: AuthService,
     private router: Router
   ) {
-    this.registerForm = this.fb.group({
-      username: [
-        '',
-        [Validators.required, usernameMinLengthValidator(3)],
-        [usernameExistsValidator(this.authService)], // async validator
-      ], 
-      email: [
-        '',
-        [Validators.required, Validators.email],
-        [emailExistsValidator(this.authService, 'register')], // async validator
-      ],
-      password: [
-        '',
-        [
-          Validators.required,
-          passwordMinLengthValidator(8),
-          passwordStrengthValidator(),
-        ], //sync validators
-      ],
-    });
+    this.registerForm = this.fb.group(
+      {
+        username: [
+          '',
+          [Validators.required],
+          [usernameExistsValidator(this.authService)], // async validator
+        ],
+        email: [
+          '',
+          [Validators.required, Validators.email],
+          [emailExistsValidator(this.authService, 'register')], // async validator
+        ],
+        password: [
+          '',
+          [
+            Validators.required,
+            passwordStrengthValidator(),
+          ], //sync validators
+        ],
+      },
+      {
+        validators: multiFieldMinLengthValidator({
+          username: 3,
+          password: 8,
+        }),
+      }
+    );
   }
 
   ngOnInit(): void {
-    this.validationService.init(this.registerForm);
+    this.formHelperService.init(this.registerForm);
   }
 
   submitRegisterForm(): void {
-    const formData = this.validationService.submit();
-    if (!formData) return;
+    const formData = this.formHelperService.submit<{ username: string; email: string; password: string }>();
 
     this.authService
       .register(formData.username, formData.email, formData.password)

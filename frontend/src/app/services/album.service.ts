@@ -24,6 +24,16 @@ export class AlbumService {
     return this.http.get<Album>(`${this.baseUrl}/${id}`);
   }
 
+  getByName(name: string): Observable<Album[]> {
+    return this.getAll().pipe(
+      map((albums) =>
+        albums.filter(
+          (album) => album.title.toLowerCase() === name.toLowerCase()
+        )
+      )
+    );
+  }
+
   getByRank(rank: string): Observable<Album[]> {
     return this.getAll().pipe(
       map((albums) => albums.filter((album) => album.rank === rank))
@@ -54,7 +64,7 @@ export class AlbumService {
   }
 
   getProducersString(producers: string[]): string {
-    if (producers.length === 0) {
+    if (!producers || producers.length === 0) {
       return 'Unknown';
     } else if (producers.length === 1) {
       return 'Producer: ' + producers[0];
@@ -67,8 +77,8 @@ export class AlbumService {
     return this.http.post<Album>(this.baseUrl, album);
   }
 
-  update(id: string, album: Album): Observable<Album> {
-    return this.http.put<Album>(`${this.baseUrl}/${id}`, album);
+  update(id: string, newData: Object): Observable<Album> {
+    return this.http.put<Album>(`${this.baseUrl}/${id}`, newData);
   }
 
   delete(id: string): Observable<{ message: string }> {

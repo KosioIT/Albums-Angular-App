@@ -1,5 +1,5 @@
 import { AbstractControl, AsyncValidatorFn } from '@angular/forms';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../../services/auth.service';
 import { map, catchError, debounceTime, first, switchMap, of } from 'rxjs';
 
 export function resetCodeExistsValidator(authService: AuthService, email: string): AsyncValidatorFn {

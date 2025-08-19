@@ -1,8 +1,9 @@
-<div id="topDiv" class="d-flex justify-content-center align-items-center">
+<div id="topDiv" class="flex-center">
   <button
     type="button"
-    class="btn admin-btn"
-    routerLink="/album-create"
+    class="btn"
+    id="addBtn"
+    routerLink="/admin/add-album"
     style="background-color: green"
   >
     Add album
@@ -24,49 +25,76 @@
           <img
             class="albumImg"
             [src]="album.cover_img_url + '?t=' + timestamp"
-            alt="{{ album.title.toLowerCase() }}"
+            alt="{{ album.title }}"
           />
         </div>
       </a>
 
       <div class="album-info">
         <h3 *ngIf="!isEditing(album._id)">{{ album.title }}</h3>
-        <input
-          *ngIf="isEditing(album._id)"
-          type="text"
-          [(ngModel)]="album.title"
-          class="form-control edit-input"
-        />
+        <div *ngIf="isEditing(album._id)" class="flex-div">
+          <label for="title" class="edit-label">Title:</label>
+          <input
+            type="text"
+            id="title"
+            [(ngModel)]="album.title"
+            class="form-control edit-input"
+            placeholder="Album Title"
+          />
+        </div>
 
         <div *ngIf="!isEditing(album._id)" class="caption-line">
           Release Date: {{ album.release_date }}
         </div>
-        <input
-          *ngIf="isEditing(album._id)"
-          type="text"
-          [(ngModel)]="album.release_date"
-          class="form-control edit-input"
-        />
+        <div *ngIf="isEditing(album._id)" class="flex-div">
+          <label for="releaseDate" class="edit-label">Release Date:</label>
+          <input
+            type="date"
+            id="releaseDate"
+            [(ngModel)]="album.release_date"
+            class="form-control edit-input"
+            placeholder="Release Date"
+          />
+        </div>
+
+        <div *ngIf="isEditing(album._id)" class="flex-div">
+          <label for="cover URL" class="edit-label">Cover URL:</label>
+          <input
+            type="url"
+            id="coverURL"
+            [(ngModel)]="album.cover_img_url"
+            class="form-control edit-input"
+            placeholder="Cover URL"
+          />
+        </div>
 
         <div *ngIf="!isEditing(album._id)" class="caption-line">
           Genre: {{ album.genre }}
         </div>
-        <input
-          *ngIf="isEditing(album._id)"
-          type="text"
-          [(ngModel)]="album.genre"
-          class="form-control edit-input"
-        />
+        <div *ngIf="isEditing(album._id)" class="flex-div">
+          <label for="genre" class="edit-label">Genre:</label>
+          <input
+            type="text"
+            id="genre"
+            [(ngModel)]="album.genre"
+            class="form-control edit-input"
+            placeholder="Genre"
+          />
+        </div>
 
         <div *ngIf="!isEditing(album._id)" class="caption-line">
           {{ albumService.getProducersString(album.producers) }}
         </div>
-        <textarea
-          *ngIf="isEditing(album._id)"
-          [(ngModel)]="album.producers"
-          (ngModelChange)="onInputChange()"
-          class="form-control edit-input"
-        ></textarea>
+        <div *ngIf="isEditing(album._id)">
+          <label for="producers" class="edit-label">Producers (comma separated):</label>
+          <textarea
+            id="producers"
+            [value]="album.producers.join(', ')"
+            [(ngModel)]="producersString"
+            (ngModelChange)="onProducersChange(album)"
+            class="form-control edit-input"
+          ></textarea>
+        </div>
 
         <div
           class="album-menu d-flex justify-content-center align-items-center"

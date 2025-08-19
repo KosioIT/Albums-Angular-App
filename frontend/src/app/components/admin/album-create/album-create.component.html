@@ -1,1 +1,90 @@
-<p>album-create works!</p>
+<div class="col-md-6 col-lg-4 mx-auto mt-5">
+  <div class="card shadow-sm form-container">
+    <div class="card-body">
+      <h5 class="card-title mb-4 text-center">Create Album</h5>
+      <form [formGroup]="albumForm" (ngSubmit)="onCreateFormSubmit()">
+        <div class="form-group">
+          <label for="title">Title:</label>
+          <input
+            type="text"
+            id="title"
+            class="form-control"
+            formControlName="title"
+            [appValidationMessage]="'title'"
+            required
+            (blur)="formHelperService.onBlur('title')"
+          />
+        </div>
+        <div class="form-group">
+          <label for="artist">Artist:</label>
+          <input
+            type="text"
+            id="artist"
+            class="form-control"
+            formControlName="artist"
+            [appValidationMessage]="'artist'"
+            required
+            (blur)="formHelperService.onBlur('artist')"
+          />
+        </div>
+        <div class="form-group">
+          <label for="releaseDate">Release Date:</label>
+          <input
+            type="date"
+            id="releaseDate"
+            class="form-control"
+            formControlName="release_date"
+            [appValidationMessage]="'release_date'"
+            required
+            (blur)="formHelperService.onBlur('release_date')"
+          />
+        </div>
+        <div class="form-group">
+          <label for="genre">Genre:</label>
+          <input
+            type="text"
+            id="genre"
+            class="form-control"
+            formControlName="genre"
+            [appValidationMessage]="'genre'"
+            required
+            (blur)="formHelperService.onBlur('genre')"
+          />
+        </div>
+        <div class="form-group">
+          <label for="coverImgUrl">Cover URL:</label>
+          <input
+            type="url"
+            id="coverImgUrl"
+            class="form-control"
+            formControlName="cover_img_url"
+            [appValidationMessage]="'cover_img_url'"
+            (blur)="formHelperService.onBlur('cover_img_url')"
+          />
+        </div>
+        <div class="form-group">
+          <label for="producers">Producers:</label>
+          <input
+            type="text"
+            id="producers"
+            class="form-control"
+            formControlName="producers"
+            [appValidationMessage]="'producers'"
+            required  
+            (blur)="formHelperService.onBlur('producers')"
+          />
+        </div>
+
+        <div class="d-flex justify-content-center mt-3">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="albumForm.invalid"
+          >
+            Create Album
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

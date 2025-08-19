@@ -1,3 +1,7 @@
+.flex-center{
+  gap: 10px;
+}
+
 /* Wrapper for albums */
 .album-wrapper {
   width: 100%;
@@ -70,6 +74,7 @@
 
 .album-info {
   text-align: center;
+  align-items: center;
   color: white;
   font-size: 23px;
 }

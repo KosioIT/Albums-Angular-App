@@ -1,5 +1,5 @@
 import { AbstractControl, AsyncValidatorFn } from '@angular/forms';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../../services/auth.service';
 import { debounceTime, switchMap, map, first, of } from 'rxjs';
 
 export function usernameExistsValidator(authService: AuthService): AsyncValidatorFn {
