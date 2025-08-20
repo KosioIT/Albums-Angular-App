@@ -1,27 +1,68 @@
-# Frontend
+# Albums-Angular-App
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.2.0.
+A full-stack web application built with AngularJS 20 (frontend), Express.js (backend), and MongoDB. Designed for performance, scalability, and clean architecture.
 
-## Development server
+## Technologies
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+**Frontend**
+- Angular 20
+- RxJS 7.8
+- TypeScript 5.3
+- Bootstrap
 
-## Code scaffolding
+**Backend**
+- Node.js 20
+- Express.js
+- MongoDB + Mongoose
+- JWT, dotenv
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## Installation & Setup
 
-## Build
+### 1. Clone the repository
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+```bash
+git clone https://github.com/KosioIT/Albums-Angular-App.git
+cd Albums-Angular-App
 
-## Running unit tests
+```
+### 2. Install the dependencies
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+cd frontend
+npm install
 
-## Running end-to-end tests
+cd ../backend
+npm install
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+### 3. Create environment files
 
-## Further help
+Create a .env file in the backend/ folder
+PORT=3000
+MONGO_URI=mongodb://localhost:27017/your-db-name
+JWT_SECRET=yourSecretKey
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+Create a environment.ts file in the frontend/environments folder
+apiUrl: 'http://localhost:4000/api'
+
+## MongoDB Setup
+This project uses MongoDB as its database. To run it locally:
+
+1.Download and install MongoDB Community Server from https://www.mongodb.com/try/download/community.
+<br>2. During installation, choose the Complete setup and enable MongoDB as a Windows Service.
+<br>3. MongoDB will run on port 27017 by default.
+
+To start MongoDB manually enter 'mongod' in the terminal
+
+You can use the 'mongo' command to test the connection.
+
+## Running the App
+
+### MongoDB
+mognod
+
+### Backend
+cd backend
+npm run dev
+
+### Frontend
+cd frontend
+ng serve
