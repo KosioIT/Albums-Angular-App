@@ -4,9 +4,7 @@ import { Album } from '../../../models/album';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { isEmpty } from 'rxjs';
 import { FormHelperService } from '../../../services/form-helper.service';
-import { Obj } from '@popperjs/core';
 
 @Component({
   selector: 'app-manage-albums',

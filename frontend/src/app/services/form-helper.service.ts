@@ -34,7 +34,7 @@ export class FormHelperService {
         }
       });
 
-      throw new FormValidationError(errors);
+      throw new FormValidationError();
     }
 
     return this.currForm.value as T;
