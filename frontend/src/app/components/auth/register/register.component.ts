@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit } from '@angular/core';
 import {
   FormBuilder,
@@ -18,7 +18,7 @@ import { FormHelperService } from '../../../services/form-helper.service';
 
 @Component({
     selector: 'app-register',
-    imports: [ReactiveFormsModule, CommonModule, RouterModule, ValidationMessageDirective],
+    imports: [ReactiveFormsModule, RouterModule, ValidationMessageDirective],
     templateUrl: './register.component.html',
     styleUrls: ['./register.component.css', '../../../styles/forms.css']
 })

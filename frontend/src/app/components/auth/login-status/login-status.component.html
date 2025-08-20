@@ -4,33 +4,38 @@
   [class.show]="(dropdownOpen$ | async) === true"
   (mouseenter)="onMouseEnter()"
   (mouseleave)="onMouseLeave()"
->
+  >
   <a
     class="nav-link d-flex align-items-center"
     style="cursor: pointer"
     (click)="onClick()"
     [attr.aria-expanded]="(dropdownOpen$ | async) === true"
-  >
+    >
     <img
       src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqgfsYn5co7FYXZi4-vGdJ2c4NZq7foww9L30axpxiKYymOSzUm4F9mDW1mZLCui-Dm7I&usqp=CAU"
       alt="User Icon"
       class="user-icon me-1"
-    />
-    <span *ngIf="user">{{ user.username }}</span>
-  </a>
-  <div
-    id="userDropdown"
-    class="dropdown-menu dropdown-menu-center"
-    [class.show]="(dropdownOpen$ | async) === true"
-  >
-    <ng-container *ngIf="!user; else loggedIn">
-      <a class="dropdown-item" routerLink="/login">Sign in</a>
-      <a class="dropdown-item" routerLink="/register">Sign up</a>
-    </ng-container>
-    <ng-template #loggedIn>
-      <a *ngIf="authService.isAdmin()" class="dropdown-item" routerLink="/admin/albums">Manage albums</a>
-      <a *ngIf="authService.isAdmin()" class="dropdown-item" routerLink="/admin/users">Manage users</a>
-      <a class="dropdown-item" (click)="logout()">Sign out</a>
-    </ng-template>
-  </div>
-</li>
+      />
+      @if (user) {
+        <span>{{ user.username }}</span>
+      }
+    </a>
+    <div
+      id="userDropdown"
+      class="dropdown-menu dropdown-menu-center"
+      [class.show]="(dropdownOpen$ | async) === true"
+      >
+      @if (!user) {
+        <a class="dropdown-item" routerLink="/login">Sign in</a>
+        <a class="dropdown-item" routerLink="/register">Sign up</a>
+      } @else {
+        @if (authService.isAdmin()) {
+          <a class="dropdown-item" routerLink="/admin/albums">Manage albums</a>
+        }
+        @if (authService.isAdmin()) {
+          <a class="dropdown-item" routerLink="/admin/users">Manage users</a>
+        }
+        <a class="dropdown-item" (click)="logout()">Sign out</a>
+      }
+    </div>
+  </li>

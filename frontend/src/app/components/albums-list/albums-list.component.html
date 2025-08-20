@@ -1,23 +1,27 @@
 <h2>Albums from {{ this.band }}:</h2>
 <div class="album-wrapper">
   <div class="album-container">
-    <div *ngFor="let album of albums" class="album-card">
-      <div
-        class="albumImg-wrapper"
-        [style.border-color]="albumService.getBorderColor(album.rank)"
-      >
-        <img class="albumImg" [src]="album.cover_img_url" [alt]="album.title" />
+    @for (album of albums; track album) {
+      <div class="album-card">
+        <div
+          class="albumImg-wrapper"
+          [style.border-color]="albumService.getBorderColor(album.rank)"
+          >
+          <img class="albumImg" [src]="album.cover_img_url" [alt]="album.title" />
+        </div>
+        <div class="album-info">
+          <h3>{{ album.title }}</h3>
+          <div class="caption-line">Release Date: {{album.release_date}}</div>
+          <div class="caption-line">Genre: {{album.genre}}</div>
+          <div class="caption-line">{{albumService.getProducersString(album.producers)}}</div>
+        </div>
       </div>
-      <div class="album-info">
-        <h3>{{ album.title }}</h3>
-        <div class="caption-line">Release Date: {{album.release_date}}</div>
-        <div class="caption-line">Genre: {{album.genre}}</div>
-        <div class="caption-line">{{albumService.getProducersString(album.producers)}}</div>
-      </div>
-    </div>
+    }
   </div>
 </div>
 
-<div *ngIf="!isLoggedIn && hasMoreAlbums" class="d-flex justify-content-center align-items-center flex-column mt-5 login-prompt">
-  <a routerLink="/login" class="loginLink">Log in to see more albums from {{ this.band }} !</a>
-</div>
+@if (!isLoggedIn && hasMoreAlbums) {
+  <div class="d-flex justify-content-center align-items-center flex-column mt-5 login-prompt">
+    <a routerLink="/login" class="loginLink">Log in to see more albums from {{ this.band }} !</a>
+  </div>
+}

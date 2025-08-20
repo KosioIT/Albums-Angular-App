@@ -7,14 +7,14 @@ import {
 } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { Router, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { FormHelperService } from '../../../services/form-helper.service';
 
 
 @Component({
     selector: 'app-login',
     templateUrl: './login.component.html',
-    imports: [ReactiveFormsModule, CommonModule, RouterModule],
+    imports: [ReactiveFormsModule, RouterModule],
     styleUrls: ['./login.component.css', '../../../styles/forms.css']
 })
 export class LoginComponent implements OnInit {

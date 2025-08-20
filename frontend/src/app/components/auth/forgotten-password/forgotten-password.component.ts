@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit } from '@angular/core';
 import {
   FormBuilder,
@@ -15,7 +15,7 @@ import { FormHelperService } from '../../../services/form-helper.service';
 
 @Component({
     selector: 'app-forgotten-password',
-    imports: [ReactiveFormsModule, CommonModule, ValidationMessageDirective],
+    imports: [ReactiveFormsModule, ValidationMessageDirective],
     templateUrl: './forgotten-password.component.html',
     styleUrls: ['./forgotten-password.component.css', '../../../styles/forms.css']
 })

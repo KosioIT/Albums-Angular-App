@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Album } from '../../models/album';
 import { AlbumService } from '../../services/album.service';
 import { AuthService } from '../../services/auth.service';
@@ -7,7 +7,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 
 @Component({
     selector: 'app-albums-list',
-    imports: [CommonModule, RouterModule],
+    imports: [RouterModule],
     templateUrl: './albums-list.component.html',
     styleUrls: ['./albums-list.component.css', '../../styles/albums-list.css']
 })

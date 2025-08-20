@@ -4,21 +4,23 @@
 <div class="album-wrapper">
   <div class="album-container">
 
-    <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+    @if (errorMessage) {
+      <div class="error-message">{{ errorMessage }}</div>
+    }
 
-    <div
-      *ngFor="let album of gold_albums; trackBy: trackById"
-      class="album-card"
-    >
-      <a [routerLink]="['/albums-list']" [queryParams]="{ band: albumService.encode(album.artist) }">
-        <div
-          class="albumImg-wrapper"
+    @for (album of gold_albums; track trackById($index, album)) {
+      <div
+        class="album-card"
+        >
+        <a [routerLink]="['/albums-list']" [queryParams]="{ band: albumService.encode(album.artist) }">
+          <div
+            class="albumImg-wrapper"
           [ngStyle]="{
             'border-color': albumService.getBorderColor(album.rank)
           }"
-        >
-          <img
-            class="albumImg"
+            >
+            <img
+              class="albumImg"
             [src]="album.cover_img_url + '?t=' + timestamp"
             alt="{{ album.title.toLowerCase() }}"
           />
@@ -26,6 +28,7 @@
       </a>
       <div class="caption">{{ album.title }}</div>
     </div>
+}
 
     <ng-template #noAlbums>
       <p>No albums available.</p>

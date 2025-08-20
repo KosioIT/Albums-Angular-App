@@ -5,25 +5,26 @@
     id="addBtn"
     routerLink="/admin/add-album"
     style="background-color: green"
-  >
+    >
     Add album
   </button>
 </div>
 <div class="album-wrapper">
   <div class="album-container">
-    <div *ngFor="let album of albums" class="album-card">
-      <a
-        [routerLink]="['/albums-list']"
-        [queryParams]="{ band: albumService.encode(album.artist) }"
-      >
-        <div
-          class="albumImg-wrapper"
+    @for (album of albums; track album) {
+      <div class="album-card">
+        <a
+          [routerLink]="['/albums-list']"
+          [queryParams]="{ band: albumService.encode(album.artist) }"
+          >
+          <div
+            class="albumImg-wrapper"
           [ngStyle]="{
             'border-color': albumService.getBorderColor(album.rank)
           }"
-        >
-          <img
-            class="albumImg"
+            >
+            <img
+              class="albumImg"
             [src]="album.cover_img_url + '?t=' + timestamp"
             alt="{{ album.title }}"
           />
@@ -31,8 +32,11 @@
       </a>
 
       <div class="album-info">
-        <h3 *ngIf="!isEditing(album._id)">{{ album.title }}</h3>
-        <div *ngIf="isEditing(album._id)" class="flex-div">
+        @if (!isEditing(album._id)) {
+<h3>{{ album.title }}</h3>
+}
+        @if (isEditing(album._id)) {
+<div class="flex-div">
           <label for="title" class="edit-label">Title:</label>
           <input
             type="text"
@@ -42,11 +46,15 @@
             placeholder="Album Title"
           />
         </div>
+}
 
-        <div *ngIf="!isEditing(album._id)" class="caption-line">
+        @if (!isEditing(album._id)) {
+<div class="caption-line">
           Release Date: {{ album.release_date }}
         </div>
-        <div *ngIf="isEditing(album._id)" class="flex-div">
+}
+        @if (isEditing(album._id)) {
+<div class="flex-div">
           <label for="releaseDate" class="edit-label">Release Date:</label>
           <input
             type="date"
@@ -56,8 +64,10 @@
             placeholder="Release Date"
           />
         </div>
+}
 
-        <div *ngIf="isEditing(album._id)" class="flex-div">
+        @if (isEditing(album._id)) {
+<div class="flex-div">
           <label for="cover URL" class="edit-label">Cover URL:</label>
           <input
             type="url"
@@ -67,11 +77,15 @@
             placeholder="Cover URL"
           />
         </div>
+}
 
-        <div *ngIf="!isEditing(album._id)" class="caption-line">
+        @if (!isEditing(album._id)) {
+<div class="caption-line">
           Genre: {{ album.genre }}
         </div>
-        <div *ngIf="isEditing(album._id)" class="flex-div">
+}
+        @if (isEditing(album._id)) {
+<div class="flex-div">
           <label for="genre" class="edit-label">Genre:</label>
           <input
             type="text"
@@ -81,43 +95,48 @@
             placeholder="Genre"
           />
         </div>
+}
 
-        <div *ngIf="!isEditing(album._id)" class="caption-line">
+        @if (!isEditing(album._id)) {
+<div class="caption-line">
           {{ albumService.getProducersString(album.producers) }}
         </div>
-        <div *ngIf="isEditing(album._id)">
+}
+        @if (isEditing(album._id)) {
+<div>
           <label for="producers" class="edit-label">Producers (comma separated):</label>
           <textarea
             id="producers"
             [value]="album.producers.join(', ')"
-            [(ngModel)]="producersString"
-            (ngModelChange)="onProducersChange(album)"
-            class="form-control edit-input"
-          ></textarea>
-        </div>
-
-        <div
-          class="album-menu d-flex justify-content-center align-items-center"
-        >
-          <button
-            type="button"
-            id="editBtn"
-            class="btn album-btn"
-            [style.background-color]="isEditing(album._id) ? 'green' : 'blue'"
-            (click)="toggleEdit(album._id)"
-          >
-            {{ isEditing(album._id) ? "Save" : "Edit" }}
-          </button>
-          <button
-            type="button"
-            class="btn album-btn"
-            style="background-color: red"
-            (click)="deleteAlbum(album._id)"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+                          [(ngModel)]="producersString"
+                          (ngModelChange)="onProducersChange(album)"
+                          class="form-control edit-input"
+                        ></textarea>
+                      </div>
+                    }
+                    <div
+                      class="album-menu d-flex justify-content-center align-items-center"
+                      >
+                      <button
+                        type="button"
+                        id="editBtn"
+                        class="btn album-btn"
+                        [style.background-color]="isEditing(album._id) ? 'green' : 'blue'"
+                        (click)="toggleEdit(album._id)"
+                        >
+                        {{ isEditing(album._id) ? "Save" : "Edit" }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn album-btn"
+                        style="background-color: red"
+                        (click)="deleteAlbum(album._id)"
+                        >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
