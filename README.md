@@ -18,12 +18,14 @@ A full-stack web application built with AngularJS 20 (frontend), Express.js (bac
 
 ## Installation & Setup
 
-### Clone the repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/KosioIT/Albums-Angular-App.git
+cd Albums-Angular-App
 
-### Install the dependencies
+```
+### 2. Install the dependencies
 
 cd frontend
 npm install
@@ -31,24 +33,22 @@ npm install
 cd ../backend
 npm install
 
-### Create environment files
+### 3. Create environment files
 
-#### Create a .env file in the backend/ folder
+Create a .env file in the backend/ folder
 PORT=3000
 MONGO_URI=mongodb://localhost:27017/your-db-name
 JWT_SECRET=yourSecretKey
 
-#### Create a environment.ts file in the frontend/environments folder
+Create a environment.ts file in the frontend/environments folder
 apiUrl: 'http://localhost:4000/api'
 
 ## MongoDB Setup
 This project uses MongoDB as its database. To run it locally:
 
-Download and install MongoDB Community Server from https://www.mongodb.com/try/download/community.
-
-During installation, choose the Complete setup and enable MongoDB as a Windows Service.
-
-MongoDB will run on port 27017 by default.
+1.Download and install MongoDB Community Server from https://www.mongodb.com/try/download/community.
+<br>2. During installation, choose the Complete setup and enable MongoDB as a Windows Service.
+<br>3. MongoDB will run on port 27017 by default.
 
 To start MongoDB manually enter 'mongod' in the terminal
 
