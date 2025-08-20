@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { AlbumService } from '../../../services/album.service';
 import { Router } from '@angular/router';
+
 import {
   FormBuilder,
   FormGroup,
@@ -31,7 +32,7 @@ export class AlbumCreateComponent implements OnInit {
   constructor(
     public albumService: AlbumService,
     public formHelperService: FormHelperService,
-    private toastr: ToastrService,
+    @Inject(ToastrService) private toastr: ToastrService,
     private fb: FormBuilder,
     private router: Router
   ) {
