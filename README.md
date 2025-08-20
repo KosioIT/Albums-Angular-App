@@ -41,7 +41,7 @@ JWT_SECRET=yourSecretKey
 #### Create a environment.ts file in the frontend/environments folder
 apiUrl: 'http://localhost:4000/api'
 
-### MongoDB Setup
+## MongoDB Setup
 This project uses MongoDB as its database. To run it locally:
 
 Download and install MongoDB Community Server from https://www.mongodb.com/try/download/community.
