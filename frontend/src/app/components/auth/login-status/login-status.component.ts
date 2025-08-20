@@ -8,11 +8,10 @@ import { Router } from '@angular/router';
 import { DropdownService } from '../../../services/dropdown.service';
 
 @Component({
-  selector: 'app-login-status',
-  standalone: true,
-  imports: [CommonModule, RouterModule, NgbDropdownModule],
-  templateUrl: './login-status.component.html',
-  styleUrls: ['./login-status.component.css', "../../navbar/navbar.component.css"]
+    selector: 'app-login-status',
+    imports: [CommonModule, RouterModule, NgbDropdownModule],
+    templateUrl: './login-status.component.html',
+    styleUrls: ['./login-status.component.css', "../../navbar/navbar.component.css"]
 })
 export class LoginStatusComponent {
   user: User | null = null;

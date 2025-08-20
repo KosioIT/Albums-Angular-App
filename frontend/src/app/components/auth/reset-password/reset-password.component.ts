@@ -16,11 +16,10 @@ import { ValidationMessageDirective } from '../../../directives/validation-messa
 import { FormHelperService } from '../../../services/form-helper.service';
 
 @Component({
-  selector: 'app-reset-password',
-  standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, ValidationMessageDirective],
-  templateUrl: './reset-password.component.html',
-  styleUrls: ['./reset-password.component.css', '../../../styles/forms.css'],
+    selector: 'app-reset-password',
+    imports: [ReactiveFormsModule, CommonModule, ValidationMessageDirective],
+    templateUrl: './reset-password.component.html',
+    styleUrls: ['./reset-password.component.css', '../../../styles/forms.css']
 })
 export class ResetPasswordComponent implements OnInit {
   resetPasswordForm: FormGroup;

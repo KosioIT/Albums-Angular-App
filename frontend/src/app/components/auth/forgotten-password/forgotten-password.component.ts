@@ -14,11 +14,10 @@ import { ValidationMessageDirective } from '../../../directives/validation-messa
 import { FormHelperService } from '../../../services/form-helper.service';
 
 @Component({
-  selector: 'app-forgotten-password',
-  standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, ValidationMessageDirective],
-  templateUrl: './forgotten-password.component.html',
-  styleUrls: ['./forgotten-password.component.css', '../../../styles/forms.css'],
+    selector: 'app-forgotten-password',
+    imports: [ReactiveFormsModule, CommonModule, ValidationMessageDirective],
+    templateUrl: './forgotten-password.component.html',
+    styleUrls: ['./forgotten-password.component.css', '../../../styles/forms.css']
 })
 export class ForgottenPasswordComponent implements OnInit {
   forgotForm: FormGroup;

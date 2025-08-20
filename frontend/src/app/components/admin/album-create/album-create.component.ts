@@ -17,11 +17,10 @@ import { ToastrService } from 'ngx-toastr';
 import { FormValidationError } from '../../../errors/form-validation-error';
 
 @Component({
-  selector: 'app-album-create',
-  standalone: true,
-  imports: [ReactiveFormsModule, ValidationMessageDirective],
-  templateUrl: './album-create.component.html',
-  styleUrls: ['./album-create.component.css', '../../../styles/forms.css'],
+    selector: 'app-album-create',
+    imports: [ReactiveFormsModule, ValidationMessageDirective],
+    templateUrl: './album-create.component.html',
+    styleUrls: ['./album-create.component.css', '../../../styles/forms.css']
 })
 export class AlbumCreateComponent implements OnInit {
   albumForm!: FormGroup;

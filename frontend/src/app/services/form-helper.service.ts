@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { FormGroup } from '@angular/forms';
 import { FormValidationError } from '../errors/form-validation-error';
+import { FormGroup } from '@angular/forms';
+
 @Injectable({
   providedIn: 'root',
 })

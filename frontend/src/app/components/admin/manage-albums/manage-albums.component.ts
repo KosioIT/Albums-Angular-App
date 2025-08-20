@@ -7,14 +7,13 @@ import { FormsModule } from '@angular/forms';
 import { FormHelperService } from '../../../services/form-helper.service';
 
 @Component({
-  selector: 'app-manage-albums',
-  standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
-  templateUrl: './manage-albums.component.html',
-  styleUrls: [
-    './manage-albums.component.css',
-    '../../../styles/albums-list.css',
-  ],
+    selector: 'app-manage-albums',
+    imports: [CommonModule, RouterModule, FormsModule],
+    templateUrl: './manage-albums.component.html',
+    styleUrls: [
+        './manage-albums.component.css',
+        '../../../styles/albums-list.css',
+    ]
 })
 export class ManageAlbumsComponent {
   albums: Album[] = [];

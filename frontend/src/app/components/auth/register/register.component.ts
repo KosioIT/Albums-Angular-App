@@ -17,11 +17,10 @@ import { ValidationMessageDirective } from '../../../directives/validation-messa
 import { FormHelperService } from '../../../services/form-helper.service';
 
 @Component({
-  selector: 'app-register',
-  standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, RouterModule, ValidationMessageDirective],
-  templateUrl: './register.component.html',
-  styleUrls: ['./register.component.css', '../../../styles/forms.css'],
+    selector: 'app-register',
+    imports: [ReactiveFormsModule, CommonModule, RouterModule, ValidationMessageDirective],
+    templateUrl: './register.component.html',
+    styleUrls: ['./register.component.css', '../../../styles/forms.css']
 })
 export class RegisterComponent implements OnInit {
   registerForm!: FormGroup;

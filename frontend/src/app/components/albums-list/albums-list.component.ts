@@ -6,11 +6,10 @@ import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 
 @Component({
-  selector: 'app-albums-list',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: './albums-list.component.html',
-  styleUrls: ['./albums-list.component.css', '../../styles/albums-list.css'],
+    selector: 'app-albums-list',
+    imports: [CommonModule, RouterModule],
+    templateUrl: './albums-list.component.html',
+    styleUrls: ['./albums-list.component.css', '../../styles/albums-list.css']
 })
 export class AlbumsListComponent implements OnInit {
   albums: Album[] = [];

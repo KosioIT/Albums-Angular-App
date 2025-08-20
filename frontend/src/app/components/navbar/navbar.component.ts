@@ -7,11 +7,10 @@ import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { AlbumService } from '../../services/album.service';
 
 @Component({
-  selector: 'app-navbar',
-  standalone: true,
-  templateUrl: './navbar.component.html',
-  styleUrls: ['./navbar.component.css'],
-  imports: [NgbModule, CommonModule, RouterModule, LoginStatusComponent],
+    selector: 'app-navbar',
+    templateUrl: './navbar.component.html',
+    styleUrls: ['./navbar.component.css'],
+    imports: [NgbModule, CommonModule, RouterModule, LoginStatusComponent]
 })
 export class NavbarComponent implements OnInit {
   isNavbarCollapsed = true;

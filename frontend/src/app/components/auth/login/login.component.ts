@@ -12,11 +12,10 @@ import { FormHelperService } from '../../../services/form-helper.service';
 
 
 @Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html',
-  standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, RouterModule],
-  styleUrls: ['./login.component.css', '../../../styles/forms.css'],
+    selector: 'app-login',
+    templateUrl: './login.component.html',
+    imports: [ReactiveFormsModule, CommonModule, RouterModule],
+    styleUrls: ['./login.component.css', '../../../styles/forms.css']
 })
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
