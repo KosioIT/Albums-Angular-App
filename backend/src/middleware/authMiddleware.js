@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import bcrypt from 'bcryptjs';
 
-const protect = async (req, res, next) => {
+export const protect = async (req, res, next) => {
   let token;
   if (req.headers.authorization?.startsWith('Bearer')) {
     try {
@@ -16,33 +17,29 @@ const protect = async (req, res, next) => {
   if (!token) res.status(401).json({ message: 'No token' });
 };
 
-export default protect;
-
 export const checkResetCode = async (req, res, next) => {
-  try {
-    const { email, code } = req.body;
-    const user = await User.findOne({ email });
+  const { email, resetCode } = req.body;
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found!' });
-    }
+  const user = await User.findOne({ email });
 
-    if (user.resetToken !== code) {
-      user.resetCodeStatus = 'invalid';
-      await user.save();
-      return res.status(400).json({ message: 'Invalid reset code!' });
-    }
-
-    if (Date.now() > user.resetTokenExpiry) {
-      user.resetCodeStatus = 'expired';
-      await user.save();
-      return res.status(400).json({ message: 'Reset code has expired!' });
-    }
-
-    req.user = user;
-    next();
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+  if (!user || !user.resetToken || !user.resetTokenExpiry) {
+    return res.status(400).json({ message: 'Invalid or expired reset code' });
   }
+
+  const isExpired = user.resetTokenExpiry < Date.now();
+  if (isExpired) {
+    user.resetCodeStatus = 'expired';
+    await user.save();
+    return res.status(400).json({ message: 'Reset code has expired' });
+  }
+
+  const isValid = await bcrypt.compare(resetCode, user.resetToken);
+  if (!isValid) {
+    user.resetCodeStatus = 'invalid';
+    await user.save();
+    return res.status(400).json({ message: 'Invalid reset code' });
+  }
+
+  req.user = user;
+  next();
 };

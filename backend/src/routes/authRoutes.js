@@ -1,14 +1,21 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
+import bcrypt from 'bcryptjs';
 import { registerUser, loginUser, userExists } from '../controllers/authController.js';
 import User from '../models/User.js';
 import { sendEmail } from '../utils/sendEmail.js';
 import { validateResetPassword, validateRegisterUser, validateResetRequest } from '../validators/authValidators.js';
 import { checkResetCode } from '../middleware/authMiddleware.js';
 
+const resetLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 5, // max 5 reset requests per windowMs (5 minutes)
+  message: 'Too many reset requests! Please try again after 5 minutes!',
+});
+
 const router = express.Router();
 
 router.post('/register', validateRegisterUser, registerUser);
-
 router.post('/login', loginUser);
 
 router.post('/check-email', async (req, res) => {
@@ -29,7 +36,7 @@ router.post('/check-password', async (req, res) => {
   res.json({ exists: isValid });
 });
 
-router.post('/request-reset', validateResetRequest, async (req, res) => {
+router.post('/request-reset', resetLimiter, validateResetRequest, async (req, res) => {
   let user;
   try {
     const { email } = req.body;
@@ -42,7 +49,8 @@ router.post('/request-reset', validateResetRequest, async (req, res) => {
     // Generate 6-digit reset code
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    user.resetToken = resetCode;
+    const hashedCode = await bcrypt.hash(resetCode, 10);
+    user.resetToken = hashedCode;
     user.resetTokenExpiry = Date.now() + 15 * 60 * 1000; // 15 minutes
     await user.save();
 
@@ -61,7 +69,7 @@ router.post('/request-reset', validateResetRequest, async (req, res) => {
     console.error(err);
     if (user) user.resetCodeStatus = 'failed';
     res.status(500).json({ message: 'Server error' });
-    
+
   } finally {
     if (user) await user.save();
   }
