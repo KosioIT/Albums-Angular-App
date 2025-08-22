@@ -6,6 +6,7 @@ import User from '../models/User.js';
 import { sendEmail } from '../utils/sendEmail.js';
 import { validateResetPassword, validateRegisterUser, validateResetRequest } from '../validators/authValidators.js';
 import { checkResetCode } from '../middleware/authMiddleware.js';
+import {generateToken} from "../utils/generateToken.js";
 
 const resetLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
@@ -54,12 +55,10 @@ router.post('/request-reset', resetLimiter, validateResetRequest, async (req, re
     user.resetTokenExpiry = Date.now() + 15 * 60 * 1000; // 15 minutes
     await user.save();
 
-    user.resetCodeStatus = 'sending';
-
     await sendEmail({
       to: email,
       subject: 'Password Reset Code',
-      text: `Your password reset code is: ${resetCode}`
+      text: `Your password reset code is: ${resetCode}. It is valid for 15 minutes.`,
     });
 
     user.resetCodeStatus = 'sent';
@@ -67,7 +66,6 @@ router.post('/request-reset', resetLimiter, validateResetRequest, async (req, re
 
   } catch (err) {
     console.error(err);
-    if (user) user.resetCodeStatus = 'failed';
     res.status(500).json({ message: 'Server error' });
 
   } finally {
@@ -77,13 +75,13 @@ router.post('/request-reset', resetLimiter, validateResetRequest, async (req, re
 });
 
 router.post('/check-reset-code', checkResetCode, (_req, res) => {
-  res.json({ valid: true });
+  res.json({ message: 'Reset code is valid' });
 });
 
 router.post('/reset-password', validateResetPassword, checkResetCode, async (req, res) => {
   try {
     const { newPassword } = req.body;
-    const user = req.user; // User object from checkResetCode middleware
+    const user = req.user;
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -95,11 +93,19 @@ router.post('/reset-password', validateResetPassword, checkResetCode, async (req
 
     user.password = newPassword;
     user.resetToken = undefined;
-    user.resetTokenExpiry = undefined;
-    user.resetCodeStatus = 'initial';
     await user.save();
 
-    res.json({ message: 'Password has been reset successfully!' });
+    const token = generateToken(user._id);
+
+    res.json({
+      message: 'Password has been reset successfully!',
+      token,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email
+      }
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

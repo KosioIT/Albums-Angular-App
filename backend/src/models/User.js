@@ -7,11 +7,7 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true, minlength: 8 },
   resetToken: { type: String, default: null },
   resetTokenExpiry: { type: Date, default: null },
-  resetCodeStatus: {
-    type: String,
-    enum: ['initial', 'sending', 'sent', 'expired', 'invalid', 'failed'],
-    default: 'initial'
-  }
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Album', default: [] }],
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {
