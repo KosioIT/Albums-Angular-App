@@ -39,6 +39,16 @@ export class AuthService {
     return !!this.userSubject.value;
   }
 
+  getUserId(): string {
+    if (!this.isLoggedIn()) {
+      throw new Error('User is not logged in');
+    }
+    if (!this.userSubject.value?._id) {
+      throw new Error('User ID is not available');
+    }
+    return this.userSubject.value?._id;
+  }
+
   isAdmin(): boolean {
     if (this.userSubject.value) {
       return this.userSubject.value.email === this.adminEmail;

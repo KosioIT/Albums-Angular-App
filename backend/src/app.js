@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
-import albumsRouter from './routes/albums.js';
+import albumsRouter from './routes/albumRoutes.js';
 
 const app = express();
 

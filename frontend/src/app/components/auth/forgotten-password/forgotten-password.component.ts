@@ -9,7 +9,6 @@ import {
 import { AuthService } from '../../../services/auth.service';
 import { emailExistsValidator } from '../../../validators/auth/emailExists';
 import { Router } from '@angular/router';
-import { CodeStatus } from '../../../models/codeStatus';
 import { ValidationMessageDirective } from '../../../directives/validation-message.directive';
 import { FormHelperService } from '../../../services/form-helper.service';
 
@@ -24,8 +23,6 @@ export class ForgottenPasswordComponent implements OnInit {
   fieldTouched: { [key: string]: boolean } = {};
   message = '';
   error = '';
-  codeSent: boolean = false;
-  codeStatus: CodeStatus = CodeStatus.sending;
 
   constructor(
     private fb: FormBuilder,
@@ -43,14 +40,11 @@ export class ForgottenPasswordComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.codeStatus = CodeStatus.initial;
     this.formHelperService.init(this.forgotForm);
   }
 
   onSendResetCode() {
     const formData = this.formHelperService.submit<{ email: string }>();
-
-    this.codeStatus = CodeStatus.sending;
     this.message = '';
     this.error = '';
 
@@ -58,15 +52,12 @@ export class ForgottenPasswordComponent implements OnInit {
       .sendResetCodeViaEmail(formData.email)
       .subscribe({
         next: () => {
-          this.codeSent = true;
-          this.codeStatus = CodeStatus.sent;
           this.router.navigate(['/reset-password'], {
             queryParams: { email: formData.email },
           });
         },
         error: (err) => {
           alert(err.error?.message || 'Error sending reset code!');
-          this.codeStatus = CodeStatus.failed;
         },
       });
   }

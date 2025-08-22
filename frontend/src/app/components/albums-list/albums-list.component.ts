@@ -1,15 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 
 import { Album } from '../../models/album';
 import { AlbumService } from '../../services/album.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-    selector: 'app-albums-list',
-    imports: [RouterModule],
-    templateUrl: './albums-list.component.html',
-    styleUrls: ['./albums-list.component.css', '../../styles/albums-list.css']
+  selector: 'app-albums-list',
+  imports: [RouterModule],
+  templateUrl: './albums-list.component.html',
+  styleUrls: ['./albums-list.component.css', '../../styles/albums-list.css'],
 })
 export class AlbumsListComponent implements OnInit {
   albums: Album[] = [];
@@ -17,14 +18,25 @@ export class AlbumsListComponent implements OnInit {
   hasMoreAlbums = false;
   band: string = '';
 
+  showPlaylistSelector: boolean = false;
+  albumToAdd!: Album;
+  selectedPlaylistId: string = '';
+
   constructor(
     public albumService: AlbumService,
     private authService: AuthService,
+    @Inject(ToastrService) private toastr: ToastrService,
     private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.isLoggedIn = this.authService.isLoggedIn();
+    if (!this.isLoggedIn) {
+      this.toastr.warning(
+        'You need to be logged in to see more albums!',
+        'Warning'
+      );
+    }
 
     this.route.queryParams.subscribe((params) => {
       this.band = params['band'] ? decodeURIComponent(params['band']) : '';
@@ -35,7 +47,6 @@ export class AlbumsListComponent implements OnInit {
       this.albumService.getByBand(this.band).subscribe({
         next: (data) => {
           if (this.isLoggedIn) {
-            console.log('Data: ', data);
             this.albums = data;
           } else {
             this.albums = data.slice(0, 6);

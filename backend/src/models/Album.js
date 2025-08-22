@@ -1,10 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-
-const trackSchema = new Schema({
-  title: { type: String, required: true },
-  duration: { type: String, required: true },
-  composer: {type: [String] , required: true}
-});
+import { trackSchema } from './Track.js';
 
 const albumSchema = new Schema({
   title: { type: String, required: true },
