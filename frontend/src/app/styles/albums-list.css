@@ -17,7 +17,6 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-
   padding: 0 20px; /* only horizontal padding */
   box-sizing: border-box;
 }

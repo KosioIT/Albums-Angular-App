@@ -35,6 +35,7 @@
         @if (authService.isAdmin()) {
           <a class="dropdown-item" routerLink="/admin/users">Manage users</a>
         }
+        <a class="dropdown-item" routerLink="/favorites">Favorite albums</a>
         <a class="dropdown-item" (click)="logout()">Sign out</a>
       }
     </div>

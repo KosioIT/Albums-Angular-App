@@ -15,6 +15,7 @@ import { usernameMinLengthValidator } from '../../../validators/auth/usernameMin
 import { multiFieldMinLengthValidator } from '../../../validators/multiFieldLength';
 import { ValidationMessageDirective } from '../../../directives/validation-message.directive';
 import { FormHelperService } from '../../../services/form-helper.service';
+import { RegisterDTO } from '../../../dto/register.dto';
 
 @Component({
     selector: 'app-register',
@@ -65,10 +66,10 @@ export class RegisterComponent implements OnInit {
   }
 
   submitRegisterForm(): void {
-    const formData = this.formHelperService.submit<{ username: string; email: string; password: string }>();
+    const formData = this.formHelperService.submit<RegisterDTO>();
 
     this.authService
-      .register(formData.username, formData.email, formData.password)
+      .register(formData)
       .subscribe({
         next: () => this.router.navigate(['/login']),
         error: (err) => alert(err.error?.message || 'Registration failed!'),

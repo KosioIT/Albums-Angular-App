@@ -22,18 +22,18 @@ export const checkResetCode = async (req, res, next) => {
 
   const user = await User.findOne({ email });
 
-  if (!user || !user.resetToken || !user.resetTokenExpiry) {
+  if (!user || !user.resetCode || !user.resetCodeExpiry) {
     return res.status(400).json({ message: 'Invalid or expired reset code' });
   }
 
-  const isExpired = user.resetTokenExpiry < Date.now();
+  const isExpired = user.resetCodeExpiry < Date.now();
   if (isExpired) {
     user.resetCodeStatus = 'expired';
     await user.save();
     return res.status(400).json({ message: 'Reset code has expired' });
   }
 
-  const isValid = await bcrypt.compare(resetCode, user.resetToken);
+  const isValid = await bcrypt.compare(resetCode, user.resetCode);
   if (!isValid) {
     user.resetCodeStatus = 'invalid';
     await user.save();

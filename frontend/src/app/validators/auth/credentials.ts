@@ -1,8 +1,11 @@
 import { AbstractControl, AsyncValidatorFn } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { map, first, of } from 'rxjs';
+import { LoginDTO } from '../../dto/login.dto';
 
-export function passwordMatchesValidator(authService: AuthService): AsyncValidatorFn {
+export function passwordMatchesValidator(
+  authService: AuthService
+): AsyncValidatorFn {
   return (control: AbstractControl) => {
     if (!control.parent) {
       return of(null); // FormGroup not yet initialized
@@ -16,8 +19,10 @@ export function passwordMatchesValidator(authService: AuthService): AsyncValidat
       return of(null);
     }
 
-    return authService.checkCredentials({ email, password }).pipe(
-      map(res => res.exists ? null : {wrongCredentials: true }),
+    const dto: LoginDTO = { email, password };
+
+    return authService.checkCredentials(dto).pipe(
+      map((res) => (res.exists ? null : { wrongCredentials: true })),
       first()
     );
   };

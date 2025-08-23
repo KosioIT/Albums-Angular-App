@@ -8,6 +8,7 @@ import { ResetPasswordComponent } from './components/auth/reset-password/reset-p
 import { ManageAlbumsComponent } from './components/admin/manage-albums/manage-albums.component';
 import { ManageUsersComponent } from './components/admin/manage-users/manage-users.component';
 import { AlbumCreateComponent } from './components/admin/album-create/album-create.component';
+import { FavoriteAlbumsComponent } from './components/favorites/favorite-albums/favorite-albums.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -19,5 +20,6 @@ export const routes: Routes = [
   { path: 'admin/albums', component: ManageAlbumsComponent },
   { path: 'admin/users', component: ManageUsersComponent },
   { path: 'admin/add-album', component: AlbumCreateComponent },
+  {path: 'favorites', component: FavoriteAlbumsComponent},
   { path: '**', redirectTo: '', pathMatch: 'full' },
 ];

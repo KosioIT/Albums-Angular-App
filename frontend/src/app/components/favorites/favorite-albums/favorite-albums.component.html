@@ -1,0 +1,26 @@
+<div class="album-wrapper">
+  <div class="album-container">
+    @if (favoriteAlbums.length > 0) { @for (album of favoriteAlbums; track
+    album) {
+    <div class="album-card">
+      <div
+        class="albumImg-wrapper"
+        [style.border-color]="albumService.getBorderColor(album.rank)"
+      >
+        <img class="albumImg" [src]="album.cover_img_url" [alt]="album.title" />
+      </div>
+      <div class="album-info">
+        <h3>{{ album.title }}</h3>
+      </div>
+      <button (click)="removeFromFavorites(album._id)">
+        Remove from favorites
+      </button>
+    </div>
+    } } @else {
+    <div class="flex-center flex-wrap flex-column fav-empty">
+      <p>You have no favorite albums yet.</p>
+      <a routerLink="/" class="loginLink">Browse albums to add some!</a>
+    </div>
+    }
+  </div>
+</div>

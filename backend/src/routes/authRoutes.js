@@ -6,7 +6,7 @@ import User from '../models/User.js';
 import { sendEmail } from '../utils/sendEmail.js';
 import { validateResetPassword, validateRegisterUser, validateResetRequest } from '../validators/authValidators.js';
 import { checkResetCode } from '../middleware/authMiddleware.js';
-import {generateToken} from "../utils/generateToken.js";
+import generateToken from "../utils/generateToken.js";
 
 const resetLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
@@ -17,6 +17,7 @@ const resetLimiter = rateLimit({
 const router = express.Router();
 
 router.post('/register', validateRegisterUser, registerUser);
+
 router.post('/login', loginUser);
 
 router.post('/check-email', async (req, res) => {
@@ -92,7 +93,8 @@ router.post('/reset-password', validateResetPassword, checkResetCode, async (req
     }
 
     user.password = newPassword;
-    user.resetToken = undefined;
+    user.resetToken = null; // Clear reset token
+    user.resetTokenExpiry = null; // Clear reset token expiry
     await user.save();
 
     const token = generateToken(user._id);

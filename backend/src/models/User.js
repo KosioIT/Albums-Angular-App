@@ -5,8 +5,9 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true, minlength: 3 },
   email: { type: String, required: true, unique: true, match: /.+\@.+\..+/ },
   password: { type: String, required: true, minlength: 8 },
-  resetToken: { type: String, default: null },
-  resetTokenExpiry: { type: Date, default: null },
+  token: { type: String, default: null },
+  resetCode: { type: String, default: null },
+  resetCodeExpiry: { type: Date, default: null },
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Album', default: [] }],
 }, { timestamps: true });
 

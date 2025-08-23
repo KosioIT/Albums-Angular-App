@@ -11,8 +11,8 @@ export class GlobalErrorHandler implements ErrorHandler {
       console.warn('Form validation failed:', error.message);
       this.toastr.error('Form validation failed: ' + error.message, 'Validation Error');
     } else {
-      console.error('Unexpected error:', error);
-      this.toastr.error('An unexpected error occurred!', 'Error');
+      console.error('Error:', error);
+      this.toastr.error('An error occurred!', 'Error');
     }
   }
 }

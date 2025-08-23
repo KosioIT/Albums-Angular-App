@@ -9,6 +9,7 @@ import { AuthService } from '../../../services/auth.service';
 import { Router, RouterModule } from '@angular/router';
 
 import { FormHelperService } from '../../../services/form-helper.service';
+import { LoginDTO } from '../../../dto/login.dto';
 
 
 @Component({
@@ -37,9 +38,9 @@ export class LoginComponent implements OnInit {
   }
 
   submitLoginForm() {
-    const formData = this.formHelperService.submit<{ email: string; password: string }>();
+    const formData = this.formHelperService.submit<LoginDTO>();
     
-    this.authService.login(formData.email, formData.password).subscribe({
+    this.authService.login(formData).subscribe({
       next: () => this.router.navigate(['/']),
       error: (err) => alert(err.error?.message || 'Login failed!'),
     });

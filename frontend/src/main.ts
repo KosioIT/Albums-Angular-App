@@ -6,8 +6,8 @@ import { routes } from './app/app.routes';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { importProvidersFrom } from '@angular/core';
-import { ToastrModule } from 'ngx-toastr';
+import { provideToastr } from 'ngx-toastr';
+import { provideAnimations } from '@angular/platform-browser/animations';
 
 const myAppConfig = {
   ...appConfig,
@@ -15,12 +15,19 @@ const myAppConfig = {
     ...(appConfig.providers ?? []),
     provideHttpClient(),
     provideRouter(routes),
-    importProvidersFrom(ToastrModule.forRoot({
+    provideAnimations(),
+    provideToastr({
       timeOut: 3000,
-      positionClass: 'toast-bottom-right',
+      positionClass: 'toast-top-center',
       closeButton: true,
       preventDuplicates: true,
-    })),
+    }),
+    // importProvidersFrom(ToastrModule.forRoot({
+    //   timeOut: 3000,
+    //   positionClass: 'toast-bottom-right',
+    //   closeButton: true,
+    //   preventDuplicates: true,
+    // })),
   ],
 };
 

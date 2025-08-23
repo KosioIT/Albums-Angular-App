@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
-import albumsRouter from './routes/albumRoutes.js';
+import albumsRoutes from './routes/albumRoutes.js';
+import favoriteRoutes from './routes/favoriteRoutes.js';
 
 const app = express();
 
@@ -13,7 +14,10 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 
 // Albums routes
-app.use('/api/albums', albumsRouter);
+app.use('/api/albums', albumsRoutes);
+
+// Favorites routes
+app.use('/api/favorites', favoriteRoutes);
 
 // Test route
 app.get('/', (_req, res) => res.send('API is running...'));

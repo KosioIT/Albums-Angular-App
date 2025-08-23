@@ -14,8 +14,10 @@
           <div class="caption-line">Release Date: {{album.release_date}}</div>
           <div class="caption-line">Genre: {{album.genre}}</div>
           <div class="caption-line">{{albumService.getProducersString(album.producers)}}</div>
+          <app-favorites-template [albumId]="album._id"></app-favorites-template>
         </div>
       </div>
+      
     }
   </div>
 </div>

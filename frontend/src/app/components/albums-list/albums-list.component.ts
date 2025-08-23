@@ -5,10 +5,11 @@ import { ToastrService } from 'ngx-toastr';
 import { Album } from '../../models/album';
 import { AlbumService } from '../../services/album.service';
 import { AuthService } from '../../services/auth.service';
+import { FavoritesTemplateComponent } from '../favorites/favorites-template/favorites-template.component';
 
 @Component({
   selector: 'app-albums-list',
-  imports: [RouterModule],
+  imports: [RouterModule, FavoritesTemplateComponent],
   templateUrl: './albums-list.component.html',
   styleUrls: ['./albums-list.component.css', '../../styles/albums-list.css'],
 })

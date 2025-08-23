@@ -23,6 +23,7 @@
     "@ng-bootstrap/ng-bootstrap": "^19.0.0-rc.0",
     "@npmcli/package-json": "^6.2.0",
     "@popperjs/core": "^2.11.8",
+    "axios": "^1.11.0",
     "bootstrap": "^5.3.7",
     "glob": "^9.3.5",
     "inquirer": "^12.9.3",

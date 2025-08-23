@@ -1,0 +1,39 @@
+.album-wrapper {
+  margin-top: 80px !important;
+}
+
+.album-container {
+  gap: 50px;
+}
+
+.fav-empty{
+  margin-top: 120px;
+}
+
+p{
+  font-size: 26px;
+  color: orange;
+}
+
+a {
+  font-size: 25px;
+  color: lime;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  background-color: darkorange;
+  font-size: 20px;
+  border-radius: 10px;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: orange;
+}

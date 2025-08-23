@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, catchError, map, Observable, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { User } from '../models/user';
+import { RegisterDTO } from '../dto/register.dto';
+import { LoginDTO } from '../dto/login.dto';
 
 @Injectable({
   providedIn: 'root',
@@ -10,7 +12,7 @@ import { User } from '../models/user';
 export class AuthService {
   private userSubject = new BehaviorSubject<User | null>(null);
   user$ = this.userSubject.asObservable();
-  private adminEmail = "admin@albums.com";
+  private adminEmail = 'admin@albums.com';
 
   constructor(private http: HttpClient) {
     this.loadUserFromStorage();
@@ -36,7 +38,18 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.userSubject.value;
+    const token = this.getToken();
+    return !!token;
+  }
+
+  getToken(): string | null {
+    return this.userSubject.value?.token ?? null;
+  }
+
+  checkIfLoggedIn(): void {
+    if (!this.isLoggedIn()) {
+      throw new Error('User is not logged in');
+    }
   }
 
   getUserId(): string {
@@ -56,33 +69,21 @@ export class AuthService {
     return false;
   }
 
-  register(
-    username: string,
-    email: string,
-    password: string
-  ): Observable<User> {
+  register(dto: RegisterDTO): Observable<User> {
     return this.http
-      .post<User>(`${environment.apiUrl}/auth/register`, {
-        username,
-        email,
-        password,
-      })
+      .post<User>(`${environment.apiUrl}/auth/register`, dto)
       .pipe(tap((user) => this.saveUser(user)));
   }
 
-  login(email: string, password: string): Observable<User> {
+  login(dto: LoginDTO): Observable<User> {
     return this.http
-      .post<User>(`${environment.apiUrl}/auth/login`, { email, password })
+      .post<User>(`${environment.apiUrl}/auth/login`, dto)
       .pipe(tap((user) => this.saveUser(user)));
   }
 
   logout(): void {
     localStorage.removeItem('user');
     this.userSubject.next(null);
-  }
-
-  getToken(): string | null {
-    return this.userSubject.value?.token ?? null;
   }
 
   checkIfEmailExists(email: string): Observable<boolean> {
@@ -107,13 +108,10 @@ export class AuthService {
       );
   }
 
-  checkCredentials(credentials: {
-    email: string;
-    password: string;
-  }): Observable<{ exists: boolean }> {
+  checkCredentials(dto: LoginDTO): Observable<{ exists: boolean }> {
     return this.http.post<{ exists: boolean }>(
       `${environment.apiUrl}/auth/check-password`,
-      credentials
+      dto
     );
   }
 

@@ -1,0 +1,14 @@
+#toggleBtn{
+    font-size: 22px;
+    width: 70px;
+    height: 70px;
+    background-size: contain;
+}
+
+.btn-add{
+    background: url('/assets/images/add-to-fv_icon.png') no-repeat center;
+}
+
+.btn-remove{
+    background: url('/assets/images/remove-from-fv_red.png') no-repeat center;
+}
