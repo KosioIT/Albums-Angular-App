@@ -21,7 +21,7 @@ export class FavoritesTemplateComponent implements OnInit {
   constructor(
     public authService: AuthService,
     private favoriteService: FavoriteService,
-    private customToastr: CustomToastrService,
+    private customToastr: CustomToastrService
   ) {}
 
   ngOnInit(): void {
@@ -49,14 +49,26 @@ export class FavoritesTemplateComponent implements OnInit {
         this.favoriteAlbums = this.favoriteAlbums.filter(
           (album) => album._id !== this.albumId
         );
-        this.customToastr.showToast('Album removed from favorites!', 'success');
+        this.customToastr.showToast(
+          'Album removed from favorites!',
+          'success',
+          '',
+          'Go to favorites',
+          '/favorites'
+        );
         this.isFav = false;
       });
     } else {
       this.favoriteService.add(this.albumId).subscribe({
         next: (album) => {
           this.favoriteAlbums.push(album);
-          this.customToastr.showToast('Album added to favorites!', 'success');
+          this.customToastr.showToast(
+            'Album added to favorites!',
+            'success',
+            '',
+            'Go to favorites',
+            '/favorites'
+          );
           this.isFav = true;
         },
         error: (err) => {

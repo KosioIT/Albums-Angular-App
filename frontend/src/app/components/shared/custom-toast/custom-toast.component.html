@@ -1,7 +1,14 @@
 <div class="toast-wrapper" [ngClass]="type">
   @if (title) {
-    <div class="toast-title">{{ title }}</div>
+  <div class="toast-title">{{ title }}</div>
   }
-  <p>{{ message }}</p>
-  <button (click)="closeToast()">X</button>
+  <div class="toast-message">{{ message }}</div>
+  <div class="buttons-container">
+    @if (actionLabel && actionUrl) {
+    <button class="toast-action" (click)="navigateToAction()">
+      {{ actionLabel }}
+    </button>
+    }
+    <button class="close-btn" (click)="closeToast()">Close</button>
+  </div>
 </div>

@@ -44,9 +44,9 @@ export class LoginComponent implements OnInit {
     
     this.authService.login(formData).subscribe({
       next: () => {
-        this.router.navigate(['/']);
         const username = this.authService.getUsername();
         this.customToastr.showToast(`Welcome, ${username}!`, 'success', 'Login successful');
+        this.router.navigate(['/']);
       },
       error: (err) => {throw err},
     });
