@@ -6,7 +6,7 @@ import { Component, Input } from '@angular/core';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './custom-toast.component.html',
-  styleUrls: ['./custom-toast.component.scss']
+  styleUrls: ['./custom-toast.component.css']
 })
 export class CustomToastComponent {
   @Input() message: string = 'Успешно!';
