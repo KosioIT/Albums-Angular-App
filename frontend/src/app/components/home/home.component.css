@@ -15,6 +15,7 @@ h2 {
   overflow-x: hidden;
   overflow-y: visible;
   position: relative;
+  align-items: center;
 }
 
 .album-container {
@@ -22,7 +23,7 @@ h2 {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 45px;
+  gap: 45px !important;
   padding: 0 20px;
   box-sizing: border-box;
 }

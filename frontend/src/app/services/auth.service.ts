@@ -61,6 +61,16 @@ export class AuthService {
     }
     return this.userSubject.value?._id;
   }
+  
+  getUsername(): string {
+    if (!this.isLoggedIn()) {
+      throw new Error('User is not logged in');
+    }
+    if (!this.userSubject.value?.username) {
+      throw new Error('Username is not available');
+    }
+    return this.userSubject.value?.username;
+  }
 
   isAdmin(): boolean {
     if (this.userSubject.value) {

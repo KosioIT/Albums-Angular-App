@@ -10,6 +10,7 @@ import { Router, RouterModule } from '@angular/router';
 
 import { FormHelperService } from '../../../services/form-helper.service';
 import { LoginDTO } from '../../../dto/login.dto';
+import { CustomToastrService } from '../../../services/custom-toastr.service';
 
 
 @Component({
@@ -25,6 +26,7 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder,
     public formHelperService: FormHelperService,
     private authService: AuthService,
+    private customToastr: CustomToastrService,
     private router: Router
   ) {
     this.loginForm = this.fb.group({
@@ -41,8 +43,12 @@ export class LoginComponent implements OnInit {
     const formData = this.formHelperService.submit<LoginDTO>();
     
     this.authService.login(formData).subscribe({
-      next: () => this.router.navigate(['/']),
-      error: (err) => alert(err.error?.message || 'Login failed!'),
+      next: () => {
+        this.router.navigate(['/']);
+        const username = this.authService.getUsername();
+        this.customToastr.showToast(`Welcome, ${username}!`, 'success', 'Login successful');
+      },
+      error: (err) => {throw err},
     });
   }
 }

@@ -1,6 +1,5 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { ToastrService } from 'ngx-toastr';
 
 import { Album } from '../../models/album';
 import { AlbumService } from '../../services/album.service';
@@ -26,18 +25,11 @@ export class AlbumsListComponent implements OnInit {
   constructor(
     public albumService: AlbumService,
     private authService: AuthService,
-    @Inject(ToastrService) private toastr: ToastrService,
     private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.isLoggedIn = this.authService.isLoggedIn();
-    if (!this.isLoggedIn) {
-      this.toastr.warning(
-        'You need to be logged in to see more albums!',
-        'Warning'
-      );
-    }
 
     this.route.queryParams.subscribe((params) => {
       this.band = params['band'] ? decodeURIComponent(params['band']) : '';

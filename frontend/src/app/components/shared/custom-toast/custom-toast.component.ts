@@ -10,7 +10,8 @@ import { Component, Input } from '@angular/core';
 })
 export class CustomToastComponent {
   @Input() message: string = 'Успешно!';
-  @Input() type: 'success' | 'error' | 'info' = 'success';
+  @Input() type: 'success' | 'error' | 'info' | 'warning' = 'success';
+  @Input() title: string = '';
 
   closeToast() {
     const el = document.querySelector('app-custom-toast');

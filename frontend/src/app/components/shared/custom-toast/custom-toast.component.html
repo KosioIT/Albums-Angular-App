@@ -1,4 +1,7 @@
 <div class="toast-wrapper" [ngClass]="type">
+  @if (title) {
+    <div class="toast-title">{{ title }}</div>
+  }
   <p>{{ message }}</p>
-  <button (click)="closeToast()">Затвори</button>
+  <button (click)="closeToast()">X</button>
 </div>

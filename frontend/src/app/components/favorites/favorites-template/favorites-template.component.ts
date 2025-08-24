@@ -1,6 +1,6 @@
-import { Component, Inject, Input, OnInit, ViewContainerRef } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ToastrModule, ToastrService } from 'ngx-toastr';
+import { ToastrModule } from 'ngx-toastr';
 import { AuthService } from '../../../services/auth.service';
 import { FavoriteService } from '../../../services/favorite.service';
 import { Album } from '../../../models/album';
@@ -22,7 +22,6 @@ export class FavoritesTemplateComponent implements OnInit {
     public authService: AuthService,
     private favoriteService: FavoriteService,
     private customToastr: CustomToastrService,
-    @Inject(ToastrService) private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
