@@ -26,22 +26,28 @@ cd Albums-Angular-App
 
 ```
 ### 2. Install the dependencies
-
+```bash
 cd frontend
 npm install
-
-cd ../backend
+```
+```bash
+cd backend
 npm install
+```
 
 ### 3. Create environment files
 
-Create a .env file in the backend/ folder
+Create a .env file in the backend/ folder with the following code: 
+```.env
 PORT=3000
 MONGO_URI=mongodb://localhost:27017/your-db-name
 JWT_SECRET=yourSecretKey
+```
 
-Create a environment.ts file in the frontend/environments folder
+Create a environment.ts file in the frontend/environments folder with the following code:
+```.env
 apiUrl: 'http://localhost:4000/api'
+```
 
 ## MongoDB Setup
 This project uses MongoDB as its database. To run it locally:
@@ -52,17 +58,23 @@ This project uses MongoDB as its database. To run it locally:
 
 To start MongoDB manually enter 'mongod' in the terminal
 
-You can use the 'mongo' command to test the connection.
+Tip: You can use the 'mongo' command to test the connection.
 
 ## Running the App
 
-### MongoDB
-mognod
+### MongoDB server
+```cmd
+mongod
+```
 
-### Backend
+### Backend server
+```
 cd backend
 npm run dev
+```
 
-### Frontend
+### Frontend server
+```
 cd frontend
 ng serve
+```
