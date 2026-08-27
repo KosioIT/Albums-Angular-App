@@ -1,4 +1,5 @@
 import { body, validationResult } from 'express-validator';
+import { albumIdArrayValidator, totalLikesValidator } from './albumsValidators';
 
 const passwordRegex =
   /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
@@ -48,27 +49,6 @@ function usernameValidator() {
     .withMessage('Username must be at least 3 characters');
 }
 
-/**
- * Array of album IDs validator
- */
-function albumIdArrayValidator(fieldName) {
-  return body(fieldName)
-    .optional()
-    .isArray()
-    .withMessage(`${fieldName} must be an array`)
-    .custom(arr => arr.every(id => typeof id === 'string'))
-    .withMessage(`${fieldName} must contain only string IDs`);
-}
-
-/**
- * totalLikes validator
- */
-function totalLikesValidator() {
-  return body('totalLikes')
-    .optional()
-    .isNumeric()
-    .withMessage('totalLikes must be a number');
-}
 
 /**
  * Registration validator
@@ -114,7 +94,7 @@ export const validateUpdateUser = [
 /**
  * Error handler
  */
-function validationResultHandler(req, res, next) {
+export function validationResultHandler(req, res, next) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });

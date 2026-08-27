@@ -1,11 +1,11 @@
 import express from 'express';
-import { getUserById, updateUser, deleteUser } from '../controllers/userController.js';
-import { validateUpdateUser } from '../validators/userValidator.js';
+import { getUser, updateUser, deleteUser } from '../controllers/userController.js';
+import { validateUpdateUser } from '../validators/authValidators.js';
 
 const router = express.Router();
 
-//Get user by ID
-router.get('/:id', getUserById);
+//Get user by value (id/username/email)
+router.get("/user/:field/:value", getUser);
 
 //Update user
 router.put('/:id', validateUpdateUser, updateUser);

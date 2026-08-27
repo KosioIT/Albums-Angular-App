@@ -1,6 +1,29 @@
 // Allowed rank values
 const VALID_RANKS = ['gold', 'silver', 'bronze', 'common'];
 
+
+/**
+ * Array of album IDs validator
+ */
+export function albumIdArrayValidator(fieldName) {
+  return body(fieldName)
+    .optional()
+    .isArray()
+    .withMessage(`${fieldName} must be an array`)
+    .custom(arr => arr.every(id => typeof id === 'string'))
+    .withMessage(`${fieldName} must contain only string IDs`);
+}
+
+/**
+ * totalLikes validator
+ */
+export function totalLikesValidator() {
+  return body('totalLikes')
+    .optional()
+    .isNumeric()
+    .withMessage('totalLikes must be a number');
+}
+
 /**
  * Validate track object
  */

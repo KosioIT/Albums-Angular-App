@@ -26,6 +26,10 @@ export class User extends BaseModel {
     this.updated_at = data.updated_at || null;
   }
 
+  getFavorites() {
+    return this.favorites;
+  }
+
   /**
    * Add album to favorites
    */
@@ -41,6 +45,7 @@ export class User extends BaseModel {
   removeFavorite(albumId) {
     this.favorites = this.favorites.filter(id => id !== albumId);
   }
+
 
   /**
    * Like album

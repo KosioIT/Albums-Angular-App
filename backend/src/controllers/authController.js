@@ -1,44 +1,10 @@
-import bcrypt from 'bcrypt';
-import { generateToken } from '../utils/generateToken.js';
-import { db } from '../config/firebase.js';
-import {getUserByEmail, getUserFromSnapshot, checkExistingEmail} from './userController.js';
-import User from '../models/User.js';
-import { sendEmail } from '../utils/sendEmail.js';
+import bcrypt from "bcrypt";
+import { generateToken } from "../utils/generateToken.js";
+import { db } from "../config/firebase.js";
+import { getUserBy } from "../utils/users.js";
+import { sendEmail } from "../utils/sendEmail.js";
 
-const USERS = db.collection('users');
-
-
-/* ----- HELPER FUNCTIONS ----- */
-
-//Get snapshot based on value type
-export async function getUserFromSnapshot(valType, value) {
-  try {
-    let snapshot;
-    switch (valType) {
-      case "email":
-        snapshot = await USERS.where('email', '==', value).get();
-      default:
-        snapshot = await USERS.where('username', '==', value).get();
-    }
-    const doc = snapshot.docs[0];
-    return new User(doc.data(), doc.id);
-  } catch (err) {
-    //console.error('Get snapshot error:', err);
-    throw new Error(err.message);
-  }
-}
-
-//Check if email exists
-export async function checkExistingEmail(email) {
-  try {
-    const snapshot = await USERS.where('email', '==', email).get();
-    return { exists: !snapshot.empty, message: snapshot.empty ? 'Email is available' : 'Email already exists' };
-  } catch (err) {
-    console.error('Check email error:', err);
-    throw new Error('Server error');
-  }
-}
-
+const USERS = db.collection("users");
 
 /* ----- AUTH FUNCTIONS ----- */
 
@@ -49,11 +15,13 @@ export async function loginUser(req, res) {
   const { email, password } = req.body;
 
   try {
-    const user = await getUserByEmail(email);
+    const user = await getUserBy("email", email);
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-      return res.status(400).json({ success: false, message: 'Wrong password! Please try again.' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Wrong password! Please try again." });
     }
 
     // Generate 7-day token
@@ -63,18 +31,20 @@ export async function loginUser(req, res) {
     user.setToken(token);
     await USERS.doc(user.id).update(user.toFirestore());
 
-    res.json({
+    return res.json({
       success: true,
       token,
       user: {
         id: user.id,
         username: user.username,
-        email: user.email
-      }
+        email: user.email,
+      },
     });
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ success: false, message: 'Could not login!' });
+    console.error("Login error:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Could not login!" });
   }
 }
 
@@ -82,7 +52,7 @@ export async function loginUser(req, res) {
 export async function requestResetCode(req, res) {
   const { email } = req.body;
   try {
-    const user = await getUserByEmail(email); // Ensure the user exists
+    const user = await getUserBy("email", email); // Ensure the user exists
     const userId = user.id;
 
     // Generate a 6-digit reset code and hash it
@@ -95,16 +65,21 @@ export async function requestResetCode(req, res) {
       resetCodeExpiry: Date.now() + 15 * 60 * 1000,
     });
 
+    //Save code to instance
+    user.setResetCode(hashedCode);
+
     await sendEmail({
       to: email,
-      subject: 'Password Reset Code',
+      subject: "Password Reset Code",
       text: `Your password reset code is: ${resetCode}. It is valid for 15 minutes.`,
     });
 
-    res.json({ success: true, message: 'Reset code sent to email!' });
+    return res.json({ success: true, message: "Reset code sent to email!" });
   } catch (err) {
-    console.error('Request reset code error:', err);
-    res.status(500).json({ success: false, message: 'Could not request reset code!' });
+    console.error("Request reset code error:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Could not request reset code!" });
   }
 }
 
@@ -112,15 +87,19 @@ export async function requestResetCode(req, res) {
 export async function checkResetCode(req, res) {
   const { email, code } = req.body;
   try {
-    const user = await getUserByEmail(email); // Ensure the user exists
+    const user = await getUserBy("email", email); // Ensure the user exists
     const isValid = await bcrypt.compare(code, user.resetCode);
     if (!isValid) {
-      return res.status(400).json({ success: false, message: 'Invalid reset code!' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid reset code!" });
     }
-    res.status(200).json({ success: true, message: 'Reset code is valid' });
+    return res
+      .status(200)
+      .json({ success: true, message: "Reset code is valid" });
   } catch (err) {
-    console.error('Check reset code error:', err);
-    res.status(500).json({ success: false, message: 'Server error!' });
+    console.error("Check reset code error:", err);
+    return res.status(500).json({ success: false, message: "Server error!" });
   }
 }
 
@@ -128,11 +107,13 @@ export async function checkResetCode(req, res) {
 export async function resetPassword(req, res) {
   const { email, code, newPassword } = req.body;
   try {
-    const user = await getUserByEmail(email);
+    const user = await getUserBy("email", email);
 
     const isValid = await bcrypt.compare(code, user.resetCode);
     if (!isValid || Date.now() > user.resetCodeExpiry) {
-      return res.status(400).json({ success: false, message: 'Invalid or expired reset code!' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid or expired reset code!" });
     }
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
@@ -143,10 +124,13 @@ export async function resetPassword(req, res) {
       resetCodeExpiry: null,
     });
 
+    //Clear the reset code from the user instance
+    user.setResetCode(null);
+
     const token = generateToken({ id: user.id });
 
-    res.status(200).json({
-      message: 'Password has been reset successfully!',
+    return res.status(200).json({
+      message: "Password has been reset successfully!",
       token,
       user: {
         id: user.id,
@@ -155,7 +139,7 @@ export async function resetPassword(req, res) {
       },
     });
   } catch (err) {
-    console.error('Reset password error:', err);
-    res.status(500).json({ success: false, message: 'Server error!' });
+    console.error("Reset password error:", err);
+    return res.status(500).json({ success: false, message: "Server error!" });
   }
 }

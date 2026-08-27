@@ -1,52 +1,15 @@
 import express from 'express';
 import { db } from '../config/firebase.js';
 import { validateAlbumCreate, validateAlbumUpdate } from '../validators/albumsValidators.js';
+import { getAllAlbums, filterAlbumsByValue } from '../controllers/albumController.js';
 
 const router = express.Router();
 
 // GET all albums
-router.get('/albums', async (_req, res) => {
-  try {
-    const snapshot = await db.collection('albums').get();
-    const albums = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.json({ success: true, data: albums });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Could not fetch albums!' });
-  }
-});
+router.get('/albums', getAllAlbums);
 
-// GET a single album by ID
-router.get('/albums/id/:id', async (req, res) => {
-  try {
-    const doc = await db.collection('albums').doc(req.params.id).get();
-
-    if (!doc.exists) {
-      return res.status(404).json({ success: false, message: 'Album not found!' });
-    }
-
-    res.json({ success: true, data: { id: doc.id, ...doc.data() } });
-  } catch (err) {
-    console.error('Error fetching album:', err);
-    res.status(500).json({ success: false, message: 'Could not fetch album!' });
-  }
-});
-
-// GET albums by artist
-router.get('/albums/artist/:artist', async (req, res) => {
-  try {
-    const snapshot = await db
-      .collection('albums')
-      .where('artist', '==', req.params.artist)
-      .get();
-
-    const albums = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.json({ success: true, data: albums });
-  } catch (err) {
-    console.error('Error fetching albums by artist:', err);
-    res.status(500).json({ success: false, message: 'No albums found from this artist!' });
-  }
-});
+//GET albums macthing certain criteria
+router.get("/:filterField/:filterVal", filterAlbumsByValue);
 
 //Create a new album
 router.post('/albums', async (req, res) => {

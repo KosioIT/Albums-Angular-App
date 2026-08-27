@@ -20,6 +20,9 @@ export class Album extends BaseModel {
     // Timestamps
     this.created_at = data.created_at || new Date().toISOString();
     this.updated_at = data.updated_at || null;
+
+    //User (id) who created the album
+    this.createdBy = data.createdBy || null;
   }
 
   /**
@@ -27,7 +30,7 @@ export class Album extends BaseModel {
    */
   addTrack(track) {
     this.tracks.push(track);
-    this.updated_at = new Date().toISOString();
+    this.setUpdateDate();
   }
 
   /**
@@ -36,19 +39,23 @@ export class Album extends BaseModel {
   removeTrack(index) {
     if (index >= 0 && index < this.tracks.length) {
       this.tracks.splice(index, 1);
-      this.updated_at = new Date().toISOString();
+      this.setUpdateDate();
     }
   }
 
-  addLike() {
+  like() {
     this.likes += 1;
-    this.updated_at = new Date().toISOString();
+    this.setUpdateDate();
   }
 
-  removeLike() {
+  unike() {
     if (this.likes > 0) {
       this.likes -= 1;
-      this.updated_at = new Date().toISOString();
+      this.setUpdateDate();
     }
+  }
+
+  setUpdateDate() {
+    this.updated_at = new Date().toISOString();
   }
 }
