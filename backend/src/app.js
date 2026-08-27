@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 import albumsRoutes from './routes/albumRoutes.js';
 import favoriteRoutes from './routes/favoriteRoutes.js';
 
@@ -10,8 +11,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Auth routes
+// Auth routes (register, login, password reset)
 app.use('/api/auth', authRoutes);
+
+// User routes (CRUD operations)
+app.use('/api/users', userRoutes);
 
 // Albums routes
 app.use('/api/albums', albumsRoutes);

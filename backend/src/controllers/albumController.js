@@ -1,84 +1,130 @@
-import Album from '../models/Album.js';
+import { db } from '../config/firebase.js';
+import { Album } from '../models/Album.js';
 
-export const getAlbums = async (req, res) => {
+const ALBUMS = db.collection('albums');
+//const USERS = db.collection('users');
+
+/**
+ * GET all albums
+ */
+export const getAlbums = async (_req, res) => {
   try {
-    const albums = await Album.find().populate('createdBy', 'username email');
-    res.json(albums);
+    const snapshot = await ALBUMS.get();
+
+    const albums = snapshot.docs.map(doc => {
+      const album = new Album(doc.data(), doc.id);
+      return album;
+    });
+
+    res.json({ success: true, data: albums });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Get albums error:', err);
+    res.status(500).json({ message: 'Server error!' });
   }
 };
 
+/**
+ * GET album by ID
+ */
 export const getAlbumById = async (req, res) => {
   try {
-    const album = await Album.findById(req.params.id).populate('createdBy', 'username email');
-    if (!album) return res.status(404).json({ message: 'Album not found' });
-    res.json(album);
+    const doc = await ALBUMS.doc(req.params.id).get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: 'Album not found!' });
+    }
+
+    const album = new Album(doc.data(), doc.id);
+
+    res.json({ success: true, data: album });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Get album error:', err);
+    res.status(500).json({ message: 'Server error!' });
   }
 };
 
+/**
+ * CREATE album
+ */
 export const createAlbum = async (req, res) => {
   try {
-    const { title, artist, year, genre, tracks, coverUrl } = req.body;
+    const { title, artist, genre, release_date, rank, producers, tracks } = req.body;
+
+    // req.user comes from protect middleware → User Class
+    const createdBy = req.user.id;
 
     const album = new Album({
       title,
       artist,
-      year,
       genre,
+      release_date,
+      rank,
+      producers,
       tracks,
-      coverUrl,
-      createdBy: req.user._id,
+      createdBy
     });
 
-    const createdAlbum = await album.save();
-    res.status(201).json(createdAlbum);
+    const docRef = await ALBUMS.add(album.toFirestore());
+
+    res.status(201).json({ success: true, id: docRef.id });
   } catch (err) {
-    res.status(400).json({ message: 'Invalid data' });
+    console.error('Create album error:', err);
+    res.status(400).json({ message: 'Invalid data!' });
   }
 };
 
-
+/**
+ * UPDATE album
+ */
 export const updateAlbum = async (req, res) => {
   try {
-    const album = await Album.findById(req.params.id);
-    if (!album) return res.status(404).json({ message: 'Album not found' });
+    const doc = await ALBUMS.doc(req.params.id).get();
 
-    if (album.createdBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized' });
+    if (!doc.exists) {
+      return res.status(404).json({ message: 'Album not found!' });
     }
 
-    const { title, artist, year, genre, tracks, coverUrl } = req.body;
+    const album = new Album(doc.data(), doc.id);
 
-    album.title = title || album.title;
-    album.artist = artist || album.artist;
-    album.year = year || album.year;
-    album.genre = genre || album.genre;
-    album.tracks = tracks || album.tracks;
-    album.coverUrl = coverUrl || album.coverUrl;
+    // Check ownership
+    if (album.createdBy !== req.user.id) {
+      return res.status(403).json({ message: 'Unauthorized!' });
+    }
 
-    const updatedAlbum = await album.save();
-    res.json(updatedAlbum);
+    album.update(req.body);
+
+    await ALBUMS.doc(album.id).update(album.toFirestore());
+
+    res.json({ success: true, message: 'Album updated successfully!', data: album });
   } catch (err) {
-    res.status(400).json({ message: 'Invalid data' });
+    console.error('Update album error:', err);
+    res.status(400).json({ message: 'Invalid data!' });
   }
 };
 
-
+/**
+ * DELETE album
+ */
 export const deleteAlbum = async (req, res) => {
   try {
-    const album = await Album.findById(req.params.id);
-    if (!album) return res.status(404).json({ message: 'Album not found' });
+    const doc = await ALBUMS.doc(req.params.id).get();
 
-    if (album.createdBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized' });
+    if (!doc.exists) {
+      return res.status(404).json({ message: 'Album not found!' });
     }
 
-    await album.remove();
-    res.json({ message: 'Album removed' });
+    const album = new Album(doc.data(), doc.id);
+
+    // Check ownership
+    if (album.createdBy !== req.user.id) {
+      return res.status(403).json({ message: 'Unauthorized!' });
+    }
+
+    await ALBUMS.doc(album.id).delete();
+
+    res.json({ success: true, message: 'Album removed successfully!' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Delete album error:', err);
+    res.status(500).json({ message: 'Server error!' });
   }
 };

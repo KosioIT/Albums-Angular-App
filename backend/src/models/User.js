@@ -1,29 +1,90 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+export class User extends BaseModel {
+  constructor(data, id = null) {
+    super(data, id);
+    this.id = id;
 
-const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true, minlength: 3 },
-  email: { type: String, required: true, unique: true, match: /.+\@.+\..+/ },
-  password: { type: String, required: true, minlength: 8 },
-  token: { type: String, default: null },
-  resetCode: { type: String, default: null },
-  resetCodeExpiry: { type: Date, default: null },
-  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Album', default: [] }],
-}, { timestamps: true });
+    // Basic fields
+    this.username = data.username;
+    this.email = data.email;
+    this.password = data.password; // hashed password
 
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
+    // Album interactions
+    this.favorites = data.favorites || [];
+    this.likedAlbums = data.likedAlbums || [];
+    this.totalLikes = data.totalLikes || 0;
 
-userSchema.methods.matchPassword = function (enteredPassword) {
-  return bcrypt.compare(enteredPassword, this.password);
-};
+    // Auth fields
+    this.token = data.token || null;
 
-userSchema.methods.matchEmail = function (enteredEmail) {
-  return this.email === enteredEmail;
-};
+    // Reset code fields
+    this.resetCode = data.resetCode || null;
+    this.resetCodeExpiry = data.resetCodeExpiry || null;
+    this.resetCodeStatus = data.resetCodeStatus || null;
 
-export default mongoose.model('User', userSchema);
+    // Timestamps
+    this.created_at = data.created_at || new Date().toISOString();
+    this.updated_at = data.updated_at || null;
+  }
+
+  /**
+   * Add album to favorites
+   */
+  addFavorite(albumId) {
+    if (!this.favorites.includes(albumId)) {
+      this.favorites.push(albumId);
+    }
+  }
+
+  /**
+   * Remove album from favorites
+   */
+  removeFavorite(albumId) {
+    this.favorites = this.favorites.filter(id => id !== albumId);
+  }
+
+  /**
+   * Like album
+   */
+  likeAlbum(albumId) {
+    if (!this.likedAlbums.includes(albumId)) {
+      this.likedAlbums.push(albumId);
+      this.totalLikes++;
+    }
+  }
+
+  /**
+   * Unlike album
+   */
+  unlikeAlbum(albumId) {
+    if (this.likedAlbums.includes(albumId)) {
+      this.likedAlbums = this.likedAlbums.filter(id => id !== albumId);
+      this.totalLikes--;
+    }
+  }
+
+  /**
+   * Set reset code
+   */
+  setResetCode(hashedCode) {
+    this.resetCode = hashedCode;
+    this.resetCodeExpiry = Date.now() + 15 * 60 * 1000; // 15 minutes
+    this.resetCodeStatus = 'sent';
+  }
+
+  /**
+   * Clear reset code
+   */
+  clearResetCode() {
+    this.resetCode = null;
+    this.resetCodeExpiry = null;
+    this.resetCodeStatus = null;
+  }
+
+  /**
+   * Set JWT token
+   */
+  setToken(token) {
+    this.token = token;
+  }
+
+}

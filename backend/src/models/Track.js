@@ -1,9 +1,8 @@
-import mongoose, { Schema } from 'mongoose';
-
-export const trackSchema = new Schema({
-  title: { type: String, required: true },
-  duration: { type: String, required: true },
-  composer: { type: [String], required: true }
-});
-
-export const Track = mongoose.model('Track', trackSchema);
+export class Track extends BaseModel {
+  constructor(data, id = null) {
+    super(data, id);
+    this.title = data.title;
+    this.duration = data.duration;
+    this.composer = data.composer || [];
+  }
+}
