@@ -1,4 +1,4 @@
-import { checkExistingAlbum } from './albums.js';
+import { checkExistingAlbum } from './albumUtils.js';
 
 export async function validateFavoriteOperation(user, albumId, operation) {
   // 1) Check if the album exists (in the database)

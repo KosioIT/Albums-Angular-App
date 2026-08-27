@@ -1,6 +1,6 @@
 import { db } from "../config/firebase.js";
 import { Album } from "../models/Album.js";
-import { getAlbumBy, getFilteredAlbums } from "../utils/albums.js";
+import { getAlbumBy, getFilteredAlbums } from "../utils/albumUtils.js";
 
 const ALBUMS = db.collection("albums");
 

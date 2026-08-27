@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt";
 import { generateToken } from "../utils/generateToken.js";
 import { db } from "../config/firebase.js";
-import { getUserBy } from "../utils/users.js";
-import { sendEmail } from "../utils/sendEmail.js";
+import { getUserBy } from "../utils/userUtils.js";
+import { sendEmail } from "../utils/email/sendCodeViaEmail.js";
 
 const USERS = db.collection("users");
 
@@ -10,7 +10,6 @@ const USERS = db.collection("users");
 
 //Register logic same as createUser in userController.js, but with password hashing
 
-//Login user
 export async function loginUser(req, res) {
   const { email, password } = req.body;
 
@@ -48,7 +47,6 @@ export async function loginUser(req, res) {
   }
 }
 
-//Request reset code
 export async function requestResetCode(req, res) {
   const { email } = req.body;
   try {
@@ -83,7 +81,6 @@ export async function requestResetCode(req, res) {
   }
 }
 
-//Check reset code
 export async function checkResetCode(req, res) {
   const { email, code } = req.body;
   try {
@@ -103,7 +100,6 @@ export async function checkResetCode(req, res) {
   }
 }
 
-//Reset password
 export async function resetPassword(req, res) {
   const { email, code, newPassword } = req.body;
   try {

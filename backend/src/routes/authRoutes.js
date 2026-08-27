@@ -6,7 +6,7 @@ import {
   validateResetPassword
 } from '../validators/authValidators.js';
 import {loginUser,  requestResetCode, checkResetCode, resetPassword} from '../controllers/authController.js';
-import { createUser } from '../controllers/userController.js';
+import { registerUser } from '../controllers/userController.js';
 
 const router = express.Router();
 
@@ -18,7 +18,7 @@ const resetLimiter = rateLimit({
 });
 
 //Register (Create) user
-router.post('/register', validateRegisterUser, createUser);
+router.post('/register', validateRegisterUser, registerUser);
 
 //Login user
 router.post('/login', loginUser);
@@ -31,5 +31,7 @@ router.post('/check-reset-code', checkResetCode);
 
 //Reset password
 router.post('/reset-password', validateResetPassword, resetPassword);
+
+router.post("");
 
 export default router;

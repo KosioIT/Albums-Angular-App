@@ -7,9 +7,10 @@ import {
 } from "../validators/userValidator.js";
 import User from "../models/User.js";
 import { Album } from "../models/Album.js";
-import { validateFavoriteOperation } from "../utils/favorites.js";
-import { getUserBy } from "../utils/users.js";
-import { getAlbumBy } from "../utils/albums.js";
+import { validateFavoriteOperation } from "../utils/favoritesUtils.js";
+import { getUserBy } from "../utils/userUtils.js";
+import { getAlbumBy } from "../utils/albumUtils.js";
+import { sendWelcomeEmail } from "../../utils/email/sendWelcomeEmail.js";
 
 const USERS = db.collection("users");
 const ALBUMS = db.collection("albums");
@@ -21,11 +22,11 @@ export async function getUser(req, res) {
   try {
     const { field, value } = req.params;
 
-    if (!field || !value){
-        return res.status(400).json({
-            success: false,
-            message: "Invalid query params!"
-        });
+    if (!field || !value) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid query params!"
+      });
     }
 
     // Unified lookup
@@ -79,11 +80,15 @@ export async function registerUser(req, res) {
 
     const docRef = await USERS.add(user.toFirestore());
 
+    // Send welcome email
+    await sendWelcomeEmail(email, username);
+
     return res.json({
       success: true,
       id: docRef.id,
       message: `User ${username} created successfully!`,
     });
+
   } catch (err) {
     console.error("Register error:", err);
     return res
@@ -119,6 +124,7 @@ export async function updateUser(req, res) {
     await docRef.update(updateData);
 
     return res.json({ success: true, message: "User updated successfully!" });
+
   } catch (err) {
     console.error("Update user error:", err);
     return res.status(500).json({ success: false, message: "Could not update user!" });
@@ -139,6 +145,7 @@ export async function deleteUser(req, res) {
     await docRef.delete();
 
     res.json({ success: true, message: "User deleted successfully!" });
+
   } catch (err) {
     console.error("Delete user error:", err);
     res.status(500).json({ success: false, message: "Could not delete user!" });
@@ -164,6 +171,7 @@ export async function getFavoriteAlbums(req, res) {
       .map((doc) => new Album(doc.data(), doc.id));
 
     return res.json({ success: true, data: albums });
+
   } catch (err) {
     console.error("Get favorite albums error:", err);
     return res
@@ -194,6 +202,7 @@ export async function addAlbumToFavorites(req, res) {
       message: "Album added to favorites!",
       favorites: user.favorites,
     });
+
   } catch (err) {
     console.error("Add favorite album error:", err);
     return res
@@ -220,6 +229,7 @@ export async function removeFromFavorites(req, res) {
     await USERS.doc(user.id).update({ favorites: user.favorites });
 
     return res.json({ success: true, message: "Album removed from favorites!" });
+
   } catch (err) {
     console.error("Remove favorite album error:", err);
     return res
@@ -228,6 +238,7 @@ export async function removeFromFavorites(req, res) {
   }
 }
 
+// Add/remove like
 export async function toggleLike(req, res) {
   try {
     const user = req.user;
@@ -270,6 +281,7 @@ export async function toggleLike(req, res) {
         message: "Album liked!",
         likes: album.likes + 1,
       });
+
     } else {
       // -------------------------
       // UNLIKE logic

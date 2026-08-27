@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Welcome to Album App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="./welcome.css">
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="container">
+        <div class="header">
+          <div class="logo">ALBUM APP</div>
+          <div class="title">Welcome on board 🎧</div>
+          <div class="subtitle">
+            Your new place for albums, artists and favorites.
+          </div>
+        </div>
+
+        <div class="content">
+          <p class="greeting">Hey, {{username}} ! 👋</p>
+          <p class="text">
+            Thanks for signing up for <strong>Album App</strong>!
+          </p>
+
+          <div class="button-wrapper">
+            <a href="{{appUrl}}" class="button">Open Album App</a>
+          </div>
+
+          <p class="text">
+            If you didn’t create this account, you can safely ignore this email.
+          </p>
+        </div>
+
+        <div class="footer">
+          Sent with care by Album App · {{year}}<br />
+          If this wasn’t you, please
+          <a href="{{supportUrl}}">contact support</a>.
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
