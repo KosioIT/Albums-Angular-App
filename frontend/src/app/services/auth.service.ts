@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, catchError, map, Observable, of, tap } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { BehaviorSubject, map, Observable, tap } from 'rxjs';
+import { api } from '../core/api';
+import { apiRequest } from '../core/api-request';
 import { User } from '../models/user';
-import { RegisterDTO } from '../dto/register.dto';
 import { LoginDTO } from '../dto/login.dto';
+import { RegisterDTO } from '../dto/register.dto';
+import { ApiResponse, ApiSuccessResponse } from '../core/api-repsonse';
 
 @Injectable({
   providedIn: 'root',
@@ -12,141 +13,124 @@ import { LoginDTO } from '../dto/login.dto';
 export class AuthService {
   private userSubject = new BehaviorSubject<User | null>(null);
   user$ = this.userSubject.asObservable();
-  private adminEmail = 'admin@albums.com';
 
-  constructor(private http: HttpClient) {
+  constructor() {
+    this.initialize();
+  }
+
+  // ===== Initialization Methods =====
+
+  initialize(): void {
     this.loadUserFromStorage();
   }
 
-  private loadUserFromStorage(): void {
+  loadUserFromStorage() {
     const json = localStorage.getItem('user');
     if (json) {
       try {
-        const user: User = JSON.parse(json);
-        this.userSubject.next(user);
+        this.userSubject.next(JSON.parse(json));
       } catch {
-        // Remove invalid JSON
         localStorage.removeItem('user');
-        this.userSubject.next(null);
       }
     }
   }
 
-  private saveUser(user: User): void {
+  // ===== User Management Methods =====
+
+  saveUser(user: User) {
     localStorage.setItem('user', JSON.stringify(user));
     this.userSubject.next(user);
   }
 
   isLoggedIn(): boolean {
-    const token = this.getToken();
-    return !!token;
-  }
-
-  getToken(): string | null {
-    return this.userSubject.value?.token ?? null;
-  }
-
-  checkIfLoggedIn(): void {
-    if (!this.isLoggedIn()) {
-      throw new Error('User is not logged in');
-    }
-  }
-
-  getUserId(): string {
-    if (!this.isLoggedIn()) {
-      throw new Error('User is not logged in');
-    }
-    if (!this.userSubject.value?._id) {
-      throw new Error('User ID is not available');
-    }
-    return this.userSubject.value?._id;
-  }
-  
-  getUsername(): string {
-    if (!this.isLoggedIn()) {
-      throw new Error('User is not logged in');
-    }
-    if (!this.userSubject.value?.username) {
-      throw new Error('Username is not available');
-    }
-    return this.userSubject.value?.username;
+    return !!this.currentUser?.token;
   }
 
   isAdmin(): boolean {
-    if (this.userSubject.value) {
-      return this.userSubject.value.email === this.adminEmail;
-    }
-    return false;
+    return this.currentUser?.role === 'admin';
   }
 
-  register(dto: RegisterDTO): Observable<User> {
-    return this.http
-      .post<User>(`${environment.apiUrl}/auth/register`, dto)
-      .pipe(tap((user) => this.saveUser(user)));
-  }
+  // ===== Authentication Methods =====
 
   login(dto: LoginDTO): Observable<User> {
-    return this.http
-      .post<User>(`${environment.apiUrl}/auth/login`, dto)
-      .pipe(tap((user) => this.saveUser(user)));
-  }
-
-  logout(): void {
-    localStorage.removeItem('user');
-    this.userSubject.next(null);
-  }
-
-  checkIfEmailExists(email: string): Observable<boolean> {
-    return this.http
-      .post<{ exists: boolean }>(`${environment.apiUrl}/auth/check-email`, {
-        email,
-      })
-      .pipe(
-        map((response) => response.exists),
-        catchError(() => of(false)) // Return false on error (not existing email)
-      );
-  }
-
-  checkIfUsernameExists(username: any): Observable<boolean> {
-    return this.http
-      .post<{ exists: boolean }>(`${environment.apiUrl}/auth/check-username`, {
-        username,
-      })
-      .pipe(
-        map((response) => response.exists),
-        catchError(() => of(false)) // Return false on error (not existing username)
-      );
-  }
-
-  checkCredentials(dto: LoginDTO): Observable<{ exists: boolean }> {
-    return this.http.post<{ exists: boolean }>(
-      `${environment.apiUrl}/auth/check-password`,
-      dto
+    return apiRequest<User>(api.post('/auth/login', dto)).pipe(
+      tap((user) => this.saveUser(user)),
     );
   }
 
-  sendResetCodeViaEmail(email: string): Observable<Object> {
-    return this.http.post(`${environment.apiUrl}/auth/request-reset`, {
-      email,
-    });
+  register(dto: RegisterDTO): Observable<User> {
+    return apiRequest<User>(api.post('/auth/register', dto)).pipe(
+      tap((user) => this.saveUser(user)),
+    );
   }
 
-  checkResetCode(email: string, code: string): Observable<{ valid: boolean }> {
-    return this.http.post<{ valid: boolean }>(
-      `${environment.apiUrl}/auth/check-reset-code`,
-      { email, code }
+  logout(): Observable<void> {
+    this.userSubject.next(null);
+    localStorage.removeItem('user');
+
+    return apiRequest<void>(api.post('/auth/logout'));
+  }
+
+  checkExistingEmail(email: string): Observable<boolean> {
+    return apiRequest<boolean>(api.get(`/users/email/${email}`)).pipe(
+      map((user) => !!user),
+    );
+  }
+
+  checkExistingUsername(username: string): Observable<boolean> {
+    return apiRequest<boolean>(api.get(`/users/username/${username}`)).pipe(
+      map((user) => !!user),
+    );
+  }
+
+  checkCredentials(dto: LoginDTO): Observable<boolean> {
+    return apiRequest<boolean>(api.post('/auth/check-password', dto));
+  }
+
+  sendResetCodeViaEmail(email: string): Observable<void> {
+    return apiRequest<void>(api.post('/auth/request-reset', { email }));
+  }
+
+  checkResetCode(
+    email: string,
+    code: string,
+  ): Observable<{ isValid: boolean }> {
+    return apiRequest<{ isValid: boolean }>(
+      api.post('/auth/check-reset-code', { email, code }),
     );
   }
 
   resetPassword(
     email: string,
-    resetToken: string,
-    newPassword: string
-  ): Observable<Object> {
-    return this.http.post(`${environment.apiUrl}/auth/reset-password`, {
-      email,
-      resetToken,
-      newPassword,
-    });
+    resetCode: string,
+    newPassword: string,
+  ): Observable<void> {
+    return apiRequest<void>(
+      api.post('/auth/reset-password', {
+        email,
+        resetCode,
+        newPassword,
+      }),
+    );
+  }
+
+  // ===== Getters =====
+
+  get currentUser(): User | null {
+    return this.userSubject.value;
+  }
+
+  get userId(): string {
+    if (!this.currentUser?._id) {
+      throw new Error('User ID not available');
+    }
+    return this.currentUser._id;
+  }
+
+  get username(): string {
+    if (!this.currentUser?.username) {
+      throw new Error('Username not available');
+    }
+    return this.currentUser.username;
   }
 }

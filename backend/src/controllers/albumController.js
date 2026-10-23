@@ -1,6 +1,7 @@
-import { db } from "../config/firebase.js";
+import { db } from "../config/firebase/firebase.js";
 import { Album } from "../models/Album.js";
-import { getAlbumBy, getFilteredAlbums } from "../utils/albumUtils.js";
+import { loadOwnedAlbumOrThrow, handleAlbumErrors } from "../utils/albumUtils.js";
+import { findAlbums } from "../services/albumService.js";
 
 const ALBUMS = db.collection("albums");
 
@@ -20,73 +21,56 @@ export const getAllAlbums = async (_req, res) => {
   }
 };
 
-export const getAlbumById = async (req, res) => {
+export const filterAlbums = async (req, res) => {
   try {
-    const album = await getAlbumBy("id", req.params.id);
-    if (!album)
-      return res
-        .status(404)
-        .json({ success: false, message: "Album not found" });
+    const { filterField, filterVal } = getFilterParams(req);
 
-    return res.json({ success: true, data: album });
-  } catch (err) {
-    console.error("Get album error:", err);
-    return res.status(500).json({ success: false, message: "Server error!" });
-  }
-};
+    const result = await findAlbums(filterField, filterVal);
 
-// Get (filter) albums by certain criteria
-export const filterAlbumsByValue = async (req, res) => {
-  try {
-    const filterField = req.params.filterField; // title, artist, genre, year, duration...
-    const filterVal = req.params.filterVal;
-
-    if (!filterField || !filterVal) {
-      return res.status(400).json({});
-    }
-
-    const albums = await getFilteredAlbums(filterField, filterVal);
-
-    if (albums.length === 0) {
+    if (!result || (Array.isArray(result) && result.length === 0)) {
       return res.status(404).json({
         success: false,
-        message: "No albums found!",
+        message: "No albums found!"
       });
     }
 
     return res.json({
       success: true,
-      count: albums.length,
-      data: albums,
+      data: result,
+      count: Array.isArray(result) ? result.length : 1
     });
+
   } catch (err) {
-    console.error("Filter albums error:", err);
-    return res.status(500).json({ success: false, message: "Server error!" });
+    console.error("Filter error:", err);
+    return res.status(400).json({
+      success: false,
+      message: err.message
+    });
   }
 };
 
 export const createAlbum = async (req, res) => {
   try {
-    const { title, artist, genre, release_date, rank, producers, tracks } =
-      req.body;
+    const album = new Album(req.body);
 
-    // req.user comes from protect middleware → User Class
-    const createdBy = req.user.id;
+    const existing = await findAlbums("title", album.title);
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: "Album with this title already exists!"
+      });
+    }
+    // Add creator
+    album.createdBy = req.user.id;
 
-    const album = new Album({
-      title,
-      artist,
-      genre,
-      release_date,
-      rank,
-      producers,
-      tracks,
-      createdBy,
+    // Save using slug ID
+    await ALBUMS.doc(album.id).set(album.toFirestore());
+
+    return res.status(201).json({
+      success: true,
+      id: album.id
     });
 
-    const docRef = await ALBUMS.add(album.toFirestore());
-
-    return res.status(201).json({ success: true, id: docRef.id });
   } catch (err) {
     console.error("Create album error:", err);
     return res.status(400).json({ success: false, message: "Invalid data!" });
@@ -95,20 +79,7 @@ export const createAlbum = async (req, res) => {
 
 export const updateAlbum = async (req, res) => {
   try {
-    const doc = await ALBUMS.doc(req.params.id).get();
-
-    if (!doc.exists) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Album not found!" });
-    }
-
-    const album = new Album(doc.data(), doc.id);
-
-    // Check ownership
-    if (!album.createdBy || album.createdBy !== req.user.id) {
-      return res.status(403).json({ success: false, message: "Unauthorized!" });
-    }
+    const album = await loadOwnedAlbumOrThrow(req.user, req.params.id);
 
     album.update(req.body);
 
@@ -127,26 +98,59 @@ export const updateAlbum = async (req, res) => {
 
 export const deleteAlbum = async (req, res) => {
   try {
-    const doc = await ALBUMS.doc(req.params.id).get();
-
-    if (!doc.exists) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Album not found!" });
-    }
-
-    const album = new Album(doc.data(), doc.id);
-
-    // Check ownership
-    if (!album.createdBy || album.createdBy !== req.user.id) {
-      return res.status(403).json({ success: false, message: "Unauthorized!" });
-    }
-
+    console.debug("[deleteAlbum] User role = ", req.user.role);
+    const album = await loadOwnedAlbumOrThrow(req.user, req.params.id);
     await ALBUMS.doc(album.id).delete();
 
     return res.json({ success: true, message: "Album removed successfully!" });
   } catch (err) {
     console.error("Delete album error:", err);
-    return res.status(500).json({ success: false, message: "Server error!" });
+    return handleAlbumErrors(err, res);
   }
+};
+
+// Download album file (zip) from MEGA
+export const downloadAlbum = async (req, res) => {
+  try {
+    const slug = req.params.slug;
+
+    const doc = await ALBUMS.doc(slug).get();
+
+    if (!doc.exists) {
+      return res.status(404).json({
+        success: false,
+        message: "Album not found!"
+      });
+    }
+
+    const album = doc.data();
+
+    if (!album.megaUrl) {
+      return res.status(404).json({
+        success: false,
+        message: "Mega download link not available!"
+      });
+    }
+
+    // Redirect to Mega file
+    return res.redirect(album.megaUrl);
+
+  } catch (err) {
+    console.error("Download error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error!"
+    });
+  }
+};
+
+// Helper function to get filter parameters
+export const getFilterParams = (req) => {
+  const { filterField, filterVal } = req.params;
+
+  if (!filterField || !filterVal) {
+    throw new Error("Filter field and value are required!");
+  }
+
+  return { filterField, filterVal };
 };

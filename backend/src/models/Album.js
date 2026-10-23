@@ -1,8 +1,13 @@
+import { BaseModel } from './BaseModel.js'; 
+import  { makeSlug } from '../utils/slugify.js';
+
 export class Album extends BaseModel {
   constructor(data, id = null) {
-    super(data, id);
-    this.id = id;
+    const finalId = id || makeSlug(data.title);
+    super(data, finalId);
 
+    this.id = finalId;
+    
     // Basic fields
     this.title = data.title;
     this.artist = data.artist;
@@ -12,6 +17,7 @@ export class Album extends BaseModel {
     // Optional fields
     this.rank = data.rank || 'common';
     this.likes = data.likes || 0;
+    this.moods = data.moods || []; 
     this.producers = data.producers || [];
 
     // Tracks
@@ -23,6 +29,9 @@ export class Album extends BaseModel {
 
     //User (id) who created the album
     this.createdBy = data.createdBy || null;
+
+    // MEGA Download URL
+    this.megaUrl = data.megaUrl || null;
   }
 
   /**

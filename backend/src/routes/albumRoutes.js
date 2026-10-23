@@ -1,79 +1,20 @@
 import express from 'express';
-import { db } from '../config/firebase.js';
 import { validateAlbumCreate, validateAlbumUpdate } from '../validators/albumsValidators.js';
-import { getAllAlbums, filterAlbumsByValue } from '../controllers/albumController.js';
+import {protect, admin } from '../middleware/authMiddleware.js';
+import { getAllAlbums, filterAlbums, createAlbum, updateAlbum, deleteAlbum, downloadAlbum } from '../controllers/albumController.js';
 
 const router = express.Router();
 
-// GET all albums
-router.get('/albums', getAllAlbums);
+/* ======== All users routes ======== */
+router.get('/', getAllAlbums);
+router.get("/:filterField/:filterVal", filterAlbums);
 
-//GET albums macthing certain criteria
-router.get("/:filterField/:filterVal", filterAlbumsByValue);
+/* ======== Registered only users routes ======== */
+router.get("/:id/download", protect, downloadAlbum);
 
-//Create a new album
-router.post('/albums', async (req, res) => {
-  try {
-    const album = req.body;
-    const error = validateAlbumCreate(req.body);
-    if (error) {
-      return res.status(400).json({ success: false, message: error });
-    }
-    const docRef = await db.collection('albums').add({
-      ...album,
-      created_at: new Date().toISOString()
-    });
-
-    res.json({ success: true, id: docRef.id });
-  } catch (err) {
-    console.error('Error creating album:', err);
-    res.status(500).json({ success: false, message: 'Could not create album!' });
-  }
-});
-
-//Update an existing album
-router.put('/albums/:id', async (req, res) => {
-  try {
-    const error = validateAlbumUpdate(req.body);
-    if (error) {
-      return res.status(400).json({ success: false, message: error });
-    }
-
-    const docRef = db.collection('albums').doc(req.params.id);
-    const doc = await docRef.get();
-
-    if (!doc.exists) {
-      return res.status(404).json({ success: false, message: 'Album not found!' });
-    }
-
-    await docRef.update({
-      ...req.body,
-      updated_at: new Date().toISOString()
-    });
-
-    res.json({ success: true, message: 'Album updated successfully!' });
-  } catch (err) {
-    console.error('Error updating album:', err);
-    res.status(500).json({ success: false, message: 'Could not update album!' });
-  }
-});
-
-//Delete an album
-router.delete('/albums/:id', async (req, res) => {
-  try {
-    const docRef = db.collection('albums').doc(req.params.id);
-    const doc = await docRef.get();
-
-    if (!doc.exists) {
-      return res.status(404).json({ success: false, message: 'Album not found!' });
-    }
-
-    await docRef.delete();
-    res.json({ success: true, message: 'Album deleted successfully!' });
-  } catch (err) {
-    console.error('Error deleting album:', err);
-    res.status(500).json({ success: false, message: 'Could not delete album!' });
-  }
-});
+/* ======== Admin routes ======== */
+router.post("/", protect, admin, validateAlbumCreate, createAlbum);
+router.put("/:id", protect, admin, validateAlbumUpdate, updateAlbum);
+router.delete("/:id", protect, admin, deleteAlbum);
 
 export default router;

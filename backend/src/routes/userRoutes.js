@@ -1,16 +1,15 @@
 import express from 'express';
-import { getUser, updateUser, deleteUser } from '../controllers/userController.js';
-import { validateUpdateUser } from '../validators/authValidators.js';
+import { getUser, deleteUser, getAllUsers } from '../controllers/userController.js';
 
 const router = express.Router();
 
-//Get user by value (id/username/email)
-router.get("/user/:field/:value", getUser);
+//Get all users
+router.get("/", getAllUsers);
 
-//Update user
-router.put('/:id', validateUpdateUser, updateUser);
+//Get user by value (username/email)
+router.get("/:field/:value", getUser);
 
-//Delete user
-router.delete('/:id', deleteUser);
+//Delete user (by email)
+router.delete("/", deleteUser);
 
 export default router;

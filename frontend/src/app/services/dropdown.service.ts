@@ -1,74 +1,82 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Injectable, NgZone, OnDestroy } from '@angular/core';
+import { BehaviorSubject, fromEvent, Subscription } from 'rxjs';
+import { debounceTime, map, startWith } from 'rxjs/operators';
 
-@Injectable({
-  providedIn: 'root',
-})
-export class DropdownService {
+@Injectable({ providedIn: 'root' })
+export class DropdownService implements OnDestroy {
   private dropdownStates = new Map<string, BehaviorSubject<boolean>>();
-  private _isMobile = window.innerWidth <= 768;
-  private mobileListenersAdded = false;
+  private resizeSub!: Subscription;
 
-  constructor() {
+  // Reactive mobile state
+  private isMobileSubject = new BehaviorSubject<boolean>(
+    window.innerWidth <= 768,
+  );
+  isMobile$ = this.isMobileSubject.asObservable();
+
+  constructor(private ngZone: NgZone) {
     this.setupResizeListener();
   }
 
-  private setupResizeListener() {
-    if (!this.mobileListenersAdded) {
-      window.addEventListener('resize', () => {
-        this._isMobile = window.innerWidth <= 768;
-      });
-      this.mobileListenersAdded = true;
-    }
+  private setupResizeListener(): void {
+    this.ngZone.runOutsideAngular(() => {
+      this.resizeSub = fromEvent(window, 'resize')
+        .pipe(
+          debounceTime(150),
+          map(() => window.innerWidth <= 768),
+          startWith(window.innerWidth <= 768),
+        )
+        .subscribe((isMobile) => {
+          this.ngZone.run(() => this.isMobileSubject.next(isMobile));
+        });
+    });
   }
 
-  isMobile() {
-    return this._isMobile;
+  isMobile(): boolean {
+    return this.isMobileSubject.value;
   }
 
-  initDropdown(key: string) {
+  private ensureDropdown(key: string): BehaviorSubject<boolean> {
     if (!this.dropdownStates.has(key)) {
       this.dropdownStates.set(key, new BehaviorSubject(false));
     }
+    return this.dropdownStates.get(key)!;
   }
 
   getState(key: string) {
-    this.initDropdown(key);
-    return this.dropdownStates.get(key)!.asObservable();
+    return this.ensureDropdown(key).asObservable();
   }
 
   toggle(key: string) {
-    this.initDropdown(key);
-    const current = this.dropdownStates.get(key)!.value;
-    this.dropdownStates.get(key)!.next(!current);
+    const state = this.ensureDropdown(key);
+    state.next(!state.value);
   }
 
   open(key: string) {
-    this.initDropdown(key);
-    this.dropdownStates.get(key)!.next(true);
+    this.ensureDropdown(key).next(true);
   }
 
   close(key: string) {
-    this.initDropdown(key);
-    this.dropdownStates.get(key)!.next(false);
+    this.ensureDropdown(key).next(false);
   }
 
-  // Логика за hover / click:
+  closeAll() {
+    this.dropdownStates.forEach((state) => state.next(false));
+  }
+
+  // Hover / click logic
   onMouseEnter(key: string) {
-    if (!this.isMobile()) {
-      this.open(key);
-    }
+    if (!this.isMobile()) this.open(key);
   }
 
   onMouseLeave(key: string) {
-    if (!this.isMobile()) {
-      this.close(key);
-    }
+    if (!this.isMobile()) this.close(key);
   }
 
   onClick(key: string) {
-    if (this.isMobile()) {
-      this.toggle(key);
-    }
+    if (this.isMobile()) this.toggle(key);
+  }
+
+  ngOnDestroy(): void {
+    this.resizeSub?.unsubscribe();
   }
 }

@@ -1,44 +1,58 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { User } from '../../../models/user';
 import { AuthService } from '../../../services/auth.service';
-import { Router } from '@angular/router';
 import { DropdownService } from '../../../services/dropdown.service';
+import { filter } from 'rxjs/operators';
+
+const key = "loginStatus";
 
 @Component({
-    selector: 'app-login-status',
-    imports: [CommonModule, RouterModule, NgbDropdownModule],
-    templateUrl: './login-status.component.html',
-    styleUrls: ['./login-status.component.css', "../../navbar/navbar.component.css"]
+  selector: 'app-login-status',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './login-status.component.html',
+  styleUrls: [
+    './login-status.component.css',
+    '../../navbar/navbar.component.css',
+  ],
 })
-export class LoginStatusComponent {
+export class LoginStatusComponent implements OnDestroy {
   user: User | null = null;
-  dropdownOpen$ = this.dropdownService.getState('loginStatus');
+  dropdownOpen$ = this.dropdownService.getState(key);
+
+  private routerSub = this.router.events
+    .pipe(filter((e) => e instanceof NavigationEnd))
+    .subscribe(() => this.dropdownService.close(key));
 
   constructor(
     public authService: AuthService,
     private router: Router,
-    private dropdownService: DropdownService
+    private dropdownService: DropdownService,
   ) {
-    this.authService.user$.subscribe(user => this.user = user);
+    this.authService.user$.subscribe((user) => (this.user = user));
   }
 
   onMouseEnter() {
-    this.dropdownService.onMouseEnter('loginStatus');
+    this.dropdownService.onMouseEnter(key);
   }
 
   onMouseLeave() {
-    this.dropdownService.onMouseLeave('loginStatus');
+    this.dropdownService.onMouseLeave(key);
   }
 
   onClick() {
-    this.dropdownService.onClick('loginStatus');
+    this.dropdownService.onClick(key);
   }
 
   logout() {
+    this.dropdownService.closeAll();
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  ngOnDestroy() {
+    this.routerSub.unsubscribe();
   }
 }

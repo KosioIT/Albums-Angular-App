@@ -1,37 +1,42 @@
 import { Component, OnInit } from '@angular/core';
-import { DropdownService } from '../../services/dropdown.service';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { CommonModule } from '@angular/common';
+import { Router, NavigationEnd, RouterModule } from '@angular/router';
+import { DropdownService } from '../../services/dropdown.service';
 import { LoginStatusComponent } from '../auth/login-status/login-status.component';
-import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { AlbumService } from '../../services/album.service';
+import { filter } from 'rxjs/operators';
 
 @Component({
-    selector: 'app-navbar',
-    templateUrl: './navbar.component.html',
-    styleUrls: ['./navbar.component.css'],
-    imports: [NgbModule, CommonModule, RouterModule, LoginStatusComponent]
+  selector: 'app-navbar',
+  standalone: true,
+  imports: [CommonModule, RouterModule, LoginStatusComponent],
+  templateUrl: './navbar.component.html',
+  styleUrls: ['./navbar.component.css'],
 })
 export class NavbarComponent implements OnInit {
   isNavbarCollapsed = true;
   isInHomePage = true;
 
+  rockOpen$ = this.dropdownService.getState('rock');
+  metalOpen$ = this.dropdownService.getState('metal');
+
   constructor(
     public dropdownService: DropdownService,
     public albumService: AlbumService,
-    private router: Router
-  ) {
-    //check if the user is on the home page
-    this.router.events.subscribe((event) => { 
-      if (event instanceof NavigationEnd) {
-        this.isInHomePage = event.url === '/';
-        console.log("isInHomePage:", this.isInHomePage);
-      }
-    });
-  }
+    private router: Router,
+  ) {}
 
   ngOnInit() {
-    
+    this.router.events
+      .pipe(filter((e) => e instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        this.isInHomePage = event.url === '/';
+        this.dropdownService.closeAll();
+      });
+  }
+
+  toggleNavbar() {
+    this.isNavbarCollapsed = !this.isNavbarCollapsed;
   }
 
   onMouseEnter(key: string) {

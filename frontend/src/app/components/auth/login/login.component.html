@@ -2,8 +2,10 @@
   <div class="card shadow-sm form-container">
     <div class="card-body">
       <h5 class="card-title mb-4 text-center">Sign in</h5>
+
       <form [formGroup]="loginForm" (ngSubmit)="submitLoginForm()">
-        <div class="form-group">
+        <!-- Email -->
+        <div class="form-group mb-3">
           <label>Email:</label>
           <input
             type="email"
@@ -11,9 +13,15 @@
             class="form-control"
             (blur)="formHelperService.onBlur('email')"
           />
+
+          <div
+            class="validation-error text-danger mt-1"
+            appValidationMessage="email"
+          ></div>
         </div>
 
-        <div class="form-group">
+        <!-- Password -->
+        <div class="form-group mb-3">
           <label>Password:</label>
           <input
             type="password"
@@ -21,11 +29,18 @@
             class="form-control"
             (blur)="formHelperService.onBlur('password')"
           />
-          <div id="forgottenPsw" class="d-flex justify-content-end">
+
+          <div
+            class="validation-error text-danger mt-1"
+            appValidationMessage="password"
+          ></div>
+
+          <div id="forgottenPsw" class="d-flex justify-content-end mt-1">
             <a routerLink="/forgot-password">Forgotten password?</a>
           </div>
         </div>
 
+        <!-- Submit -->
         <div class="text-center mt-3">
           <button
             class="btn btn-primary"
@@ -35,6 +50,8 @@
             Sign in
           </button>
         </div>
+
+        <!-- Register link -->
         <div
           class="d-flex justify-content-center align-items-center flex-column"
         >

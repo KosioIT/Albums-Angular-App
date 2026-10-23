@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import expand from "dotenv-expand";
+import dotenvExpand from "dotenv-expand";
 import path from "path";
 
 export function loadEnv() {
@@ -11,7 +11,7 @@ export function loadEnv() {
   const envPath = path.resolve(process.cwd(), envFile);
 
   const env = dotenv.config({ path: envPath });
-  expand(env);
+  dotenvExpand.expand(env);
 
   console.log(`Loaded environment: ${envFile}`);
 }

@@ -1,21 +1,20 @@
 /// <reference types="@angular/localize" />
 
 import { AppComponent } from './app/app.component';
-import { appConfig } from './app/app.config';
+import { inject, provideAppInitializer } from '@angular/core';
+import { firebaseConfig } from './app/app.config';
 import { routes } from './app/app.routes';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideToastr } from 'ngx-toastr';
-import { provideAnimations } from '@angular/platform-browser/animations';
+import { AuthService } from './app/services/auth.service';
 
 const myAppConfig = {
-  ...appConfig,
   providers: [
-    ...(appConfig.providers ?? []),
-    provideHttpClient(),
+    ...(firebaseConfig.providers ?? []),
     provideRouter(routes),
-    provideAnimations(),
+    provideHttpClient(),
     provideToastr({
       timeOut: 3000,
       positionClass: 'toast-top-center',
@@ -31,5 +30,10 @@ const myAppConfig = {
   ],
 };
 
-bootstrapApplication(AppComponent, myAppConfig)
-  .catch(err => console.error(err));
+provideAppInitializer(() => {
+  inject(AuthService).initialize();
+});
+
+bootstrapApplication(AppComponent, myAppConfig).catch((err) =>
+  console.error(err),
+);

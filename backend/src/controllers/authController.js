@@ -1,8 +1,9 @@
 import bcrypt from "bcrypt";
-import { generateToken } from "../utils/generateToken.js";
-import { db } from "../config/firebase.js";
-import { getUserBy } from "../utils/userUtils.js";
-import { sendEmail } from "../utils/email/sendCodeViaEmail.js";
+import { db } from "../config/firebase/firebase.js";
+import { getUserBy } from "../services/userService.js";
+import { generateToken } from "../services/authService.js";
+import { sendCodeViaEmail } from "../utils/email/sendCodeViaEmail.js";
+import { User } from "../models/User.js";
 
 const USERS = db.collection("users");
 
@@ -24,7 +25,7 @@ export async function loginUser(req, res) {
     }
 
     // Generate 7-day token
-    const token = generateToken({ id: user.id });
+    const token = generateToken(user);
 
     // Save the token in Firestore
     user.setToken(token);
@@ -47,6 +48,26 @@ export async function loginUser(req, res) {
   }
 }
 
+export async function logoutUser(req, res) {
+  try {
+    const user = req.user;
+    if (!user || !user.id) {
+      return res.status(401).json({ success: false, message: "Unauthorized!" });
+    }
+
+    user.setToken(null);
+    await USERS.doc(user.id).update({
+      token: null,
+      updated_at: new Date().toISOString(),
+    });
+
+    return res.status(200).json({ success: true, message: "Logged out successfully!" });
+  } catch (err) {
+    console.error("Logout error:", err);
+    return res.status(500).json({ success: false, message: "Could not logout!" });
+  }
+}
+
 export async function requestResetCode(req, res) {
   const { email } = req.body;
   try {
@@ -66,11 +87,7 @@ export async function requestResetCode(req, res) {
     //Save code to instance
     user.setResetCode(hashedCode);
 
-    await sendEmail({
-      to: email,
-      subject: "Password Reset Code",
-      text: `Your password reset code is: ${resetCode}. It is valid for 15 minutes.`,
-    });
+    await sendCodeViaEmail(email, resetCode);
 
     return res.json({ success: true, message: "Reset code sent to email!" });
   } catch (err) {
@@ -89,11 +106,11 @@ export async function checkResetCode(req, res) {
     if (!isValid) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid reset code!" });
+        .json({ success: false, message: "Invalid reset code!", data: { isValid: false } });
     }
     return res
       .status(200)
-      .json({ success: true, message: "Reset code is valid" });
+      .json({ success: true, message: "Reset code is valid", data: { isValid: true } });
   } catch (err) {
     console.error("Check reset code error:", err);
     return res.status(500).json({ success: false, message: "Server error!" });
@@ -123,7 +140,7 @@ export async function resetPassword(req, res) {
     //Clear the reset code from the user instance
     user.setResetCode(null);
 
-    const token = generateToken({ id: user.id });
+    const token = generateToken(user);
 
     return res.status(200).json({
       message: "Password has been reset successfully!",
@@ -137,5 +154,13 @@ export async function resetPassword(req, res) {
   } catch (err) {
     console.error("Reset password error:", err);
     return res.status(500).json({ success: false, message: "Server error!" });
+  }
+}
+
+export async function name(req, res) {
+  try {
+    await checkResetCode(req, res);
+  } catch (err) {
+
   }
 }

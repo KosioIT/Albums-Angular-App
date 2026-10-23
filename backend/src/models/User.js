@@ -1,3 +1,5 @@
+import { BaseModel } from './BaseModel.js';
+
 export class User extends BaseModel {
   constructor(data, id = null) {
     super(data, id);
@@ -15,6 +17,7 @@ export class User extends BaseModel {
 
     // Auth fields
     this.token = data.token || null;
+    this.role = data.role || "user"; // user, admin, guest
 
     // Reset code fields
     this.resetCode = data.resetCode || null;

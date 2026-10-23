@@ -6,7 +6,7 @@ export function emailExistsValidator(authService: AuthService, mode: 'register' 
   return (control: AbstractControl) => {
     return control.valueChanges.pipe(
       debounceTime(500),  // wait 500ms after the last event before considering the term
-      switchMap(value => authService.checkIfEmailExists(value)),
+      switchMap(value => authService.checkExistingEmail(value)),
       map(exists => {
         if (mode === 'register' && exists) {
           return { emailExists: true };

@@ -6,7 +6,7 @@ export function albumExistsValidator(
   albumService: AlbumService
 ): AsyncValidatorFn {
   return (control: AbstractControl) => {
-    return albumService.getByName(control.value).pipe(
+    return albumService.getByTitle(control.value).pipe(
       debounceTime(500),
       map((albums) => {
         const exists = albums.length > 0;

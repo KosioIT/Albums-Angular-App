@@ -1,38 +1,43 @@
-<hr/>
+<hr />
 <h2>Best-selling albums:</h2>
 
 <div class="album-wrapper">
   <div class="album-container">
-
     @if (errorMessage) {
       <div class="error-message">{{ errorMessage }}</div>
     }
 
-    @for (album of gold_albums; track trackById($index, album)) {
-      <div
-        class="album-card"
-        >
-        <a [routerLink]="['/albums-list']" [queryParams]="{ band: albumService.encode(album.artist) }">
-          <div
-            class="albumImg-wrapper"
-          [ngStyle]="{
-            'border-color': albumService.getBorderColor(album.rank)
-          }"
+    @if (gold_albums.length > 0) {
+      @for (album of gold_albums; track trackById($index, album)) {
+        <div class="album-card">
+          <a
+            [routerLink]="['/albums-list']"
+            [queryParams]="{ band: albumService.encode(album.artist) }"
+          >
+            <div
+              class="albumImg-wrapper"
+              [ngStyle]="{
+                'border-color': albumService.getBorderColor(album.rank),
+              }"
             >
-            <img
-              class="albumImg"
-            [src]="album.cover_img_url + '?t=' + timestamp"
-            alt="{{ album.title.toLowerCase() }}"
-          />
-        </div>
-      </a>
-      <div class="caption">{{ album.title }}</div>
-    </div>
-}
+              <img
+                class="albumImg"
+                loading="lazy"
+                [src]="album.cover_img_url"
+                alt="Cover of {{ album.title }}"
+              />
+            </div>
+          </a>
 
-    <ng-template #noAlbums>
-      <p>No albums available.</p>
-    </ng-template>
-    
+          <div class="caption">{{ album.title }}</div>
+        </div>
+      }
+    } @else {
+      <ng-container *ngTemplateOutlet="noAlbums"></ng-container>
+    }
   </div>
 </div>
+
+<ng-template #noAlbums>
+  <div class="no-albums-message">No gold albums found!</div>
+</ng-template>

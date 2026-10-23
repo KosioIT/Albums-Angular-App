@@ -1,5 +1,7 @@
 users.txt
 albums-files/
+.kilo/
+/.kilo/
 
 # Angular specific
 /dist/
@@ -33,6 +35,7 @@ yarn-error.log*
 
 # Scripts folder (custom backend logic)
 scripts/
+db_scripts/
 
 # Express specific
 /build/
@@ -61,3 +64,6 @@ dist/
 *.bak
 *.tmp
 *.swp
+
+backend/src/config/firebase/serviceAccountKey.json
+serviceAccountKey.json

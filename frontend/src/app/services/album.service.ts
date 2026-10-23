@@ -1,53 +1,52 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
-import { environment as env } from '../../environments/environment';
+import { Observable } from 'rxjs';
 import { Album } from '../models/album';
+import { api } from '../core/api';
+import { apiRequest } from '../core/api-request';
+import { ApiSuccessResponse } from '../core/api-repsonse';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AlbumService {
-  private baseUrl = `${env.apiUrl}/albums`;
-
-  constructor(private http: HttpClient) {}
-
-  encode(name: string) {
-    return encodeURIComponent(name);
-  }
-
+  // ===== CRUD Operations =====
   getAll(): Observable<Album[]> {
-    return this.http.get<Album[]>(this.baseUrl);
+    return apiRequest<Album[]>(api.get('/albums'));
   }
 
   getById(id: string): Observable<Album> {
-    return this.http.get<Album>(`${this.baseUrl}/${id}`);
+    return apiRequest<Album>(api.get(`/albums/${id}`));
   }
 
-  getByName(name: string): Observable<Album[]> {
-    return this.getAll().pipe(
-      map((albums) =>
-        albums.filter(
-          (album) => album.title.toLowerCase() === name.toLowerCase()
-        )
-      )
-    );
+  getByTitle(name: string): Observable<Album[]> {
+    return apiRequest<Album[]>(api.get(`/albums/title/${this.encode(name)}`));
   }
 
   getByRank(rank: string): Observable<Album[]> {
-    return this.getAll().pipe(
-      map((albums) => albums.filter((album) => album.rank === rank))
-    );
+    return apiRequest<Album[]>(api.get(`/albums/rank/${rank}`));
   }
 
   getByBand(bandName: string): Observable<Album[]> {
-    return this.getAll().pipe(
-      map((albums) =>
-        albums.filter(
-          (album) => album.artist.toLowerCase() === bandName.toLowerCase()
-        )
-      )
+    return apiRequest<Album[]>(
+      api.get(`/albums/band/${this.encode(bandName)}`),
     );
+  }
+
+  create(album: Album): Observable<Album> {
+    return apiRequest<Album>(api.post('/albums', album));
+  }
+
+  update(id: string, newData: Object): Observable<Album> {
+    return apiRequest<Album>(api.put(`/albums/${id}`, newData));
+  }
+
+  delete(id: string): Observable<ApiSuccessResponse<void>> {
+    return apiRequest<ApiSuccessResponse<void>>(api.delete(`/albums/${id}`));
+  }
+
+  // ===== Helper Methods =====
+  encode(name: string) {
+    return encodeURIComponent(name).replace(/'/g, '%27');
   }
 
   getBorderColor(rank: string): string {
@@ -71,17 +70,5 @@ export class AlbumService {
     } else {
       return 'Producers: ' + producers.join(', ');
     }
-  }
-
-  create(album: Album): Observable<Album> {
-    return this.http.post<Album>(this.baseUrl, album);
-  }
-
-  update(id: string, newData: Object): Observable<Album> {
-    return this.http.put<Album>(`${this.baseUrl}/${id}`, newData);
-  }
-
-  delete(id: string): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(`${this.baseUrl}/${id}`);
   }
 }

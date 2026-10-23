@@ -11,13 +11,13 @@ import { Router, RouterModule } from '@angular/router';
 import { FormHelperService } from '../../../services/form-helper.service';
 import { LoginDTO } from '../../../dto/login.dto';
 import { CustomToastrService } from '../../../services/custom-toastr.service';
-
+import { ValidationMessageDirective } from "../../../directives/validation-message.directive";
 
 @Component({
-    selector: 'app-login',
-    templateUrl: './login.component.html',
-    imports: [ReactiveFormsModule, RouterModule],
-    styleUrls: ['./login.component.css', '../../../styles/forms.css']
+  selector: 'app-login',
+  templateUrl: './login.component.html',
+  imports: [ReactiveFormsModule, RouterModule, ValidationMessageDirective],
+  styleUrls: ['./login.component.css', '../../../styles/forms.css'],
 })
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
@@ -27,7 +27,7 @@ export class LoginComponent implements OnInit {
     public formHelperService: FormHelperService,
     private authService: AuthService,
     private customToastr: CustomToastrService,
-    private router: Router
+    private router: Router,
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -39,16 +39,18 @@ export class LoginComponent implements OnInit {
     this.formHelperService.init(this.loginForm);
   }
 
-  submitLoginForm() {
+  async submitLoginForm() {
     const formData = this.formHelperService.submit<LoginDTO>();
-    
+
     this.authService.login(formData).subscribe({
-      next: () => {
-        const username = this.authService.getUsername();
-        this.customToastr.showToast(`Welcome, ${username}!`, 'success', 'Login successful');
+      next: (user) => {
+        this.customToastr.showToast(
+          `Welcome, ${user.username}!`,
+          'success',
+          'Login successful!',
+        );
         this.router.navigate(['/']);
       },
-      error: (err) => {throw err},
     });
   }
 }

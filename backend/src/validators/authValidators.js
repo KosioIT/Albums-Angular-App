@@ -1,5 +1,5 @@
 import { body, validationResult } from 'express-validator';
-import { albumIdArrayValidator, totalLikesValidator } from './albumsValidators';
+import { albumIdArrayValidator, totalLikesValidator } from './albumsValidators.js';
 
 const passwordRegex =
   /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;

@@ -1,55 +1,67 @@
 <div class="col-md-6 col-lg-4 mx-auto mt-5">
-  <div class="card shadow-sm form-container" style="margin-top: 55px;">
+  <div class="card shadow-sm form-container" style="margin-top: 55px">
     <div class="card-body">
       <h5 class="card-title mb-4 text-center">Sign up</h5>
-      <form
-        [formGroup]="registerForm"
-        (ngSubmit)="submitRegisterForm()"
-      >
-        <div class="form-group">
+
+      <form [formGroup]="registerForm" (ngSubmit)="submitRegisterForm()">
+        <!-- Username -->
+        <div class="form-group mb-3">
           <label for="username">Username:</label>
           <input
             type="text"
-            class="form-control"
             id="username"
+            class="form-control"
             formControlName="username"
-            [appValidationMessage]="'username'"
-            required
             (blur)="formHelperService.onBlur('username')"
           />
+
+          <div
+            class="validation-error text-danger mt-1"
+            appValidationMessage="username"
+          ></div>
         </div>
-        <div class="form-group">
+
+        <!-- Email -->
+        <div class="form-group mb-3">
           <label for="email">Email:</label>
           <input
             type="email"
-            class="form-control"
             id="email"
+            class="form-control"
             formControlName="email"
-            [appValidationMessage]="'email'"
-            required
             (blur)="formHelperService.onBlur('email')"
           />
+
+          <div
+            class="validation-error text-danger mt-1"
+            appValidationMessage="email"
+          ></div>
         </div>
 
-        <div class="form-group">
+        <!-- Password -->
+        <div class="form-group mb-3">
           <label for="password">Password:</label>
           <input
             type="password"
-            class="form-control"
             id="password"
+            class="form-control"
             formControlName="password"
-            [appValidationMessage]="'password'"
-            required
             (blur)="formHelperService.onBlur('password')"
           />
+
+          <div
+            class="validation-error text-danger mt-1"
+            appValidationMessage="password"
+          ></div>
         </div>
 
+        <!-- Submit -->
         <div
           class="d-flex justify-content-center align-items-center flex-column"
         >
           <button
             type="submit"
-            class="btn submit-btn"
+            class="btn btn-primary submit-btn"
             [disabled]="registerForm.invalid"
           >
             Sign up

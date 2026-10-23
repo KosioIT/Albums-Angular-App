@@ -1,3 +1,5 @@
+import { body } from 'express-validator';
+
 // Allowed rank values
 const VALID_RANKS = ['gold', 'silver', 'bronze', 'common'];
 

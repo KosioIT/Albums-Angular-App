@@ -12,6 +12,9 @@ export async function sendEmail({ to, subject, text, html }) {
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS
+    },
+    tls: {
+      rejectUnauthorized: false  // accept self-signed certificates
     }
   });
 

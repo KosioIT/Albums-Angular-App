@@ -2,24 +2,26 @@ import { Injectable } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
 
 type ErrorMessageFn = (error: any) => string;
-@Injectable({
-  providedIn: 'root',
-})
+
+@Injectable({ providedIn: 'root' })
+
 export class ValidationService {
-  private minLengthMessageFor(fieldName: string): ErrorMessageFn {
+  
+  // ---------- Dynamic message generators ----------
+  private minLengthMessageFor(field: string): ErrorMessageFn {
     return (error) =>
-      `${fieldName} must be at least ${error.requiredLength} characters long!`;
+      `${field} must be at least ${error.requiredLength} characters long!`;
   }
 
-  private requiredMessageFor(fieldName: string): ErrorMessageFn {
-    return (_error) => `${fieldName} is required!`;
+  private requiredMessageFor(field: string): ErrorMessageFn {
+    return () => `${field} is required!`;
   }
 
-  private fieldErrorMessages: Record<
+  // ---------- Field-specific messages ----------
+  private fieldMessages: Record<
     string,
     Record<string, string | ErrorMessageFn>
   > = {
-    //Auth errors:
     password: {
       required: this.requiredMessageFor('Password'),
       customMinLength: this.minLengthMessageFor('Password'),
@@ -44,7 +46,6 @@ export class ValidationService {
     resetCode: {
       resetCodeNotFound: 'Invalid reset code!',
     },
-    //Album errors:
     title: {
       required: this.requiredMessageFor('Title'),
       customMinLength: this.minLengthMessageFor('Title'),
@@ -73,88 +74,61 @@ export class ValidationService {
     },
   };
 
-  private globalErrorMessages: Record<string, string | ErrorMessageFn> = {
+  // ---------- Global fallback messages ----------
+  private globalMessages: Record<string, string | ErrorMessageFn> = {
     required: 'This field is required!',
     minlength: (error) =>
       `Field must be at least ${error.requiredLength} characters long!`,
+    maxlength: (error) =>
+      `Field must be at most ${error.requiredLength} characters long!`,
     email: 'Please enter a valid email address!',
+    pattern: 'Invalid format!',
   };
 
-  private formatFieldLabel(fieldName: string): string {
-    // Split camelCase into words and capitalize the first letter
-    const spaced = fieldName.replace(/([a-z])([A-Z])/g, '$1 $2');
-    return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+  // ---------- Label formatter ----------
+  private formatLabel(field: string): string {
+    return field
+      .replace(/[_-]/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
-  getErrorMessage(control: AbstractControl | null, fieldName: string): string {
-    if (
-      !control ||
-      (!control.touched && control.value === '') ||
-      (!control.errors && !control.parent?.errors)
-    ) {
-      return '';
-    }
-
-    console.log('Field name:', fieldName);
-    console.log('Errors:', control?.errors);
-    console.log(
-      'Message found:',
-      this.fieldErrorMessages[fieldName]?.['required']
-    );
+  // ---------- Main resolver ----------
+  getErrorMessage(control: AbstractControl | null, field: string): string {
+    if (!control) return '';
 
     const errors = control.errors || {};
     const parentErrors = control.parent?.errors || {};
-    const fieldMessages = this.fieldErrorMessages[fieldName] || {};
+    const combined = { ...parentErrors, ...errors };
 
-    const combinedErrors = { ...parentErrors, ...errors };
-    // console.log('Errors for', fieldName, combinedErrors);
-    // console.log('Available messages:', this.fieldErrorMessages[fieldName]);
+    const fieldMsgs = this.fieldMessages[field] || {};
 
-    for (const errorKey of Object.keys(combinedErrors)) {
-      const errorValue = combinedErrors[errorKey];
+    for (const key of Object.keys(combined)) {
+      const value = combined[key];
 
-      // Skip if the error is not relevant to the field
-      if (
-        errorKey !== fieldName &&
-        !errorKey.startsWith(`${fieldName}_`) &&
-        !(errorKey in fieldMessages)
-      ) {
-        continue;
+      // Field-specific message
+      if (fieldMsgs[key]) {
+        const msg = fieldMsgs[key];
+        return typeof msg === 'function' ? msg(value) : msg;
       }
 
-      // Check for direct match in fieldMessages
-      const directMessage = fieldMessages[errorKey];
-      if (directMessage) {
-        return typeof directMessage === 'function'
-          ? directMessage(errorValue)
-          : directMessage;
-      }
-
-      // Custom field-level message
-      const customMessage = fieldMessages['customMinLength'];
-      if (customMessage && errorKey.endsWith('_customMinLength')) {
-        return typeof customMessage === 'function'
-          ? customMessage(errorValue)
-          : customMessage;
+      // Custom minLength
+      if (key === 'customMinLength' && fieldMsgs['customMinLength']) {
+        const msg = fieldMsgs['customMinLength'];
+        return typeof msg === 'function' ? msg(value) : msg;
       }
 
       // Global fallback
-      const globalMessage = this.globalErrorMessages[errorKey];
-      if (globalMessage) {
-        return typeof globalMessage === 'function'
-          ? globalMessage(errorValue)
-          : globalMessage;
+      if (this.globalMessages[key]) {
+        const msg = this.globalMessages[key];
+        return typeof msg === 'function' ? msg(value) : msg;
       }
 
       // Final fallback
-      const label = this.formatFieldLabel(fieldName);
-      return `${label} must be at least ${
-        errorValue?.requiredLength ?? 'X'
-      } characters long!`;
+      const label = this.formatLabel(field);
+      return `${label} is invalid!`;
     }
 
-    return `Please enter a valid ${this.formatFieldLabel(
-      fieldName
-    ).toLowerCase()}!`;
+    return '';
   }
 }

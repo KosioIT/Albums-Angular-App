@@ -1,12 +1,10 @@
 import jwt from 'jsonwebtoken';
-import { db } from '../config/firebase.js';
-import User from '../models/User.js';
+import { db } from '../config/firebase/firebase.js';
+import { User } from '../models/User.js';
 
 const USERS = db.collection('users');
 
-/** 
- * JWT Protect Middleware 
- */
+// Ensure user is authenticated 
 export const protect = async (req, res, next) => {
   let token;
 
@@ -22,8 +20,9 @@ export const protect = async (req, res, next) => {
         return res.status(401).json({ message: 'Unauthorized!' });
       }
 
-     const userInstance = new User(doc.data(), doc.id);
-
+      const userInstance = new User(doc.data(), doc.id);
+      userInstance.role = decoded.role;
+      
       req.user = userInstance;
 
       return next();
@@ -35,9 +34,18 @@ export const protect = async (req, res, next) => {
   return res.status(401).json({ message: 'No token!' });
 };
 
-/**
- * Check Reset Code Middleware
- */
+// Ensure user is an admin
+export const admin = (req, res, next) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Admin access only!"
+    });
+  }
+
+  next();
+};
+
 export const checkResetCode = async (req, res, next) => {
   const { email, code } = req.body;
 

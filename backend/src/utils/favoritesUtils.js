@@ -1,4 +1,4 @@
-import { checkExistingAlbum } from './albumUtils.js';
+import { checkExistingAlbum } from '../services/albumService.js';
 
 export async function validateFavoriteOperation(user, albumId, operation) {
   // 1) Check if the album exists (in the database)
@@ -33,8 +33,4 @@ export async function validateFavoriteOperation(user, albumId, operation) {
 
   // 4) All good
   return { ok: true };
-}
-
-export function isAlbumFavorite(user, albumId) {
-  return user.favorites.includes(albumId);
 }

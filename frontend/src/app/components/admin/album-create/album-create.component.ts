@@ -14,7 +14,7 @@ import { ValidationMessageDirective } from '../../../directives/validation-messa
 import { FormHelperService } from '../../../services/form-helper.service';
 import { notInFutureValidator } from '../../../validators/album/notInFuture';
 import { ToastrService } from 'ngx-toastr'; 
-import { FormValidationError } from '../../../errors/form-validation-error';
+import { FormValidationError } from '../../../errors/form-errors/form-validation-error';
 
 @Component({
     selector: 'app-album-create',

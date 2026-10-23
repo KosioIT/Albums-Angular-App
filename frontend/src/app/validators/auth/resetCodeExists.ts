@@ -1,21 +1,27 @@
 import { AbstractControl, AsyncValidatorFn } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-import { map, catchError, debounceTime, first, switchMap, of } from 'rxjs';
+import { map, catchError, switchMap, of, timer } from 'rxjs';
 
-export function resetCodeExistsValidator(authService: AuthService, email: string): AsyncValidatorFn {
+export function resetCodeExistsValidator(
+  authService: AuthService,
+  email: string,
+): AsyncValidatorFn {
   return (control: AbstractControl) => {
-    return control.valueChanges.pipe(
-      debounceTime(500),
-      switchMap(code => {
+    return timer(400).pipe(
+      switchMap(() => {
+        const code = control.value;
+
         if (!email || !code) {
-          return of(null); // No email or code -> no possible validation
+          return of(null);
         }
+
         return authService.checkResetCode(email, code).pipe(
-          map(() => null), // valid code
-          catchError(() => of({ resetCodeNotFound: true })) // invalid code
+          map((result) => {
+            return result.isValid ? null : { resetCodeNotFound: true };
+          }),
+          catchError(() => of({ resetCodeNotFound: true })),
         );
       }),
-      first()
     );
   };
 }

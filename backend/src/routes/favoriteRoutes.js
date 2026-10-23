@@ -8,9 +8,9 @@ const router = express.Router();
 router.get('/', protect, getFavoriteAlbums);
 
 // Add album to favorites
-router.post('/:albumId', protect, addAlbumToFavorites);
+router.post('/:id', protect, addAlbumToFavorites);
 
 // Remove album from favorites
-router.delete('/:albumId', protect, removeFromFavorites);
+router.delete('/:id', protect, removeFromFavorites);
 
 export default router;

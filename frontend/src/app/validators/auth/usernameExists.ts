@@ -6,7 +6,7 @@ export function usernameExistsValidator(authService: AuthService): AsyncValidato
     return (control: AbstractControl) => {
         return control.valueChanges.pipe(
             debounceTime(500),
-            switchMap(username => authService.checkIfUsernameExists(username)),
+            switchMap(username => authService.checkExistingUsername(username)),
             map(exists => exists ? { usernameExists: true } : null),
             first()
         );

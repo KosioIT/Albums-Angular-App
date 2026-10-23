@@ -1,15 +1,13 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { sendEmail } from "./sendEmail.js";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export async function sendWelcomeEmail(email, username) {
-  const templatePath = path.join(
-    process.cwd(),
-    "utils",
-    "email",
-    "templates",
-    "welcome.html"
-  );
+  const templatePath = path.join(__dirname, "templates", "welcome.html");
 
   let html = fs.readFileSync(templatePath, "utf8");
 

@@ -1,44 +1,43 @@
 import { Injectable } from '@angular/core';
-import { FormValidationError } from '../errors/form-validation-error';
-import { FormGroup } from '@angular/forms';
+import { FormGroup, AbstractControl } from '@angular/forms';
+import { FormValidationError } from '../errors/form-errors/form-validation-error';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class FormHelperService {
-  private currForm!: FormGroup;
+  private form!: FormGroup;
 
-  constructor() {}
-
-  init(form: FormGroup) {
-    this.currForm = form;
+  init(form: FormGroup): void {
+    this.form = form;
   }
 
-  onBlur(field: string) {
-    const control = this.currForm.get(field);
-    control?.markAsTouched();
-    control?.markAsDirty();
-    control?.updateValueAndValidity();
+  onBlur(field: string): void {
+    const control = this.form.get(field);
+    if (!control) return;
+
+    control.markAsTouched();
+    control.updateValueAndValidity();
   }
 
   submit<T extends Record<string, any>>(): T {
-    if (this.currForm.invalid) {
-      Object.values(this.currForm.controls).forEach((control) =>
-        control.markAsTouched()
-      );
+    if (!this.form) {
+      throw new Error('FormHelperService: form not initialized.');
+    }
 
-      const errors: Record<string, string[]> = {};
-
-      Object.entries(this.currForm.controls).forEach(([key, control]) => {
-        if (control.errors) {
-          errors[key] = Object.keys(control.errors);
-        }
-      });
-
+    if (this.form.invalid) {
+      this.markAllAsTouched(this.form);
       throw new FormValidationError();
     }
 
-    return this.currForm.value as T;
+    return this.form.value as T;
+  }
+
+  private markAllAsTouched(control: AbstractControl): void {
+    if (control instanceof FormGroup) {
+      Object.values(control.controls).forEach((child) => {
+        child.markAsTouched();
+        this.markAllAsTouched(child);
+      });
+    }
   }
 
   parseStringToArray(input: string, delimiter: string = ','): string[] {
@@ -46,12 +45,5 @@ export class FormHelperService {
       .split(delimiter)
       .map((str) => str.trim())
       .filter((str) => str.length > 0);
-  }
-
-  markAllAsTouched(albumForm: FormGroup<any>) {
-    Object.values(albumForm.controls).forEach((control) => {
-      control.markAsTouched();
-      control.markAsDirty();
-    });
   }
 }

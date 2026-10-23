@@ -3,21 +3,27 @@ import { CustomToastComponent } from '../components/shared/custom-toast/custom-t
 import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 
-
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CustomToastrService {
-  constructor(private overlay: Overlay) { }
+  constructor(private overlay: Overlay) {}
 
-  showToast(message: string, type: 'success' | 'error' | 'info' | 'warning', title: string = '', actionLabel: string = '', actionUrl: string = ''): void {
+  showToast(
+    message: string,
+    type: 'success' | 'error' | 'info' | 'warning',
+    title: string = '',
+    actionLabel: string = '',
+    actionUrl: string = '',
+  ): void {
     const overlayRef: OverlayRef = this.overlay.create({
-      positionStrategy: this.overlay.position()
+      positionStrategy: this.overlay
+        .position()
         .global()
         .top('20px')
         .right('20px'),
       hasBackdrop: false,
-      scrollStrategy: this.overlay.scrollStrategies.noop()
+      scrollStrategy: this.overlay.scrollStrategies.noop(),
     });
 
     const toastPortal = new ComponentPortal(CustomToastComponent);
@@ -29,6 +35,7 @@ export class CustomToastrService {
     toastRef.instance.actionLabel = actionLabel;
     toastRef.instance.actionUrl = actionUrl;
 
-    setTimeout(() => overlayRef.dispose(), 5000); // Auto close after 5 seconds
+    const seconds = 5; // Show the toast for 5 seconds
+    setTimeout(() => overlayRef.dispose(), seconds * 1000);
   }
 }

@@ -1,21 +1,31 @@
 import bcrypt from "bcrypt";
-import { db } from "../config/firebase.js";
+import { db } from "../config/firebase/firebase.js";
 import { FieldValue } from "firebase-admin/firestore";
 import {
-  validateUserCreate,
-  validateUserUpdate,
-} from "../validators/userValidator.js";
-import User from "../models/User.js";
+  validateUserCreate
+} from "../validators/userValidators.js";
+import { User } from "../models/User.js";
 import { Album } from "../models/Album.js";
 import { validateFavoriteOperation } from "../utils/favoritesUtils.js";
-import { getUserBy } from "../utils/userUtils.js";
-import { getAlbumBy } from "../utils/albumUtils.js";
-import { sendWelcomeEmail } from "../../utils/email/sendWelcomeEmail.js";
+import { getUserBy, checkExistingCredential } from "../services/userService.js";
+import { findAlbums } from "../services/albumService.js";
+import { sendWelcomeEmail } from '../utils/email/sendWelcomeEmail.js';
 
 const USERS = db.collection("users");
 const ALBUMS = db.collection("albums");
 
 /* ----- USER CRUD FUNCTIONS ----- */
+
+export async function getAllUsers(req, res) {
+  try {
+    const usersSnapshot = await USERS.get();
+    const users = usersSnapshot.docs.map((doc => doc.data()));
+    return res.status(200).json({ success: true, data: users, message: "Users fetched successfully!" });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return res.status(500).json({ success: false, message: "Failed to fetch users!" });
+  }
+}
 
 // Unified GET query
 export async function getUser(req, res) {
@@ -55,38 +65,37 @@ export async function getUser(req, res) {
 
 //Same as CREATE operation (POST method)
 export async function registerUser(req, res) {
-  const error = validateUserCreate(req.body);
-  if (error) return res.status(400).json({ success: false, message: error });
-
   try {
-    const { username, email, password } = req.body;
+    const error = validateUserCreate(req.body);
+    if (error) return res.status(400).json({ success: false, message: error });
 
-    // Check if email already exists
-    const existingUser = await getUserBy("email", email);
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "Email already exists!",
-      });
-    }
-    // Hash password
+    const { username, email, password, role } = req.body;
+
+    if (await checkExistingCredential("username", username))
+      return res.status(409).json({ message: "Username already exists!" });
+
+    if (await checkExistingCredential("email", email))
+      return res.status(409).json({ message: "Email already exists!" });
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = new User({
       username,
       email,
       password: hashedPassword,
+      role: role ? role : "user" // Default role is "user"
     });
 
-    const docRef = await USERS.add(user.toFirestore());
+    await USERS.doc(email).set(user.toFirestore());
 
-    // Send welcome email
-    await sendWelcomeEmail(email, username);
-
-    return res.json({
+    res.json({
       success: true,
-      id: docRef.id,
+      email: email,
       message: `User ${username} created successfully!`,
+    });
+
+    sendWelcomeEmail(email, username).catch(err => {
+      console.error("Error sending welcome email:", err);
     });
 
   } catch (err) {
@@ -97,60 +106,33 @@ export async function registerUser(req, res) {
   }
 }
 
-export async function updateUser(req, res) {
-  const error = validateUserUpdate(req.body);
-  if (error) return res.status(400).json({ success: false, message: error });
-
-  try {
-    const docRef = USERS.doc(req.params.id);
-    const doc = await docRef.get();
-
-    if (!doc.exists) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found!" });
-    }
-
-    const user = new User(doc.data());
-    user.update(req.body);
-
-    await docRef.update(user.toFirestore());
-
-    // Hash password if updated
-    if (updateData.password) {
-      updateData.password = await bcrypt.hash(updateData.password, 10);
-    }
-
-    await docRef.update(updateData);
-
-    return res.json({ success: true, message: "User updated successfully!" });
-
-  } catch (err) {
-    console.error("Update user error:", err);
-    return res.status(500).json({ success: false, message: "Could not update user!" });
-  }
-}
-
+//Delete user by email
 export async function deleteUser(req, res) {
   try {
-    const docRef = USERS.doc(req.params.id);
-    const doc = await docRef.get();
+    const { email } = req.query;
 
-    if (!doc.exists) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found!" });
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email query parameter is required!"
+      });
     }
 
-    await docRef.delete();
+    await db.collection("users").doc(email).delete();
 
-    res.json({ success: true, message: "User deleted successfully!" });
+    return res.json({
+      success: true,
+      message: `User ${email} deleted successfully!`
+    });
 
   } catch (err) {
-    console.error("Delete user error:", err);
-    res.status(500).json({ success: false, message: "Could not delete user!" });
+    return res.status(400).json({
+      success: false,
+      message: err.message
+    });
   }
 }
+
 
 /* ----- ALBUMS-RELATED OPERATIONS ----- */
 
@@ -162,11 +144,12 @@ export async function getFavoriteAlbums(req, res) {
       return res.json({ success: true, data: [] });
     }
 
-    // Load albums from Firestore
-    const albumPromises = user.favorites.map((id) => ALBUMS.doc(id).get());
-    const albumDocs = await Promise.all(albumPromises);
+    // Load albums from Firestore (favorites store album slug ids)
+    const snapshots = await Promise.all(
+      user.favorites.map((slug) => ALBUMS.doc(slug).get())
+    );
 
-    const albums = albumDocs
+    const albums = snapshots
       .filter((doc) => doc.exists)
       .map((doc) => new Album(doc.data(), doc.id));
 
@@ -183,10 +166,10 @@ export async function getFavoriteAlbums(req, res) {
 export async function addAlbumToFavorites(req, res) {
   try {
     const user = req.user;
-    const albumId = req.params.albumId;
+    const slug = req.params.id;
 
     // Validate the favorite operation (add)
-    const validation = await validateFavoriteOperation(user, albumId, "add");
+    const validation = await validateFavoriteOperation(user, slug, "add");
     if (!validation.ok) {
       return res.status(validation.status).json({
         success: false,
@@ -194,13 +177,13 @@ export async function addAlbumToFavorites(req, res) {
       });
     }
 
-    user.addFavorite(albumId);
-    await USERS.doc(user.id).update({ favorites: user.favorites });
+    user.addFavorite(slug);
+    await USERS.doc(user.email).update({ favorites: user.favorites });
 
     return res.json({
       success: true,
       message: "Album added to favorites!",
-      favorites: user.favorites,
+      data: user.favorites,
     });
 
   } catch (err) {
@@ -214,10 +197,10 @@ export async function addAlbumToFavorites(req, res) {
 export async function removeFromFavorites(req, res) {
   try {
     const user = req.user;
-    const albumId = req.params.albumId;
+    const slug = req.params.id;
 
     // Validate the favorite operation (remove)
-    const validation = await validateFavoriteOperation(user, albumId, "remove");
+    const validation = await validateFavoriteOperation(user, slug, "remove");
     if (!validation.ok) {
       return res.status(validation.status).json({
         success: false,
@@ -225,8 +208,8 @@ export async function removeFromFavorites(req, res) {
       });
     }
 
-    user.removeFavorite(albumId);
-    await USERS.doc(user.id).update({ favorites: user.favorites });
+    user.removeFavorite(slug);
+    await USERS.doc(user.email).update({ favorites: user.favorites });
 
     return res.json({ success: true, message: "Album removed from favorites!" });
 
@@ -244,7 +227,7 @@ export async function toggleLike(req, res) {
     const user = req.user;
     const albumId = req.params.albumId;
 
-    const album = await getAlbumBy("id", albumId);
+    const album = await findAlbums("id", albumId);
     if (!album) {
       return res.status(404).json({
         success: false,
@@ -315,3 +298,4 @@ export async function toggleLike(req, res) {
     });
   }
 }
+

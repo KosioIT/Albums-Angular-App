@@ -1,31 +1,71 @@
+/* NAVBAR BASE */
 .navbar {
   border-radius: 10px;
   margin-top: 15px;
+  padding: 10px 20px;
+  font-size: 22px;
 }
 
-.navbar,
+/* BRAND */
 .navbar-brand {
   font-size: 25px;
-}
-
-.navbar-brand {
   margin-left: 20px;
 }
 
-.dropdown-menu {
+/* NAV LINKS */
+.nav-link {
+  color: white !important;
   font-size: 22px;
-  text-align: center;
-  /* background-color: rgb(17, 236, 247) !important; */
-}
-
-a {
   cursor: pointer;
 }
 
-a.nav-link {
-  color: white;
-}
-
+/* NAV ITEMS SPACING */
 .navbar-nav .nav-item {
   margin-right: 20px;
+}
+
+.dropdown-menu {
+  font-size: 20px;
+  text-align: center;
+  border-radius: 8px;
+  padding: 10px 0;
+}
+
+/* DROPDOWN SHOW STATE */
+.dropdown-menu.show {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+}
+
+/* DROPDOWN HIDDEN STATE */
+.dropdown-menu {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+}
+
+/* DROPDOWN ITEMS */
+.dropdown-item {
+  padding: 10px 20px;
+  font-size: 20px;
+}
+
+/* HOVER EFFECT */
+.dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* MOBILE FIXES */
+@media (max-width: 768px) {
+  .navbar-nav .nav-item {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+
+  .dropdown-menu {
+    text-align: left;
+    font-size: 18px;
+  }
 }
