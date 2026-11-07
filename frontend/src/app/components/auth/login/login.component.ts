@@ -1,17 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import { Router, RouterModule } from '@angular/router';
-
 import { FormHelperService } from '../../../services/form-helper.service';
 import { LoginDTO } from '../../../dto/login.dto';
 import { CustomToastrService } from '../../../services/custom-toastr.service';
-import { ValidationMessageDirective } from "../../../directives/validation-message.directive";
+import { ValidationMessageDirective } from '../../../directives/validation-message.directive';
+import { safeReturnUrl } from '../../../core/guards/auth.guards';
 
 @Component({
   selector: 'app-login',
@@ -20,7 +15,8 @@ import { ValidationMessageDirective } from "../../../directives/validation-messa
   styleUrls: ['./login.component.css', '../../../styles/forms.css'],
 })
 export class LoginComponent implements OnInit {
-  loginForm!: FormGroup;
+  loginForm: FormGroup;
+  submitting = false;
 
   constructor(
     private fb: FormBuilder,
@@ -28,6 +24,7 @@ export class LoginComponent implements OnInit {
     private authService: AuthService,
     private customToastr: CustomToastrService,
     private router: Router,
+    private route: ActivatedRoute,
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -37,19 +34,27 @@ export class LoginComponent implements OnInit {
 
   ngOnInit() {
     this.formHelperService.init(this.loginForm);
+
+    // Prefilled after a password reset request or a redirect from register
+    const email = this.route.snapshot.queryParamMap.get('email');
+    if (email) this.loginForm.patchValue({ email });
   }
 
-  async submitLoginForm() {
+  submitLoginForm() {
+    if (this.submitting) return;
     const formData = this.formHelperService.submit<LoginDTO>();
+    this.submitting = true;
 
-    this.authService.login(formData).subscribe({
+    this.authService.login({ ...formData, email: formData.email.trim() }).subscribe({
       next: (user) => {
-        this.customToastr.showToast(
-          `Welcome, ${user.username}!`,
-          'success',
-          'Login successful!',
-        );
-        this.router.navigate(['/']);
+        this.customToastr.showToast(`Welcome back, ${user.username}!`, 'success', 'Signed in');
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        this.router.navigateByUrl(safeReturnUrl(returnUrl));
+      },
+      error: (err: Error) => {
+        this.submitting = false;
+        this.loginForm.get('password')?.reset('');
+        this.customToastr.showToast(err.message, 'error', 'Sign in failed');
       },
     });
   }

@@ -1,136 +1,156 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, map, Observable, tap } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { BehaviorSubject, Observable, from, map, catchError, of, finalize } from 'rxjs';
 import { api } from '../core/api';
 import { apiRequest } from '../core/api-request';
-import { User } from '../models/user';
+import { authToken, setRefreshHandler } from '../core/auth-token';
+import { AuthResponse } from '../core/api-repsonse';
+import { normalizeApiError } from '../errors/api-errors/normalizeApiError';
+import { User, UserSession } from '../models/user';
 import { LoginDTO } from '../dto/login.dto';
 import { RegisterDTO } from '../dto/register.dto';
-import { ApiResponse, ApiSuccessResponse } from '../core/api-repsonse';
+import { CustomToastrService } from './custom-toastr.service';
 
-@Injectable({
-  providedIn: 'root',
-})
+/*
+  Session model (matches the backend):
+  - access token: short-lived JWT, kept in memory only (core/auth-token.ts)
+  - refresh token: httpOnly cookie that JavaScript never sees; /auth/refresh swaps it for a new pair
+  On startup restoreSession() asks for a new access token, so a reload keeps the user logged in.
+*/
+@Injectable({ providedIn: 'root' })
 export class AuthService {
+  private router = inject(Router);
+  private toastr = inject(CustomToastrService);
+
   private userSubject = new BehaviorSubject<User | null>(null);
-  user$ = this.userSubject.asObservable();
+  readonly user$ = this.userSubject.asObservable();
+
+  // One refresh at a time: parallel 401s share it, because reusing an old refresh token kills the session
+  private refreshInFlight: Promise<string | null> | null = null;
 
   constructor() {
-    this.initialize();
+    setRefreshHandler(() => this.refreshAccessToken());
   }
 
-  // ===== Initialization Methods =====
+  // ===== Session state =====
 
-  initialize(): void {
-    this.loadUserFromStorage();
-  }
-
-  loadUserFromStorage() {
-    const json = localStorage.getItem('user');
-    if (json) {
-      try {
-        this.userSubject.next(JSON.parse(json));
-      } catch {
-        localStorage.removeItem('user');
-      }
-    }
-  }
-
-  // ===== User Management Methods =====
-
-  saveUser(user: User) {
-    localStorage.setItem('user', JSON.stringify(user));
-    this.userSubject.next(user);
+  get currentUser(): User | null {
+    return this.userSubject.value;
   }
 
   isLoggedIn(): boolean {
-    return !!this.currentUser?.token;
+    return !!this.currentUser;
   }
 
   isAdmin(): boolean {
     return this.currentUser?.role === 'admin';
   }
 
-  // ===== Authentication Methods =====
+  private setSession({ token, user }: AuthResponse): User {
+    authToken.set(token);
+    this.userSubject.next(user);
+    return user;
+  }
+
+  private clearSession(): void {
+    authToken.set(null);
+    this.userSubject.next(null);
+  }
+
+  // Runs once before the first navigation (see main.ts); never fails
+  async restoreSession(): Promise<void> {
+    await this.refreshAccessToken();
+  }
+
+  refreshAccessToken(): Promise<string | null> {
+    if (!this.refreshInFlight) {
+      this.refreshInFlight = this.withCrossTabLock(() => this.requestRefresh()).finally(() => {
+        this.refreshInFlight = null;
+      });
+    }
+    return this.refreshInFlight;
+  }
+
+  private async requestRefresh(): Promise<string | null> {
+    const wasLoggedIn = this.isLoggedIn();
+    try {
+      const res = await api.post<AuthResponse>('/auth/refresh');
+      this.setSession(res.data);
+      return res.data.token;
+    } catch {
+      this.clearSession();
+      if (wasLoggedIn) this.onSessionExpired();
+      return null;
+    }
+  }
+
+  /*
+    Two tabs share one refresh cookie. If both refreshed at once, the second would present a token
+    that was just rotated and the backend would revoke the session. The lock makes the second tab
+    wait and then send the new cookie.
+  */
+  private withCrossTabLock<T>(fn: () => Promise<T>): Promise<T> {
+    const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined;
+    return locks ? locks.request('auth-refresh', fn) : fn();
+  }
+
+  private onSessionExpired(): void {
+    this.toastr.showToast('Please sign in again.', 'warning', 'Session expired');
+    this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+  }
+
+  // ===== Login / register / logout =====
 
   login(dto: LoginDTO): Observable<User> {
-    return apiRequest<User>(api.post('/auth/login', dto)).pipe(
-      tap((user) => this.saveUser(user)),
-    );
+    return this.authRequest(api.post<AuthResponse>('/auth/login', dto));
   }
 
+  // The backend logs the new user in right away
   register(dto: RegisterDTO): Observable<User> {
-    return apiRequest<User>(api.post('/auth/register', dto)).pipe(
-      tap((user) => this.saveUser(user)),
-    );
+    return this.authRequest(api.post<AuthResponse>('/auth/register', dto));
   }
 
+  // The local session is cleared even when the request fails (e.g. offline)
   logout(): Observable<void> {
-    this.userSubject.next(null);
-    localStorage.removeItem('user');
-
-    return apiRequest<void>(api.post('/auth/logout'));
+    return this.endSession('/auth/logout');
   }
 
-  checkExistingEmail(email: string): Observable<boolean> {
-    return apiRequest<boolean>(api.get(`/users/email/${email}`)).pipe(
-      map((user) => !!user),
+  logoutAll(): Observable<void> {
+    return this.endSession('/auth/logout-all');
+  }
+
+  private endSession(url: string): Observable<void> {
+    return from(api.post(url)).pipe(
+      map(() => undefined),
+      catchError(() => of(undefined)),
+      finalize(() => this.clearSession()),
     );
   }
 
-  checkExistingUsername(username: string): Observable<boolean> {
-    return apiRequest<boolean>(api.get(`/users/username/${username}`)).pipe(
-      map((user) => !!user),
-    );
+  getSessions(): Observable<UserSession[]> {
+    return apiRequest<UserSession[]>(api.get('/auth/sessions'));
   }
 
-  checkCredentials(dto: LoginDTO): Observable<boolean> {
-    return apiRequest<boolean>(api.post('/auth/check-password', dto));
+  revokeSession(id: string): Observable<void> {
+    return apiRequest<void>(api.delete(`/auth/sessions/${encodeURIComponent(id)}`));
   }
 
-  sendResetCodeViaEmail(email: string): Observable<void> {
+  // ===== Password reset =====
+
+  // Always "succeeds": the backend does not reveal whether the email is registered
+  requestResetCode(email: string): Observable<void> {
     return apiRequest<void>(api.post('/auth/request-reset', { email }));
   }
 
-  checkResetCode(
-    email: string,
-    code: string,
-  ): Observable<{ isValid: boolean }> {
-    return apiRequest<{ isValid: boolean }>(
-      api.post('/auth/check-reset-code', { email, code }),
+  // On success the backend revokes every old session and logs the user in
+  resetPassword(email: string, code: string, newPassword: string): Observable<User> {
+    return this.authRequest(api.post<AuthResponse>('/auth/reset-password', { email, code, newPassword }));
+  }
+
+  private authRequest(request: Promise<{ data: AuthResponse }>): Observable<User> {
+    return from(request).pipe(
+      map((res) => this.setSession(res.data)),
+      catchError((err) => normalizeApiError(err)),
     );
-  }
-
-  resetPassword(
-    email: string,
-    resetCode: string,
-    newPassword: string,
-  ): Observable<void> {
-    return apiRequest<void>(
-      api.post('/auth/reset-password', {
-        email,
-        resetCode,
-        newPassword,
-      }),
-    );
-  }
-
-  // ===== Getters =====
-
-  get currentUser(): User | null {
-    return this.userSubject.value;
-  }
-
-  get userId(): string {
-    if (!this.currentUser?._id) {
-      throw new Error('User ID not available');
-    }
-    return this.currentUser._id;
-  }
-
-  get username(): string {
-    if (!this.currentUser?.username) {
-      throw new Error('Username not available');
-    }
-    return this.currentUser.username;
   }
 }

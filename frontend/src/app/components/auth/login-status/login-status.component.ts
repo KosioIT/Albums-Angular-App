@@ -48,8 +48,12 @@ export class LoginStatusComponent implements OnDestroy {
 
   logout() {
     this.dropdownService.closeAll();
-    this.authService.logout();
-    this.router.navigate(['/login']);
+    this.authService.logout().subscribe(() => this.router.navigate(['/login']));
+  }
+
+  logoutAll() {
+    this.dropdownService.closeAll();
+    this.authService.logoutAll().subscribe(() => this.router.navigate(['/login']));
   }
 
   ngOnDestroy() {

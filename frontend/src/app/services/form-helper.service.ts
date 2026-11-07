@@ -31,7 +31,7 @@ export class FormHelperService {
     return this.form.value as T;
   }
 
-  private markAllAsTouched(control: AbstractControl): void {
+  markAllAsTouched(control: AbstractControl): void {
     if (control instanceof FormGroup) {
       Object.values(control.controls).forEach((child) => {
         child.markAsTouched();

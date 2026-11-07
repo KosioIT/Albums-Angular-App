@@ -24,7 +24,7 @@ export async function loginUser(req, res) {
     if (!match) {
       return res
         .status(400)
-        .json({ success: false, message: "Wrong password! Please try again." });
+        .json({ success: false, message: "Wrong email or password!" });
     }
 
     // Logging in again replaces this browser's session instead of piling up a second one

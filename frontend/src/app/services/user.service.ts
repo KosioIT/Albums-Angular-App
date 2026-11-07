@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { User } from '../models/user';
+import { UserProfile as User } from '../models/user';
 import { api } from '../core/api';
 import { apiRequest } from '../core/api-request';
 

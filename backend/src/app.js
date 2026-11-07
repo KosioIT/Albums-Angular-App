@@ -8,11 +8,7 @@ import cookieParser from 'cookie-parser';
 
 const app = express();
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
-
-// CORS configuration
+// CORS: an explicit origin list is required, because the refresh cookie makes the requests credentialed
 app.use(cors({
   origin: (process.env.CLIENT_ORIGIN || 'http://localhost:4200').split(','),
   credentials: true,

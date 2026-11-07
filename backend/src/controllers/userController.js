@@ -8,7 +8,9 @@ import { getUserBy, checkExistingCredential } from "../services/userService.js";
 import { recordListen, getActivitySummary } from '../services/activityService.js';
 import { checkExistingAlbum } from "../services/albumService.js";
 import { sendWelcomeEmail } from '../utils/email/sendWelcomeEmail.js';
-import { revokeAllSessions } from '../services/sessionService.js';
+import { revokeAllSessions, createSession } from '../services/sessionService.js';
+import { generateAccessToken } from '../services/authService.js';
+import { setRefreshCookie } from '../utils/refreshCookie.js';
 
 const USERS = db.collection("users");
 const ALBUMS = db.collection("albums");
@@ -61,41 +63,41 @@ export async function getUser(req, res) {
   }
 }
 
-//Same as CREATE operation (POST method)
+// Same as CREATE operation (POST method); the new user is logged in right away
 export async function registerUser(req, res) {
   try {
     const { username, email, password } = req.body;
 
     if (await checkExistingCredential("username", username))
-      return res.status(409).json({ message: "Username already exists!" });
+      return res.status(409).json({ success: false, field: "username", message: "Username already exists!" });
 
     if (await checkExistingCredential("email", email))
-      return res.status(409).json({ message: "Email already exists!" });
-
-    const hashedPassword = await bcrypt.hash(password, 10);
+      return res.status(409).json({ success: false, field: "email", message: "Email already exists!" });
 
     const user = new User({
       username,
       email,
-      password: hashedPassword,
+      password: await bcrypt.hash(password, 10),
       role: "user" // Default role is "user" (admin role can be assigned manually in the database)
-    });
+    }, email);
 
     try {
       await USERS.doc(email).create(user.toFirestore());
     } catch (err) {
       if (err.code === 6) { // ALREADY_EXISTS: the email was registered a moment ago
-        return res.status(409).json({ success: false, message: "Email already exists!" });
+        return res.status(409).json({ success: false, field: "email", message: "Email already exists!" });
       }
       throw err;
     }
 
-    await USERS.doc(email).set(user.toFirestore());
+    const { sessionId, refreshToken } = await createSession(user.id, req.get("user-agent"));
+    setRefreshCookie(res, refreshToken);
 
-    res.json({
+    res.status(201).json({
       success: true,
-      email: email,
-      message: `User ${username} created successfully!`,
+      message: `Welcome, ${username}! Your account has been created.`,
+      token: generateAccessToken(user, sessionId),
+      user: user.toBasic(),
     });
 
     sendWelcomeEmail(email, username).catch(err => {

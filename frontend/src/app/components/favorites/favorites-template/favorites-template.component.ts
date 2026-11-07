@@ -25,10 +25,10 @@ export class FavoritesTemplateComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.authService.checkIfLoggedIn();
     if (!this.albumId) {
       throw new Error('Album ID is required!');
     }
+    if (!this.authService.isLoggedIn()) return; // favorites exist only for signed in users
     this.isFav = this.isFavorite();
     this.loadFavoriteAlbums();
   }
@@ -60,8 +60,8 @@ export class FavoritesTemplateComponent implements OnInit {
       });
     } else {
       this.favoriteService.add(this.albumId).subscribe({
-        next: (album) => {
-          this.favoriteAlbums.push(album);
+        next: () => {
+          this.loadFavoriteAlbums();
           this.customToastr.showToast(
             'Album added to favorites!',
             'success',

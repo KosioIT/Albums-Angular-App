@@ -25,6 +25,7 @@ export class ValidationService {
     password: {
       required: this.requiredMessageFor('Password'),
       customMinLength: this.minLengthMessageFor('Password'),
+      maxlength: (error) => `Password must be at most ${error.requiredLength} characters long!`,
       missingChars:
         'Password must contain at least one letter, one number and one special character!',
     },
@@ -32,11 +33,12 @@ export class ValidationService {
       required: this.requiredMessageFor('Email'),
       email: 'Please enter a valid email address!',
       emailExists: 'Email already exists!',
-      emailNotFound: 'No user found with this email!',
     },
     username: {
       required: this.requiredMessageFor('Username'),
       customMinLength: this.minLengthMessageFor('Username'),
+      minlength: this.minLengthMessageFor('Username'),
+      maxlength: (error) => `Username must be at most ${error.requiredLength} characters long!`,
       usernameExists: 'Username already exists!',
       userNotFound: 'User not found!',
     },
@@ -44,7 +46,8 @@ export class ValidationService {
       wrongCredentials: 'Wrong email or password!',
     },
     resetCode: {
-      resetCodeNotFound: 'Invalid reset code!',
+      required: this.requiredMessageFor('Reset code'),
+      pattern: 'The code must be exactly 6 digits!',
     },
     title: {
       required: this.requiredMessageFor('Title'),

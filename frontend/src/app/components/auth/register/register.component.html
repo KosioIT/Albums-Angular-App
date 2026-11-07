@@ -10,6 +10,7 @@
           <input
             type="text"
             id="username"
+            autocomplete="username"
             class="form-control"
             formControlName="username"
             (blur)="formHelperService.onBlur('username')"
@@ -27,6 +28,7 @@
           <input
             type="email"
             id="email"
+            autocomplete="email"
             class="form-control"
             formControlName="email"
             (blur)="formHelperService.onBlur('email')"
@@ -44,6 +46,7 @@
           <input
             type="password"
             id="password"
+            autocomplete="new-password"
             class="form-control"
             formControlName="password"
             (blur)="formHelperService.onBlur('password')"
@@ -62,10 +65,15 @@
           <button
             type="submit"
             class="btn btn-primary submit-btn"
-            [disabled]="registerForm.invalid"
+            [disabled]="registerForm.invalid || submitting"
           >
-            Sign up
+            {{ submitting ? 'Creating account...' : 'Sign up' }}
           </button>
+
+          <p class="w-100 text-center mt-4">
+            Already have an account?
+            <a routerLink="/login">Sign in</a>
+          </p>
         </div>
       </form>
     </div>
