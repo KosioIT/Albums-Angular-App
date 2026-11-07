@@ -1,16 +1,24 @@
-import { ApplicationConfig } from '@angular/core';
-import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
-import { provideAuth, getAuth } from '@angular/fire/auth';
-import { provideFirestore, getFirestore } from '@angular/fire/firestore';
-import { provideStorage, getStorage } from '@angular/fire/storage';
+import { ApplicationConfig, ErrorHandler, inject, provideAppInitializer } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideToastr } from 'ngx-toastr';
+import { routes } from './app.routes';
+import { AuthService } from './services/auth.service';
+import { GlobalErrorHandler } from './errors/global-error-handler';
 
-import { environment } from '../environments/environment';
-
-export const firebaseConfig: ApplicationConfig = {
+// The app talks only to the Express API; Firestore is reached by the backend (firebase-admin)
+export const appConfig: ApplicationConfig = {
   providers: [
-    provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideAuth(() => getAuth()),
-    provideFirestore(() => getFirestore()),
-    provideStorage(() => getStorage()),
+    provideRouter(routes),
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
+    provideHttpClient(),
+    // Restore the session from the refresh cookie before the first navigation, so guards see the user
+    provideAppInitializer(() => inject(AuthService).restoreSession()),
+    provideToastr({
+      timeOut: 3000,
+      positionClass: 'toast-top-center',
+      closeButton: true,
+      preventDuplicates: true,
+    }),
   ],
 };

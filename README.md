@@ -44,9 +44,12 @@ MONGO_URI=mongodb://localhost:27017/your-db-name
 JWT_SECRET=yourSecretKey
 ```
 
-Create a environment.ts file in the frontend/environments folder with the following code:
-```.env
-apiUrl: 'http://localhost:4000/api'
+Create an environment.ts file in the frontend/src/environments folder with the following code:
+```ts
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:3000/api', // the backend port + /api
+};
 ```
 
 ## MongoDB Setup
