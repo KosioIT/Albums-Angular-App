@@ -5,7 +5,7 @@ import { User } from "../models/User.js";
 import { Album } from "../models/Album.js";
 import { validateFavoriteOperation } from "../utils/favoritesUtils.js";
 import { getUserBy, checkExistingCredential } from "../services/userService.js";
-import { recordListen, getActivitySummary, setLiked } from '../services/activityService.js';
+import { recordListen, getActivitySummary } from '../services/activityService.js';
 import { checkExistingAlbum } from "../services/albumService.js";
 import { sendWelcomeEmail } from '../utils/email/sendWelcomeEmail.js';
 import { revokeAllSessions } from '../services/sessionService.js';
@@ -81,6 +81,15 @@ export async function registerUser(req, res) {
       role: "user" // Default role is "user" (admin role can be assigned manually in the database)
     });
 
+    try {
+      await USERS.doc(email).create(user.toFirestore());
+    } catch (err) {
+      if (err.code === 6) { // ALREADY_EXISTS: the email was registered a moment ago
+        return res.status(409).json({ success: false, message: "Email already exists!" });
+      }
+      throw err;
+    }
+
     await USERS.doc(email).set(user.toFirestore());
 
     res.json({
@@ -104,28 +113,39 @@ export async function registerUser(req, res) {
 //Delete user by email
 export async function deleteUser(req, res) {
   try {
-    const { email } = req.query;
-
+    const email = String(req.query.email || "").trim().toLowerCase();
     if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Email query parameter is required!"
-      });
+      return res.status(400).json({ success: false, message: "Email query parameter is required!" });
+    }
+    if (email === req.user.id) {
+      return res.status(400).json({ success: false, message: "You cannot delete your own account!" });
     }
 
-    await db.collection("users").doc(email).delete();
-    await revokeAllSessions(email);
+    const ref = USERS.doc(email);
+    const snap = await ref.get();
+    if (!snap.exists) {
+      return res.status(404).json({ success: false, message: "User not found!" });
+    }
 
-    return res.json({
-      success: true,
-      message: `User ${email} deleted successfully!`
-    });
+    await revokeAllSessions(email); // first, so the user cannot act while the data is removed
 
+    // Take this user's likes out of the album counters (skip albums that no longer exist)
+    const liked = snap.data().likedAlbums || [];
+    if (liked.length) {
+      const albums = await db.getAll(...liked.map((id) => ALBUMS.doc(id)));
+      const batch = db.batch();
+      albums
+        .filter((a) => a.exists)
+        .forEach((a) => batch.update(a.ref, { likes: FieldValue.increment(-1) }));
+      await batch.commit(); // one batch holds up to 500 writes, plenty for now
+    }
+
+    await db.recursiveDelete(ref); // the user and the "activity" subcollection
+
+    return res.json({ success: true, message: `User ${email} deleted successfully!` });
   } catch (err) {
-    return res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    console.error("Delete user error:", err);
+    return res.status(500).json({ success: false, message: "Could not delete user!" });
   }
 }
 
@@ -172,7 +192,7 @@ export async function getFavoriteAlbums(req, res) {
 
     const albums = snapshots
       .filter((doc) => doc.exists)
-      .map((doc) => new Album(doc.data(), doc.id));
+      .map((doc) => new Album(doc.data(), doc.id).toPublic());
 
     return res.json({ success: true, data: albums });
 
@@ -199,7 +219,7 @@ export async function addAlbumToFavorites(req, res) {
     }
 
     user.addFavorite(slug);
-    await USERS.doc(user.email).update({ favorites: user.favorites });
+    await USERS.doc(user.id).update({ favorites: FieldValue.arrayUnion(slug) });
 
     return res.json({
       success: true,
@@ -230,7 +250,7 @@ export async function removeFromFavorites(req, res) {
     }
 
     user.removeFavorite(slug);
-    await USERS.doc(user.email).update({ favorites: user.favorites });
+    await USERS.doc(user.id).update({ favorites: FieldValue.arrayRemove(slug) });
 
     return res.json({ success: true, message: "Album removed from favorites!" });
 
