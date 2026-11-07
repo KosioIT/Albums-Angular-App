@@ -2,9 +2,8 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { protect, requireCsrfHeader } from '../middleware/authMiddleware.js';
 import {
-  validateRegisterUser,
-  validateLogin, validateResetRequest,
-  validateCheckResetCode, validateResetPassword
+  validateRegister, validateLogin, 
+  validateResetRequest, validateCheckResetCode, validateResetPassword
 } from '../validators/authValidators.js';
 import {
   getMe,
@@ -38,9 +37,15 @@ const loginLimiter = rateLimit({
   message: tooMany('Too many login attempts! Please try again later.'),
 });
 
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  message: tooMany('Too many registrations from this IP! Please try again later.'),
+});
+
 router.get('/me', protect, getMe);
 router.post('/login', loginLimiter, validateLogin, loginUser);
-router.post('/register', validateRegisterUser, registerUser);
+router.post('/register', registerLimiter, validateRegister, registerUser);
 
 router.post('/refresh', requireCsrfHeader, refreshSession);
 router.post('/logout', protect, logoutUser);

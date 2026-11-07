@@ -10,7 +10,7 @@ function codeValidator(fieldName = 'code') {
     .withMessage('Code must contain only numbers');
 }
 
-export const validateRegisterUser = [
+export const validateRegister = [
   emailValidator(),
   ...passwordValidator('password'),
   usernameValidator(),

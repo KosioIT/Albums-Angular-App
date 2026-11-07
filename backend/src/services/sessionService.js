@@ -89,6 +89,19 @@ export async function deleteSession(sessionId) {
     if (isValidId(sessionId)) await SESSIONS.doc(sessionId).delete();
 }
 
+/* 
+Deletes the session behind a refresh token, but only if the secret matches, which proves the caller really holds that token. Anything else is ignored. 
+*/
+export async function deleteSessionByToken(refreshToken) {
+    const [sessionId, secret] = String(refreshToken || "").split(".");
+    if (!isValidId(sessionId) || !secret) return;
+
+    const session = await getSession(sessionId);
+    if (session && safeEqual(sha256(secret), session.tokenHash)) {
+        await deleteSession(sessionId);
+    }
+}
+
 export async function revokeAllSessions(userId) {
     const snap = await SESSIONS.where("userId", "==", userId).get();
     const batch = db.batch();

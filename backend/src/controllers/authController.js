@@ -4,7 +4,7 @@ import { db } from "../config/firebase/firebase.js";
 import { getUserBy } from "../services/userService.js";
 import { issueResetCode, getResetCodeError, CLEARED_RESET_CODE } from "../services/resetCodeService.js";
 import { generateAccessToken, refreshTokens } from "../services/authService.js";
-import { createSession, deleteSession, revokeAllSessions, listUserSessions, revokeUserSession} from "../services/sessionService.js";
+import { createSession, deleteSession, deleteSessionByToken, revokeAllSessions, listUserSessions, revokeUserSession } from "../services/sessionService.js";
 import { setRefreshCookie, clearRefreshCookie, readRefreshCookie } from "../utils/refreshCookie.js";
 import { sendCodeViaEmail } from "../utils/email/sendCodeViaEmail.js";
 import { sendPasswordChangedEmail } from "../utils/email/sendPasswordChangedEmail.js";
@@ -26,6 +26,9 @@ export async function loginUser(req, res) {
         .status(400)
         .json({ success: false, message: "Wrong password! Please try again." });
     }
+
+    // Logging in again replaces this browser's session instead of piling up a second one
+    await deleteSessionByToken(readRefreshCookie(req));
 
     const { sessionId, refreshToken } = await createSession(user.id, req.get("user-agent"));
     setRefreshCookie(res, refreshToken);
@@ -65,7 +68,11 @@ export async function requestResetCode(req, res) {
     if (!user) return genericResponse();
 
     const code = await issueResetCode(user); // null during the cooldown
-    if (code) await sendCodeViaEmail(email, code);
+    if (code) {
+      sendCodeViaEmail(email, code).catch((err) => {
+        console.error("Send reset code email error:", err);
+      });
+    }
 
     return genericResponse();
   } catch (err) {

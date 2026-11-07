@@ -15,6 +15,7 @@ albums-files/
 node_modules/
 package-lock.json
 /yarn.lock
+nodemon.json
 
 # Environment files
 .env
