@@ -1,7 +1,6 @@
 users.txt
 albums-files/
 .kilo/
-/.kilo/
 
 # Angular specific
 /dist/
