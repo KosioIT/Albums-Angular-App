@@ -1,3 +1,5 @@
+import { provideRouter } from '@angular/router';
+import { provideToastr } from 'ngx-toastr';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { FavoriteAlbumsComponent } from './favorite-albums.component';
@@ -8,7 +10,8 @@ describe('FavoriteAlbumsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FavoriteAlbumsComponent]
+      imports: [FavoriteAlbumsComponent],
+      providers: [provideRouter([]), provideToastr()],
     })
     .compileComponents();
 

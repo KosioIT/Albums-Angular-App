@@ -1,3 +1,5 @@
+import { provideRouter } from '@angular/router';
+import { provideToastr } from 'ngx-toastr';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { LoginStatusComponent } from './login-status.component';
@@ -8,7 +10,8 @@ describe('LoginStatusComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LoginStatusComponent]
+      imports: [LoginStatusComponent],
+      providers: [provideRouter([]), provideToastr()],
     })
     .compileComponents();
     

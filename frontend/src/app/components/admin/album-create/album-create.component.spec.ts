@@ -1,3 +1,5 @@
+import { provideRouter } from '@angular/router';
+import { provideToastr } from 'ngx-toastr';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { AlbumCreateComponent } from './album-create.component';
@@ -8,7 +10,8 @@ describe('AlbumCreateComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AlbumCreateComponent]
+      imports: [AlbumCreateComponent],
+      providers: [provideRouter([]), provideToastr()],
     })
     .compileComponents();
     

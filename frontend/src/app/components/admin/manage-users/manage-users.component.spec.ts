@@ -1,3 +1,5 @@
+import { provideRouter } from '@angular/router';
+import { provideToastr } from 'ngx-toastr';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ManageUsersComponent } from './manage-users.component';
@@ -8,7 +10,8 @@ describe('ManageUsersComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ManageUsersComponent]
+      imports: [ManageUsersComponent],
+      providers: [provideRouter([]), provideToastr()],
     })
     .compileComponents();
     
