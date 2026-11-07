@@ -16,83 +16,57 @@ export class User extends BaseModel {
     this.totalLikes = data.totalLikes || 0;
 
     // Auth fields
-    this.token = data.token || null;
     this.role = data.role || "user"; // user, admin, guest
 
     // Reset code fields
     this.resetCode = data.resetCode || null;
     this.resetCodeExpiry = data.resetCodeExpiry || null;
-    this.resetCodeStatus = data.resetCodeStatus || null;
+    this.resetCodeAttempts = data.resetCodeAttempts || 0;
 
     // Timestamps
     this.created_at = data.created_at || new Date().toISOString();
     this.updated_at = data.updated_at || null;
   }
 
+  // Minimal user info for the client (login, refresh, /me)
+  toBasic() {
+    return { id: this.id, username: this.username, email: this.email, role: this.role };
+  }
+
+  // Public representation without sensitive fields, plus simple stats
+  toPublic() {
+    const { password, resetCode, resetCodeExpiry, resetCodeAttempts, ...safe } = this;
+    return {
+      ...safe,
+      stats: {
+        favoritesCount: this.favorites.length,
+        likedCount: this.likedAlbums.length,
+      },
+    };
+  }
+
   getFavorites() {
     return this.favorites;
   }
 
-  /**
-   * Add album to favorites
-   */
   addFavorite(albumId) {
     if (!this.favorites.includes(albumId)) {
       this.favorites.push(albumId);
     }
   }
 
-  /**
-   * Remove album from favorites
-   */
   removeFavorite(albumId) {
     this.favorites = this.favorites.filter(id => id !== albumId);
   }
 
-
-  /**
-   * Like album
-   */
-  likeAlbum(albumId) {
-    if (!this.likedAlbums.includes(albumId)) {
-      this.likedAlbums.push(albumId);
-      this.totalLikes++;
-    }
-  }
-
-  /**
-   * Unlike album
-   */
-  unlikeAlbum(albumId) {
-    if (this.likedAlbums.includes(albumId)) {
-      this.likedAlbums = this.likedAlbums.filter(id => id !== albumId);
-      this.totalLikes--;
-    }
-  }
-
-  /**
-   * Set reset code
-   */
   setResetCode(hashedCode) {
     this.resetCode = hashedCode;
     this.resetCodeExpiry = Date.now() + 15 * 60 * 1000; // 15 minutes
-    this.resetCodeStatus = 'sent';
   }
 
-  /**
-   * Clear reset code
-   */
   clearResetCode() {
     this.resetCode = null;
     this.resetCodeExpiry = null;
-    this.resetCodeStatus = null;
-  }
-
-  /**
-   * Set JWT token
-   */
-  setToken(token) {
-    this.token = token;
   }
 
 }

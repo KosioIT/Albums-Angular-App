@@ -11,6 +11,6 @@ export interface Album {
   moods: string[]; // Moods like 'love', 'sadness', 'epic', etc.
   rank: 'gold' | 'silver' | 'bronze' | 'common';
   tracks: Track[];
-  megaUrl: string; // Download URL for the album file
+  downloadUrl: string; // Download URL for the album file
   createdBy: string; // User ID of the creator
 }

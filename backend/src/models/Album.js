@@ -1,5 +1,5 @@
-import { BaseModel } from './BaseModel.js'; 
-import  { makeSlug } from '../utils/slugify.js';
+import { BaseModel } from './BaseModel.js';
+import { makeSlug } from '../utils/slugify.js';
 
 export class Album extends BaseModel {
   constructor(data, id = null) {
@@ -7,7 +7,7 @@ export class Album extends BaseModel {
     super(data, finalId);
 
     this.id = finalId;
-    
+
     // Basic fields
     this.title = data.title;
     this.artist = data.artist;
@@ -17,8 +17,13 @@ export class Album extends BaseModel {
     // Optional fields
     this.rank = data.rank || 'common';
     this.likes = data.likes || 0;
-    this.moods = data.moods || []; 
+    this.moods = data.moods || [];
     this.producers = data.producers || [];
+
+    // Counters (changed only with FieldValue.increment in Firestore)
+    this.likes = data.likes || 0;
+    this.listens = data.listens || 0;
+    this.downloads = data.downloads || 0;
 
     // Tracks
     this.tracks = data.tracks || [];
@@ -27,11 +32,17 @@ export class Album extends BaseModel {
     this.created_at = data.created_at || new Date().toISOString();
     this.updated_at = data.updated_at || null;
 
-    //User (id) who created the album
+    // User (id) who created the album
     this.createdBy = data.createdBy || null;
 
-    // MEGA Download URL
-    this.megaUrl = data.megaUrl || null;
+    // Download URL (any provider; never sent to clients, see toPublic)
+    this.downloadUrl = data.downloadUrl || null;
+  }
+
+  // Public representation: hides the download link
+  toPublic() {
+    const { downloadUrl, ...safe } = this;
+    return { ...safe, hasDownload: !!downloadUrl };
   }
 
   /**

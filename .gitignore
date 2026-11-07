@@ -67,3 +67,6 @@ dist/
 
 backend/src/config/firebase/serviceAccountKey.json
 serviceAccountKey.json
+
+*.rar
+*.zip

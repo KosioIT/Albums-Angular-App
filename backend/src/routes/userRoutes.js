@@ -1,15 +1,11 @@
 import express from 'express';
-import { getUser, deleteUser, getAllUsers } from '../controllers/userController.js';
-
+import { getUser, deleteUser, getAllUsers, getMyActivity } from '../controllers/userController.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
-//Get all users
-router.get("/", getAllUsers);
-
-//Get user by value (username/email)
-router.get("/:field/:value", getUser);
-
-//Delete user (by email)
-router.delete("/", deleteUser);
+router.get('/me/activity', protect, getMyActivity);
+router.get('/', protect, admin, getAllUsers);
+router.get('/:field/:value', protect, admin, getUser);
+router.delete('/', protect, admin, deleteUser);
 
 export default router;

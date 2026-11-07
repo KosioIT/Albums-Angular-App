@@ -1,165 +1,81 @@
 import { body } from 'express-validator';
+import { MAX_TEXT, stringArray, validationResultHandler } from './sharedValidators.js';
 
-// Allowed rank values
 const VALID_RANKS = ['gold', 'silver', 'bronze', 'common'];
+const MAX_TRACKS = 100;
+const DURATION_RE = /^\d{1,3}:[0-5]\d$/;
 
+const ALLOWED_DOWNLOAD_HOSTS = [
+    'mega.nz', 'drive.google.com', 'dropbox.com', 'onedrive.live.com', '1drv.ms',
+];
+// matches the host itself and its subdomains (e.g. www.dropbox.com)
+const HOST_WHITELIST = ALLOWED_DOWNLOAD_HOSTS.map(
+    h => new RegExp(`(^|\\.)${h.replace(/\./g, '\\.')}$`)
+);
 
-/**
- * Array of album IDs validator
- */
-export function albumIdArrayValidator(fieldName) {
-  return body(fieldName)
-    .optional()
-    .isArray()
-    .withMessage(`${fieldName} must be an array`)
-    .custom(arr => arr.every(id => typeof id === 'string'))
-    .withMessage(`${fieldName} must contain only string IDs`);
+// partial = true → every field is optional (used for updates)
+function required(name, partial) {
+    const chain = body(name);
+    return partial ? chain.optional() : chain.exists().withMessage(`${name} is required`).bail();
 }
 
-/**
- * totalLikes validator
- */
-export function totalLikesValidator() {
-  return body('totalLikes')
-    .optional()
-    .isNumeric()
-    .withMessage('totalLikes must be a number');
+function text(name, partial) {
+    return required(name, partial)
+        .isString().withMessage(`${name} must be a string`)
+        .bail()
+        .trim()
+        .notEmpty().withMessage(`${name} must not be empty`)
+        .isLength({ max: MAX_TEXT }).withMessage(`${name} must be at most ${MAX_TEXT} characters`);
 }
 
-/**
- * Validate track object
- */
-export function validateTrack(track) {
-    if (!track || typeof track !== 'object') return 'Track must be an object!';
+function albumRules(partial) {
+    return [
+        text('title', partial),
+        text('artist', partial),
+        text('genre', partial),
 
-    if (!track.title || typeof track.title !== 'string') {
-        return 'Track title is required and must be a string!';
-    }
+        required('release_date', partial)
+            .matches(/^\d{2}\.\d{2}\.\d{4}$/)
+            .withMessage('release_date must be in DD.MM.YYYY format')
+            .bail()
+            .isDate({ format: 'DD.MM.YYYY', delimiters: ['.'], strictMode: true })
+            .withMessage('release_date must be a valid date'),
 
-    if (!track.duration || typeof track.duration !== 'string') {
-        return 'Track duration is required and must be a string!';
-    }
+        body('rank').optional()
+            .isIn(VALID_RANKS).withMessage(`rank must be one of: ${VALID_RANKS.join(', ')}`),
 
-    if (!Array.isArray(track.composer)) {
-        return 'Track composer must be an array of strings!';
-    }
+        ...stringArray('moods'),
+        ...stringArray('producers'),
 
-    return null; // valid
+        body('tracks').optional()
+            .isArray({ max: MAX_TRACKS }).withMessage(`tracks must be an array with at most ${MAX_TRACKS} items`),
+        body('tracks.*')
+            .isObject().withMessage('Each track must be an object'),
+        body('tracks.*.title')
+            .isString().withMessage('Track title must be a string')
+            .bail()
+            .trim()
+            .notEmpty().withMessage('Track title must not be empty')
+            .isLength({ max: MAX_TEXT }).withMessage(`Track title must be at most ${MAX_TEXT} characters`),
+        body('tracks.*.duration')
+            .isString().bail()
+            .matches(DURATION_RE).withMessage('Track duration must be in m:ss format'),
+        ...stringArray('tracks.*.composer', { required: true }),
+
+        // null clears the link; anything else must be an https URL on an allowed host
+        body('downloadUrl')
+            .optional({ values: 'null' })
+            .isURL({
+                protocols: ['https'],
+                require_protocol: true,
+                disallow_auth: true,
+                host_whitelist: HOST_WHITELIST,
+            })
+            .withMessage(`downloadUrl must be an https link on: ${ALLOWED_DOWNLOAD_HOSTS.join(', ')}`),
+
+        validationResultHandler,
+    ];
 }
 
-/**
- * Validate album rank
- */
-export function validateRank(rank) {
-    if (!VALID_RANKS.includes(rank)) {
-        return `Rank must be one of: ${VALID_RANKS.join(', ')}!`;
-    }
-    return null;
-}
-
-/**
- * Validate array of strings (producers, composer)
- */
-export function validateStringArray(arr, fieldName) {
-    if (!Array.isArray(arr)) {
-        return `${fieldName} must be an array!`;
-    }
-    if (!arr.every(item => typeof item === 'string')) {
-        return `${fieldName} must contain only strings!`;
-    }
-    return null;
-}
-
-/**
- * Validate album on CREATE (POST)
- */
-export function validateAlbumCreate(album) {
-    if (!album || typeof album !== 'object') {
-        return 'Album must be an object!';
-    }
-
-    if (!album.title || typeof album.title !== 'string') {
-        return 'Album title is required and must be a string!';
-    }
-
-    if (!album.artist || typeof album.artist !== 'string') {
-        return 'Album artist is required and must be a string!';
-    }
-
-    if (!album.release_date || typeof album.release_date !== 'string') {
-        return 'Album release_date is required and must be a string!';
-    }
-
-    if (!album.genre || typeof album.genre !== 'string') {
-        return 'Album genre is required and must be a string!';
-    }
-
-    if (album.producers) {
-        const err = validateStringArray(album.producers, 'producers');
-        if (err) return err;
-    }
-
-    if (album.rank) {
-        const err = validateRank(album.rank);
-        if (err) return err;
-    }
-
-    if (album.tracks) {
-        if (!Array.isArray(album.tracks)) {
-            return 'Tracks must be an array!';
-        }
-        for (const track of album.tracks) {
-            const err = validateTrack(track);
-            if (err) return err;
-        }
-    }
-
-    return null; // valid
-}
-
-/**
- * Validate album on UPDATE (PUT)
- */
-export function validateAlbumUpdate(album) {
-    if (!album || typeof album !== 'object') {
-        return 'Album must be an object!';
-    }
-
-    if (album.title && typeof album.title !== 'string') {
-        return 'Album title must be a string!';
-    }
-
-    if (album.artist && typeof album.artist !== 'string') {
-        return 'Album artist must be a string!';
-    }
-
-    if (album.release_date && typeof album.release_date !== 'string') {
-        return 'Album release_date must be a string!';
-    }
-
-    if (album.genre && typeof album.genre !== 'string') {
-        return 'Album genre must be a string!';
-    }
-
-    if (album.producers) {
-        const err = validateStringArray(album.producers, 'producers');
-        if (err) return err;
-    }
-
-    if (album.rank) {
-        const err = validateRank(album.rank);
-        if (err) return err;
-    }
-
-    if (album.tracks) {
-        if (!Array.isArray(album.tracks)) {
-            return 'Tracks must be an array!';
-        }
-        for (const track of album.tracks) {
-            const err = validateTrack(track);
-            if (err) return err;
-        }
-    }
-
-    return null; // valid
-}
+export const validateAlbumCreate = albumRules(false);
+export const validateAlbumUpdate = albumRules(true);

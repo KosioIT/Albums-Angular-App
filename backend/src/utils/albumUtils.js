@@ -1,17 +1,3 @@
-export async function loadOwnedAlbumOrThrow(user, albumId) {
-  const album = await findAlbums("id", albumId);
-
-  if (!album) {
-    throw new Error("NOT_FOUND");
-  }
-
-  if (!user || (user.role !== "admin" && album.createdBy !== user.id)) {
-    throw new Error("UNAUTHORIZED");
-  }
-
-  return album;
-}
-
 // Advanced multi-criteria filtering (AI + UI + combined filters)
 export function filterAlbumsAdvanced(albums, criteria = {}) {
   let results = albums;

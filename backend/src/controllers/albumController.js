@@ -1,20 +1,24 @@
 import { db } from "../config/firebase/firebase.js";
 import { Album } from "../models/Album.js";
-import { loadOwnedAlbumOrThrow, handleAlbumErrors } from "../utils/albumUtils.js";
-import { findAlbums } from "../services/albumService.js";
+import { matchedData } from "express-validator";
+import { loadOwnedAlbumOrThrow, getAllAlbumsFromFirestore, findAlbums } from "../services/albumService.js";;
+import { recordDownload } from '../services/activityService.js';
 
 const ALBUMS = db.collection("albums");
 
 export const getAllAlbums = async (_req, res) => {
   try {
-    const snapshot = await ALBUMS.get();
+    const albums = await getAllAlbumsFromFirestore();
 
-    const albums = snapshot.docs.map((doc) => {
-      const album = new Album(doc.data(), doc.id);
-      return album;
-    });
+    if (!albums || albums.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No albums found!"
+      });
+    }
 
     return res.json({ success: true, data: albums });
+
   } catch (err) {
     console.error("Get albums error:", err);
     return res.status(500).json({ success: false, message: "Server error!" });
@@ -51,7 +55,7 @@ export const filterAlbums = async (req, res) => {
 
 export const createAlbum = async (req, res) => {
   try {
-    const album = new Album(req.body);
+    const album = new Album(matchedData(req));
 
     const existing = await findAlbums("title", album.title);
     if (existing) {
@@ -60,6 +64,7 @@ export const createAlbum = async (req, res) => {
         message: "Album with this title already exists!"
       });
     }
+
     // Add creator
     album.createdBy = req.user.id;
 
@@ -79,17 +84,21 @@ export const createAlbum = async (req, res) => {
 
 export const updateAlbum = async (req, res) => {
   try {
-    const album = await loadOwnedAlbumOrThrow(req.user, req.params.id);
+    const changes = matchedData(req);
+    const album = new Album(await loadOwnedAlbumOrThrow(req.user, req.params.id), req.params.id);
 
-    album.update(req.body);
+    album.update(changes);
+    album.setUpdateDate();
 
-    await ALBUMS.doc(album.id).update(album.toFirestore());
+    const { id, likes, listens, downloads, ...data } = album.toFirestore();
+    await ALBUMS.doc(album.id).update(data);
 
     return res.json({
       success: true,
       message: "Album updated successfully!",
-      data: album,
+      data: album.toPublic(),
     });
+
   } catch (err) {
     console.error("Update album error:", err);
     return res.status(400).json({ success: false, message: "Invalid data!" });
@@ -105,14 +114,14 @@ export const deleteAlbum = async (req, res) => {
     return res.json({ success: true, message: "Album removed successfully!" });
   } catch (err) {
     console.error("Delete album error:", err);
-    return handleAlbumErrors(err, res);
+    return res.status(400).json({ success: false, message: "Invalid data!" });
   }
 };
 
 // Download album file (zip) from MEGA
 export const downloadAlbum = async (req, res) => {
   try {
-    const slug = req.params.slug;
+    const slug = req.params.id;
 
     const doc = await ALBUMS.doc(slug).get();
 
@@ -125,7 +134,7 @@ export const downloadAlbum = async (req, res) => {
 
     const album = doc.data();
 
-    if (!album.megaUrl) {
+    if (!album.downloadUrl) {
       return res.status(404).json({
         success: false,
         message: "Mega download link not available!"
@@ -133,7 +142,8 @@ export const downloadAlbum = async (req, res) => {
     }
 
     // Redirect to Mega file
-    return res.redirect(album.megaUrl);
+    await recordDownload(req.user.id, slug);
+    return res.redirect(album.downloadUrl);
 
   } catch (err) {
     console.error("Download error:", err);

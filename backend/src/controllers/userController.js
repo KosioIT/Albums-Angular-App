@@ -1,25 +1,25 @@
 import bcrypt from "bcrypt";
 import { db } from "../config/firebase/firebase.js";
 import { FieldValue } from "firebase-admin/firestore";
-import {
-  validateUserCreate
-} from "../validators/userValidators.js";
 import { User } from "../models/User.js";
 import { Album } from "../models/Album.js";
 import { validateFavoriteOperation } from "../utils/favoritesUtils.js";
 import { getUserBy, checkExistingCredential } from "../services/userService.js";
-import { findAlbums } from "../services/albumService.js";
+import { recordListen, getActivitySummary, setLiked } from '../services/activityService.js';
+import { checkExistingAlbum } from "../services/albumService.js";
 import { sendWelcomeEmail } from '../utils/email/sendWelcomeEmail.js';
+import { revokeAllSessions } from '../services/sessionService.js';
 
 const USERS = db.collection("users");
 const ALBUMS = db.collection("albums");
+
 
 /* ----- USER CRUD FUNCTIONS ----- */
 
 export async function getAllUsers(req, res) {
   try {
     const usersSnapshot = await USERS.get();
-    const users = usersSnapshot.docs.map((doc => doc.data()));
+    const users = usersSnapshot.docs.map(doc => new User(doc.data(), doc.id).toPublic());
     return res.status(200).json({ success: true, data: users, message: "Users fetched successfully!" });
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -30,13 +30,11 @@ export async function getAllUsers(req, res) {
 // Unified GET query
 export async function getUser(req, res) {
   try {
+    const ALLOWED_FIELDS = ["email", "username"];
     const { field, value } = req.params;
 
-    if (!field || !value) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid query params!"
-      });
+    if (!ALLOWED_FIELDS.includes(field) || !value) {
+      return res.status(400).json({ success: false, message: "Invalid query params!" });
     }
 
     // Unified lookup
@@ -51,7 +49,7 @@ export async function getUser(req, res) {
 
     return res.json({
       success: true,
-      data: user
+      data: user.toPublic()
     });
 
   } catch (err) {
@@ -66,10 +64,7 @@ export async function getUser(req, res) {
 //Same as CREATE operation (POST method)
 export async function registerUser(req, res) {
   try {
-    const error = validateUserCreate(req.body);
-    if (error) return res.status(400).json({ success: false, message: error });
-
-    const { username, email, password, role } = req.body;
+    const { username, email, password } = req.body;
 
     if (await checkExistingCredential("username", username))
       return res.status(409).json({ message: "Username already exists!" });
@@ -83,7 +78,7 @@ export async function registerUser(req, res) {
       username,
       email,
       password: hashedPassword,
-      role: role ? role : "user" // Default role is "user"
+      role: "user" // Default role is "user" (admin role can be assigned manually in the database)
     });
 
     await USERS.doc(email).set(user.toFirestore());
@@ -119,6 +114,7 @@ export async function deleteUser(req, res) {
     }
 
     await db.collection("users").doc(email).delete();
+    await revokeAllSessions(email);
 
     return res.json({
       success: true,
@@ -135,6 +131,31 @@ export async function deleteUser(req, res) {
 
 
 /* ----- ALBUMS-RELATED OPERATIONS ----- */
+
+export async function listenToAlbum(req, res) {
+  try {
+    const { albumId } = req.params;
+    if (!(await checkExistingAlbum(albumId))) {
+      return res.status(404).json({ success: false, message: 'Album not found!' });
+    }
+    await recordListen(req.user.id, albumId);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Listen error:', err);
+    return res.status(500).json({ success: false, message: 'Could not record listen!' });
+  }
+}
+
+//Get activity summary (listens, downloads, likes)
+export async function getMyActivity(req, res) {
+  try {
+    const data = await getActivitySummary(req.user.id);
+    return res.json({ success: true, data });
+  } catch (err) {
+    console.error('Activity error:', err);
+    return res.status(500).json({ success: false, message: 'Could not fetch activity!' });
+  }
+}
 
 export async function getFavoriteAlbums(req, res) {
   try {
@@ -227,75 +248,46 @@ export async function toggleLike(req, res) {
     const user = req.user;
     const albumId = req.params.albumId;
 
-    const album = await findAlbums("id", albumId);
-    if (!album) {
-      return res.status(404).json({
-        success: false,
-        message: "Album not found!",
+    const albumRef = ALBUMS.doc(albumId);
+    const userRef = USERS.doc(user.id);
+    const activityRef = userRef.collection("activity").doc(albumId);
+
+    const result = await db.runTransaction(async (t) => {
+      // all reads first
+      const albumSnap = await t.get(albumRef);
+      if (!albumSnap.exists) return null;
+      const userSnap = await t.get(userRef);
+
+      const alreadyLiked = (userSnap.data().likedAlbums || []).includes(albumId);
+      const delta = alreadyLiked ? -1 : 1;
+
+      // then all writes
+      t.update(userRef, {
+        likedAlbums: alreadyLiked
+          ? FieldValue.arrayRemove(albumId)
+          : FieldValue.arrayUnion(albumId),
       });
+      t.update(albumRef, { likes: FieldValue.increment(delta) });
+      t.set(activityRef, {
+        liked: !alreadyLiked,
+        likedAt: alreadyLiked ? null : new Date().toISOString(),
+      }, { merge: true });
+
+      return { liked: !alreadyLiked, likes: (albumSnap.data().likes || 0) + delta };
+    });
+
+    if (!result) {
+      return res.status(404).json({ success: false, message: "Album not found!" });
     }
 
-    // Initialize the array if missing
-    user.likedAlbums = user.likedAlbums || [];
-
-    const alreadyLiked = user.likedAlbums.includes(albumId);
-
-    if (!alreadyLiked) {
-      // -------------------------
-      // LIKE logic
-      // -------------------------
-
-      // Add to user instance
-      user.likedAlbums.push(albumId);
-
-      // Save to firestore
-      await USERS.doc(user.id).update({
-        likedAlbums: user.likedAlbums,
-      });
-
-      // Automatic increment
-      await ALBUMS.doc(albumId).update({
-        likes: FieldValue.increment(1),
-      });
-
-      return res.json({
-        success: true,
-        action: "liked",
-        message: "Album liked!",
-        likes: album.likes + 1,
-      });
-
-    } else {
-      // -------------------------
-      // UNLIKE logic
-      // -------------------------
-
-      // Remove from user model (instance)
-      user.likedAlbums = user.likedAlbums.filter((id) => id !== albumId);
-
-      // Save to firestore
-      await USERS.doc(user.id).update({
-        likedAlbums: user.likedAlbums,
-      });
-
-      // Automatic derement
-      await ALBUMS.doc(albumId).update({
-        likes: FieldValue.increment(-1),
-      });
-
-      return res.json({
-        success: true,
-        action: "unliked",
-        message: "Album unliked!",
-        likes: album.likes - 1,
-      });
-    }
+    return res.json({
+      success: true,
+      action: result.liked ? "liked" : "unliked",
+      message: result.liked ? "Album liked!" : "Album unliked!",
+      likes: result.likes,
+    });
   } catch (err) {
     console.error("Toggle like error:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Could not toggle like!",
-    });
+    return res.status(500).json({ success: false, message: "Could not toggle like!" });
   }
 }
-
