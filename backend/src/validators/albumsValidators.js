@@ -41,6 +41,12 @@ function albumRules(partial) {
             .isDate({ format: 'DD.MM.YYYY', delimiters: ['.'], strictMode: true })
             .withMessage('release_date must be a valid date'),
 
+        body('cover_img_url')
+            .optional({ values: 'null' })
+            .isURL({ protocols: ['http', 'https'], require_protocol: true, disallow_auth: true })
+            .withMessage('cover_img_url must be an http(s) link')
+            .isLength({ max: 2000 }).withMessage('cover_img_url is too long'),
+
         body('rank').optional()
             .isIn(VALID_RANKS).withMessage(`rank must be one of: ${VALID_RANKS.join(', ')}`),
 

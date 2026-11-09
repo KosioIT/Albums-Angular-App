@@ -48,6 +48,28 @@ export const environment = {
 };
 ```
 
+## Sample data
+
+The album seed scripts live in `backend/db` and need the Firebase service account key
+(`backend/src/config/firebase/serviceAccountKey.json`). Run them from the `backend` folder:
+
+```bash
+npm run seed:albums -- --check
+```
+validates `db/albums.data.js` with the same rules as the API, without touching the database.
+
+```bash
+npm run seed:albums
+```
+adds the albums that are missing (existing ones are skipped; `-- --force` updates their metadata
+but keeps likes, listens, downloads and download links).
+
+```bash
+npm run seed:downloads
+```
+matches the archives in the Mega folder from `MEGA_ALBUMS_FOLDER_URL` (backend `.env`) to albums
+and shows the result; add `-- --write` to save the links (`-- --write --overwrite` replaces existing ones).
+
 ## MongoDB Setup
 This project uses MongoDB as its database. To run it locally:
 

@@ -13,6 +13,7 @@ export class Album extends BaseModel {
     this.artist = data.artist;
     this.genre = data.genre;
     this.release_date = data.release_date;
+    this.cover_img_url = data.cover_img_url || null;
 
     // Optional fields
     this.rank = data.rank || 'common';
