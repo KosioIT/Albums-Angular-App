@@ -6,6 +6,7 @@
     npm run seed:downloads -- --write --overwrite   also replaces links that are already set
 
   The folder link is read from MEGA_ALBUMS_FOLDER_URL in backend/.env (or passed as an argument).
+  In .env it must be in double quotes, otherwise dotenv cuts it at "#" (the start of a comment).
   Keep it out of git: anyone with it can download every archive, and the app hides download links on purpose.
 
   Each archive (.zip/.rar/.7z, subfolders included) is matched to an album by name: the album's slug
@@ -24,6 +25,10 @@ const FOLDER_URL = process.argv.find((a) => a.startsWith('https://mega.nz/')) ||
 const ARCHIVE_RE = /\.(zip|rar|7z)$/i;
 
 const folderMatch = FOLDER_URL?.match(/^https:\/\/mega\.nz\/folder\/([\w-]+)#([\w-]+)/);
+if (!folderMatch && /^https:\/\/mega\.nz\/folder\/[\w-]+$/.test(FOLDER_URL || '')) {
+    console.error('✘ The folder key (the part after "#") is missing. In .env put the link in double quotes:\n  MEGA_ALBUMS_FOLDER_URL="https://mega.nz/folder/<id>#<key>"');
+    process.exit(1);
+}
 if (!folderMatch) {
     console.error('✘ Set MEGA_ALBUMS_FOLDER_URL in backend/.env to a public folder link (https://mega.nz/folder/<id>#<key>)');
     process.exit(1);

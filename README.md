@@ -67,7 +67,7 @@ but keeps likes, listens, downloads and download links).
 ```bash
 npm run seed:downloads
 ```
-matches the archives in the Mega folder from `MEGA_ALBUMS_FOLDER_URL` (backend `.env`) to albums
+matches the archives in the Mega folder from `MEGA_ALBUMS_FOLDER_URL` (backend `.env`, in double quotes because of the `#`) to albums
 and shows the result; add `-- --write` to save the links (`-- --write --overwrite` replaces existing ones).
 
 ## MongoDB Setup
