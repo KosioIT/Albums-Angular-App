@@ -3,7 +3,8 @@
   Shape follows the Album model and the album validators:
   release_date "DD.MM.YYYY", tracks[].composer as an array, rank gold|silver|bronze|common.
   Within each band the order is the rank by sales (US certifications): 1st gold, 2nd silver,
-  3rd bronze, the rest common.
+  3rd bronze, the rest common. A reissue counts with its original album (as RIAA certifies them),
+  e.g. Appetite for Destruction (Super Deluxe Edition) carries the original's sales.
   The document id is the slug of the title (Album model), so titles must stay unique.
 */
 
@@ -96,13 +97,27 @@ const acdc = [
 
 const gunsNRoses = [
     {
+        title: "Appetite for Destruction (Super Deluxe Edition)",
+        artist: "Guns N' Roses",
+        release_date: "29.06.2018",
+        producers: ["Mike Clink", "Axl Rose"],
+        genre: "Hard Rock / Remastered",
+        cover_img_url: "https://i.scdn.co/image/ab67616d0000b273275b7ffe49eb84ab13a71980",
+        rank: "gold",
+        tracks: [
+            { title: "Shadow of Your Love", duration: "3:05", composer: ["Axl Rose", "Paul Tobias"] },
+            { title: "Move to the City", duration: "3:42", composer: ["Axl Rose", "Izzy Stradlin"] },
+            { title: "Reckless Life", duration: "3:20", composer: ["Axl Rose", "Slash"] },
+        ],
+    },
+    {
         title: "Greatest Hits",
         artist: "Guns N' Roses",
         release_date: "23.03.2004",
         producers: ["Various"],
         genre: "Compilation",
         cover_img_url: "https://i.discogs.com/CjFOO1WqKCOEi0oQtSUEbmky_IiUAnEtO3Phd6K6HrY/rs:fit/g:sm/q:90/h:554/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEzNjAy/NjQ5LTE1NTczNzA1/OTktNjcwOS5qcGVn.jpeg",
-        rank: "gold",
+        rank: "silver",
         tracks: [
             { title: "Welcome to the Jungle", duration: "4:31", composer: ["Axl Rose", "Slash"] },
             { title: "Sweet Child o' Mine", duration: "5:56", composer: ["Axl Rose", "Slash", "Izzy Stradlin"] },
@@ -116,7 +131,7 @@ const gunsNRoses = [
         producers: ["Guns N' Roses"],
         genre: "Hard Rock / Live",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/2/2c/Live_Era_87-93Guns%27n%27roses.jpg",
-        rank: "silver",
+        rank: "bronze",
         tracks: [
             { title: "Nightrain (Live)", duration: "5:59", composer: ["Axl Rose", "Slash", "Izzy Stradlin"] },
             { title: "Mr. Brownstone (Live)", duration: "4:58", composer: ["Axl Rose", "Izzy Stradlin"] },
@@ -130,25 +145,11 @@ const gunsNRoses = [
         producers: ["MTV"],
         genre: "Hard Rock / Live",
         cover_img_url: "https://m.media-amazon.com/images/I/81LHQnoRvcL._UF1000,1000_QL80_.jpg",
-        rank: "bronze",
+        rank: "common",
         tracks: [
             { title: "It's So Easy (Live)", duration: "3:50", composer: ["Duff McKagan", "West Arkeen"] },
             { title: "Out Ta Get Me (Live)", duration: "4:20", composer: ["Axl Rose", "Slash"] },
             { title: "Rocket Queen (Live)", duration: "6:13", composer: ["Axl Rose", "Slash"] },
-        ],
-    },
-    {
-        title: "Appetite for Destruction (Super Deluxe Edition)",
-        artist: "Guns N' Roses",
-        release_date: "29.06.2018",
-        producers: ["Mike Clink", "Axl Rose"],
-        genre: "Hard Rock / Remastered",
-        cover_img_url: "https://i.scdn.co/image/ab67616d0000b273275b7ffe49eb84ab13a71980",
-        rank: "common",
-        tracks: [
-            { title: "Shadow of Your Love", duration: "3:05", composer: ["Axl Rose", "Paul Tobias"] },
-            { title: "Move to the City", duration: "3:42", composer: ["Axl Rose", "Izzy Stradlin"] },
-            { title: "Reckless Life", duration: "3:20", composer: ["Axl Rose", "Slash"] },
         ],
     },
     {
