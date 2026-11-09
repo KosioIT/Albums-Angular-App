@@ -22,7 +22,7 @@ h2 {
   margin-top: 70px;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   gap: 45px !important;
   padding: 0 20px;
   box-sizing: border-box;
@@ -71,24 +71,11 @@ h2 {
   font-weight: 900;
   color: lime;
   text-align: center;
-  white-space: normal;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
-<<<<<<< HEAD
   max-width: 220px;
-=======
-  /* at most 2 lines, then "…" */
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-}
-
-.no-albums-message{
-  color: red;
-  font-size: 24px;
->>>>>>> 4f85b6cc646eb10d0f70c2dfced65d7e6c4718c8
 }
 
 .no-albums-message{
