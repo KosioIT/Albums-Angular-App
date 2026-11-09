@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 
 import { Album } from '../../models/album';
@@ -8,7 +9,7 @@ import { FavoritesTemplateComponent } from '../favorites/favorites-template/favo
 
 @Component({
   selector: 'app-albums-list',
-  imports: [RouterModule, FavoritesTemplateComponent],
+  imports: [RouterModule, FavoritesTemplateComponent, DecimalPipe],
   templateUrl: './albums-list.component.html',
   styleUrls: ['./albums-list.component.css', '../../styles/albums-list.css'],
 })
