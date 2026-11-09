@@ -1,0 +1,51 @@
+<div class="col-md-10 col-lg-7 mx-auto mt-5">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title mb-1">Active sessions</h5>
+      <p class="text-muted small mb-4">
+        Devices signed in to your account. A session ends after 30 days without use.
+        If you don't recognise one, sign it out and change your password.
+      </p>
+
+      @if (loading) {
+        <p class="text-muted">Loading...</p>
+      } @else if (sessions.length === 0) {
+        <p class="text-muted">No active sessions.</p>
+      } @else {
+        <ul class="list-group mb-4">
+          @for (session of sessions; track session.id) {
+            <li class="list-group-item d-flex justify-content-between align-items-center gap-3">
+              <div class="session-info">
+                <div class="fw-semibold">
+                  {{ describeDevice(session.userAgent) }}
+                  @if (session.current) {
+                    <span class="badge bg-success ms-1">This device</span>
+                  }
+                </div>
+                <div class="text-muted small">
+                  Last active {{ session.lastUsedAt | date: 'medium' }}
+                  · signed in {{ session.createdAt | date: 'mediumDate' }}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-danger"
+                [disabled]="busyId === session.id"
+                (click)="revoke(session)"
+              >
+                {{ busyId === session.id ? 'Signing out...' : 'Sign out' }}
+              </button>
+            </li>
+          }
+        </ul>
+
+        <div class="d-flex justify-content-end">
+          <button type="button" class="btn btn-danger" (click)="signOutEverywhere()">
+            Sign out of all devices{{ otherSessions ? ' (' + (otherSessions + 1) + ')' : '' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>

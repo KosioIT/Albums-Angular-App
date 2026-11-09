@@ -9,6 +9,7 @@ import { ManageAlbumsComponent } from './components/admin/manage-albums/manage-a
 import { ManageUsersComponent } from './components/admin/manage-users/manage-users.component';
 import { AlbumCreateComponent } from './components/admin/album-create/album-create.component';
 import { FavoriteAlbumsComponent } from './components/favorites/favorite-albums/favorite-albums.component';
+import { SessionsComponent } from './components/account/sessions/sessions.component';
 import { adminGuard, authGuard, guestGuard } from './core/guards/auth.guards';
 
 export const routes: Routes = [
@@ -21,6 +22,7 @@ export const routes: Routes = [
   { path: 'reset-password', component: ResetPasswordComponent, canActivate: [guestGuard] },
 
   { path: 'favorites', component: FavoriteAlbumsComponent, canActivate: [authGuard] },
+  { path: 'account/sessions', component: SessionsComponent, canActivate: [authGuard] },
 
   { path: 'admin/albums', component: ManageAlbumsComponent, canActivate: [adminGuard] },
   { path: 'admin/users', component: ManageUsersComponent, canActivate: [adminGuard] },
