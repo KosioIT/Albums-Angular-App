@@ -20,7 +20,7 @@ export function filterAlbumsAdvanced(albums, criteria = {}) {
   if (criteria.band) {
     const bandLower = criteria.band.toLowerCase();
     results = results.filter(album =>
-      album.band.toLowerCase() === bandLower
+      (album.artist || "").toLowerCase() === bandLower
     );
   }
 
@@ -28,7 +28,7 @@ export function filterAlbumsAdvanced(albums, criteria = {}) {
   if (criteria.era) {
     const [start, end] = eraToYears(criteria.era);
     results = results.filter(album => {
-      const year = new Date(album.release_date).getFullYear();
+      const year = yearOf(album);
       return year >= start && year < end;
     });
   }
@@ -55,10 +55,10 @@ export function filterAlbumsAdvanced(albums, criteria = {}) {
 export function sortAlbums(albums, sortBy) {
   switch (sortBy) {
     case "year-asc":
-      return albums.sort((a, b) => a.year - b.year);
+      return albums.sort((a, b) => yearOf(a) - yearOf(b));
 
     case "year-desc":
-      return albums.sort((a, b) => b.year - a.year);
+      return albums.sort((a, b) => yearOf(b) - yearOf(a));
 
     case "title-asc":
       return albums.sort((a, b) => a.title.localeCompare(b.title));
@@ -104,3 +104,8 @@ export function eraToYears(era) {
   }
 }
 
+
+// release_date is stored as DD.MM.YYYY
+function yearOf(album) {
+  return Number(String(album.release_date || "").slice(-4)) || 0;
+}

@@ -40,13 +40,10 @@ export class ManageAlbumsComponent {
 
   toggleEdit(albumId: string): void {
     if (this.isEditing(albumId)) {
-      this.albumService.getById(albumId).subscribe((album) => {
-        if (album) {
-          this.saveEdit(album);
-        }else{
-          throw new Error(`Album with ID ${albumId} not found!`);
-        }
-      });
+      // Save the edited copy from the table (it is bound with ngModel)
+      const album = this.albums.find((a) => a.id === albumId);
+      if (!album) throw new Error(`Album with ID ${albumId} not found!`);
+      this.saveEdit(album);
     } else {
       this.startEdit(albumId);
     }
@@ -57,14 +54,14 @@ export class ManageAlbumsComponent {
   }
 
   saveEdit(album: Album): void {
-    this.editStates[album._id] = false;
-    this.updateAlbum(album._id, album);
+    this.editStates[album.id] = false;
+    this.updateAlbum(album.id, album);
   }
 
   onProducersChange(album: Album): void {
     this.stringArray = this.formHelperService.parseStringToArray(this.producersString);
     album.producers = this.stringArray;
-    this.updateAlbum(album._id, { producers: this.stringArray });
+    this.updateAlbum(album.id, { producers: this.stringArray });
   }
 
   updateAlbum(albumId: string, updatedData: Object): void {
@@ -75,7 +72,7 @@ export class ManageAlbumsComponent {
     });
     
     this.albumService.update(albumId, updatedData).subscribe((album) => {
-      const index = this.albums.findIndex((a) => a._id === album._id);
+      const index = this.albums.findIndex((a) => a.id === album.id);
       if (index !== -1) {
         this.albums[index] = album;
       } else {
@@ -86,7 +83,7 @@ export class ManageAlbumsComponent {
 
   deleteAlbum(id: string): void {
     this.albumService.delete(id).subscribe(() => {
-      this.albums = this.albums.filter((album) => album._id !== id);
+      this.albums = this.albums.filter((album) => album.id !== id);
     });
   }
 }

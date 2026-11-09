@@ -29,17 +29,21 @@ export class HomeComponent implements OnInit {
     this.albumService.getByRank('gold').subscribe({
       next: (albums) => {
         this.gold_albums = albums;
-        this.errorMessage = albums.length === 0 ? 'No gold albums found!' : '';
+        this.errorMessage = '';
         this.toastr.showToast(
           'Gold albums loaded successfully!',
           'success',
           'Success',
         );
       },
+      error: (err: Error) => {
+        this.gold_albums = [];
+        this.errorMessage = err.message;
+      },
     });
   }
 
   trackById(_index: number, album: Album): string {
-    return album._id;
+    return album.id;
   }
 }

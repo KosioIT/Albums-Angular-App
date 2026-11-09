@@ -29,25 +29,25 @@ export class FavoritesTemplateComponent implements OnInit {
       throw new Error('Album ID is required!');
     }
     if (!this.authService.isLoggedIn()) return; // favorites exist only for signed in users
-    this.isFav = this.isFavorite();
     this.loadFavoriteAlbums();
   }
 
   loadFavoriteAlbums(): void {
     this.favoriteService.getAll().subscribe((albums) => {
       this.favoriteAlbums = albums;
+      this.isFav = this.isFavorite();
     });
   }
 
   isFavorite(): boolean {
-    return this.favoriteAlbums.some((album) => album._id === this.albumId);
+    return this.favoriteAlbums.some((album) => album.id === this.albumId);
   }
 
   toggleFavorite(): void {
     if (this.isFav) {
       this.favoriteService.remove(this.albumId).subscribe(() => {
         this.favoriteAlbums = this.favoriteAlbums.filter(
-          (album) => album._id !== this.albumId
+          (album) => album.id !== this.albumId
         );
         this.customToastr.showToast(
           'Album removed from favorites!',

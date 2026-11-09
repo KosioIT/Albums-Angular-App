@@ -16,7 +16,7 @@ export async function checkExistingAlbum(albumId) {
 }
 
 export async function loadOwnedAlbumOrThrow(user, albumId) {
-  const album = await findAlbums("id", albumId);
+  const album = await findAlbumById(albumId);
 
   if (!album) {
     throw new Error("NOT_FOUND");
@@ -29,28 +29,19 @@ export async function loadOwnedAlbumOrThrow(user, albumId) {
   return album;
 }
 
+// Fields that can be searched with GET /api/albums/:field/:value ("band" is the URL name for artist)
+export const SEARCHABLE_FIELDS = { band: "artist", artist: "artist", title: "title", genre: "genre", rank: "rank" };
 
+// One album (public form) or null
+export async function findAlbumById(id) {
+  const snapshot = await ALBUMS.doc(String(id)).get();
+  return snapshot.exists ? new Album(snapshot.data(), snapshot.id).toPublic() : null;
+}
+
+// Always an array (empty when nothing matches), whatever the number of results
 export async function findAlbums(field, value) {
-  try {
-    if (field === "id") {
-      const snapshot = await ALBUMS.doc(value).get();
-      if (!snapshot.exists) return null;
-      return new Album(snapshot.data(), snapshot.id).toPublic();
-    }
-
-    const querySnapshot = await ALBUMS.where(field, "==", value).get();
-    if (querySnapshot.empty) return [];
-
-    if (querySnapshot.docs.length === 1) {
-      const doc = querySnapshot.docs[0];
-      return new Album(doc.data(), doc.id).toPublic();
-    }
-
-    return querySnapshot.docs.map(doc => new Album(doc.data(), doc.id).toPublic());
-
-  } catch (err) {
-    throw new Error("Error fetching albums: " + err.message);
-  }
+  const querySnapshot = await ALBUMS.where(field, "==", value).get();
+  return querySnapshot.docs.map(doc => new Album(doc.data(), doc.id).toPublic());
 }
 
 export async function updateAlbumDownloadUrl(albumTitle, downloadUrl) {

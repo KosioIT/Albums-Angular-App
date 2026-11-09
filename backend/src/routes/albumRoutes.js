@@ -6,14 +6,15 @@ import { listenToAlbum, toggleLike } from '../controllers/userController.js';
 
 const router = express.Router();
 
+/* ======== Registered only users routes ======== */
+// Before "/:filterField/:filterVal", which would otherwise also match "/<id>/download"
+router.get("/:id/download", protect, downloadAlbum);
+router.post('/:id/like', protect, toggleLike);
+router.post('/:id/listen', protect, listenToAlbum);
+
 /* ======== All users routes ======== */
 router.get('/', getAllAlbums);
 router.get("/:filterField/:filterVal", filterAlbums);
-
-/* ======== Registered only users routes ======== */
-router.post('/:id/like', protect, toggleLike);
-router.post('/:id/listen', protect, listenToAlbum);
-router.get("/:id/download", protect, downloadAlbum);
 
 /* ======== Admin routes ======== */
 router.post("/", protect, admin, validateAlbumCreate, createAlbum);

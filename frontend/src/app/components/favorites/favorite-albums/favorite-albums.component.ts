@@ -35,7 +35,7 @@ export class FavoriteAlbumsComponent implements OnInit {
 
   removeFromFavorites(albumId: string): void {
     this.favoriteService.remove(albumId).subscribe(() => {
-      this.favoriteAlbums = this.favoriteAlbums.filter(album => album._id !== albumId);
+      this.favoriteAlbums = this.favoriteAlbums.filter(album => album.id !== albumId);
     });
   }
 

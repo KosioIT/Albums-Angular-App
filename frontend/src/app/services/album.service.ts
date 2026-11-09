@@ -15,7 +15,7 @@ export class AlbumService {
   }
 
   getById(id: string): Observable<Album> {
-    return apiRequest<Album>(api.get(`/albums/${id}`));
+    return apiRequest<Album>(api.get(`/albums/id/${this.encode(id)}`));
   }
 
   getByTitle(name: string): Observable<Album[]> {

@@ -1,22 +1,15 @@
 import { db } from "../config/firebase/firebase.js";
 import { Album } from "../models/Album.js";
 import { matchedData } from "express-validator";
-import { loadOwnedAlbumOrThrow, getAllAlbumsFromFirestore, findAlbums } from "../services/albumService.js";;
+import { loadOwnedAlbumOrThrow, getAllAlbumsFromFirestore, findAlbums, findAlbumById, SEARCHABLE_FIELDS } from "../services/albumService.js";
 import { recordDownload } from '../services/activityService.js';
 
 const ALBUMS = db.collection("albums");
 
 export const getAllAlbums = async (_req, res) => {
   try {
+    // An empty list is a normal answer, not an error
     const albums = await getAllAlbumsFromFirestore();
-
-    if (!albums || albums.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No albums found!"
-      });
-    }
-
     return res.json({ success: true, data: albums });
 
   } catch (err) {
@@ -25,27 +18,27 @@ export const getAllAlbums = async (_req, res) => {
   }
 };
 
+// GET /api/albums/id/:id -> one album; GET /api/albums/(band|artist|title|genre|rank)/:value -> a list
 export const filterAlbums = async (req, res) => {
   try {
     const { filterField, filterVal } = req.params;
-    if (!filterField || !filterVal) {
-      return res.status(400).json({ success: false, message: "Filter field and value are required!" });
+
+    if (filterField === "id") {
+      const album = await findAlbumById(filterVal);
+      if (!album) return res.status(404).json({ success: false, message: "Album not found!" });
+      return res.json({ success: true, data: album });
     }
 
-    const result = await findAlbums(filterField, filterVal);
-
-    if (!result || (Array.isArray(result) && result.length === 0)) {
-      return res.status(404).json({
+    const field = SEARCHABLE_FIELDS[filterField];
+    if (!field) {
+      return res.status(400).json({
         success: false,
-        message: "No albums found!"
+        message: `Albums can be filtered by: id, ${Object.keys(SEARCHABLE_FIELDS).join(", ")}`,
       });
     }
 
-    return res.json({
-      success: true,
-      data: result,
-      count: Array.isArray(result) ? result.length : 1
-    });
+    const albums = await findAlbums(field, filterVal);
+    return res.json({ success: true, data: albums, count: albums.length });
 
   } catch (err) {
     console.error("Filter error:", err);
@@ -57,7 +50,8 @@ export const createAlbum = async (req, res) => {
   try {
     const album = new Album(matchedData(req));
 
-    const existing = await findAlbums("title", album.title);
+    // The id is the slug of the title, so this also catches titles that differ only in punctuation
+    const existing = await findAlbumById(album.id);
     if (existing) {
       return res.status(409).json({
         success: false,
@@ -68,8 +62,8 @@ export const createAlbum = async (req, res) => {
     // Add creator
     album.createdBy = req.user.id;
 
-    // Save using slug ID
-    await ALBUMS.doc(album.id).set(album.toFirestore());
+    // Save using slug ID; create() fails instead of overwriting if someone saved the same id meanwhile
+    await ALBUMS.doc(album.id).create(album.toFirestore());
 
     return res.status(201).json({
       success: true,

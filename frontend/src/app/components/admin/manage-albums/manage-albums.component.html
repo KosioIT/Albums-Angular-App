@@ -32,10 +32,10 @@
       </a>
 
       <div class="album-info">
-        @if (!isEditing(album._id)) {
+        @if (!isEditing(album.id)) {
 <h3>{{ album.title }}</h3>
 }
-        @if (isEditing(album._id)) {
+        @if (isEditing(album.id)) {
 <div class="flex-div">
           <label for="title" class="edit-label">Title:</label>
           <input
@@ -48,12 +48,12 @@
         </div>
 }
 
-        @if (!isEditing(album._id)) {
+        @if (!isEditing(album.id)) {
 <div class="caption-line">
           Release Date: {{ album.release_date }}
         </div>
 }
-        @if (isEditing(album._id)) {
+        @if (isEditing(album.id)) {
 <div class="flex-div">
           <label for="releaseDate" class="edit-label">Release Date:</label>
           <input
@@ -66,7 +66,7 @@
         </div>
 }
 
-        @if (isEditing(album._id)) {
+        @if (isEditing(album.id)) {
 <div class="flex-div">
           <label for="cover URL" class="edit-label">Cover URL:</label>
           <input
@@ -79,12 +79,12 @@
         </div>
 }
 
-        @if (!isEditing(album._id)) {
+        @if (!isEditing(album.id)) {
 <div class="caption-line">
           Genre: {{ album.genre }}
         </div>
 }
-        @if (isEditing(album._id)) {
+        @if (isEditing(album.id)) {
 <div class="flex-div">
           <label for="genre" class="edit-label">Genre:</label>
           <input
@@ -97,12 +97,12 @@
         </div>
 }
 
-        @if (!isEditing(album._id)) {
+        @if (!isEditing(album.id)) {
 <div class="caption-line">
           {{ albumService.getProducersString(album.producers) }}
         </div>
 }
-        @if (isEditing(album._id)) {
+        @if (isEditing(album.id)) {
 <div>
           <label for="producers" class="edit-label">Producers (comma separated):</label>
           <textarea
@@ -121,16 +121,16 @@
                         type="button"
                         id="editBtn"
                         class="btn album-btn"
-                        [style.background-color]="isEditing(album._id) ? 'green' : 'blue'"
-                        (click)="toggleEdit(album._id)"
+                        [style.background-color]="isEditing(album.id) ? 'green' : 'blue'"
+                        (click)="toggleEdit(album.id)"
                         >
-                        {{ isEditing(album._id) ? "Save" : "Edit" }}
+                        {{ isEditing(album.id) ? "Save" : "Edit" }}
                       </button>
                       <button
                         type="button"
                         class="btn album-btn"
                         style="background-color: red"
-                        (click)="deleteAlbum(album._id)"
+                        (click)="deleteAlbum(album.id)"
                         >
                         Delete
                       </button>
