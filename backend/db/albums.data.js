@@ -2,6 +2,7 @@
   Seed data for the "albums" collection (used by seed-albums.js).
   Shape follows the Album model and the album validators:
   release_date "DD.MM.YYYY", tracks[].composer as an array, rank gold|silver|bronze|common.
+  Within each band the order is the rank: 1st gold, 2nd silver, 3rd bronze, the rest common.
   The document id is the slug of the title (Album model), so titles must stay unique.
 */
 
@@ -13,7 +14,7 @@ const acdc = [
         producers: ["Harry Vanda", "George Young"],
         genre: "Hard Rock",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/thumb/d/d7/ACDC-LetThereBeRock.jpg/250px-ACDC-LetThereBeRock.jpg",
-        rank: "bronze",
+        rank: "gold",
         tracks: [
             { title: "Go Down", duration: "5:13", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
             { title: "Dog Eat Dog", duration: "3:39", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
@@ -41,7 +42,7 @@ const acdc = [
         producers: ["Harry Vanda", "George Young"],
         genre: "Live",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/thumb/f/f6/Acdc_If_You_Want_Blood_You%27ve_Got_It.JPG/250px-Acdc_If_You_Want_Blood_You%27ve_Got_It.JPG",
-        rank: "common",
+        rank: "bronze",
         tracks: [
             { title: "Live Wire", duration: "5:24", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
             { title: "T.N.T. (Live)", duration: "3:40", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
@@ -83,7 +84,7 @@ const acdc = [
         producers: ["Brendan O'Brien"],
         genre: "Hard Rock",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/3/3e/Black_ice_red.jpg",
-        rank: "silver",
+        rank: "common",
         tracks: [
             { title: "Rock 'n' Roll Train", duration: "4:21", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
             { title: "Big Jack", duration: "3:57", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
@@ -100,7 +101,7 @@ const gunsNRoses = [
         producers: ["Guns N' Roses"],
         genre: "Hard Rock / Live",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/2/2c/Live_Era_87-93Guns%27n%27roses.jpg",
-        rank: "bronze",
+        rank: "gold",
         tracks: [
             { title: "Nightrain (Live)", duration: "5:59", composer: ["Axl Rose", "Slash", "Izzy Stradlin"] },
             { title: "Mr. Brownstone (Live)", duration: "4:58", composer: ["Axl Rose", "Izzy Stradlin"] },
@@ -114,7 +115,7 @@ const gunsNRoses = [
         producers: ["Various"],
         genre: "Compilation",
         cover_img_url: "https://i.discogs.com/CjFOO1WqKCOEi0oQtSUEbmky_IiUAnEtO3Phd6K6HrY/rs:fit/g:sm/q:90/h:554/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEzNjAy/NjQ5LTE1NTczNzA1/OTktNjcwOS5qcGVn.jpeg",
-        rank: "gold",
+        rank: "silver",
         tracks: [
             { title: "Welcome to the Jungle", duration: "4:31", composer: ["Axl Rose", "Slash"] },
             { title: "Sweet Child o' Mine", duration: "5:56", composer: ["Axl Rose", "Slash", "Izzy Stradlin"] },
@@ -128,7 +129,7 @@ const gunsNRoses = [
         producers: ["MTV"],
         genre: "Hard Rock / Live",
         cover_img_url: "https://m.media-amazon.com/images/I/81LHQnoRvcL._UF1000,1000_QL80_.jpg",
-        rank: "common",
+        rank: "bronze",
         tracks: [
             { title: "It's So Easy (Live)", duration: "3:50", composer: ["Duff McKagan", "West Arkeen"] },
             { title: "Out Ta Get Me (Live)", duration: "4:20", composer: ["Axl Rose", "Slash"] },
@@ -142,7 +143,7 @@ const gunsNRoses = [
         producers: ["Mike Clink", "Axl Rose"],
         genre: "Hard Rock / Remastered",
         cover_img_url: "https://i.scdn.co/image/ab67616d0000b273275b7ffe49eb84ab13a71980",
-        rank: "silver",
+        rank: "common",
         tracks: [
             { title: "Shadow of Your Love", duration: "3:05", composer: ["Axl Rose", "Paul Tobias"] },
             { title: "Move to the City", duration: "3:42", composer: ["Axl Rose", "Izzy Stradlin"] },
@@ -170,7 +171,7 @@ const gunsNRoses = [
         producers: ["Axl Rose"],
         genre: "Hard Rock",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/b/b7/GNR_hardskool.jpg",
-        rank: "bronze",
+        rank: "common",
         tracks: [
             { title: "Hard Skool", duration: "3:16", composer: ["Axl Rose"] },
             { title: "Absurd", duration: "3:23", composer: ["Axl Rose"] },
@@ -187,7 +188,7 @@ const scorpions = [
         producers: ["Dieter Dierks"],
         genre: "Hard Rock",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/c/cb/ScorpionsSavageAmusement.jpg",
-        rank: "silver",
+        rank: "gold",
         tracks: [
             { title: "Don't Stop at the Top", duration: "4:03", composer: ["Klaus Meine", "Rudolf Schenker"] },
             { title: "Rhythm of Love", duration: "3:50", composer: ["Klaus Meine", "Rudolf Schenker"] },
@@ -273,7 +274,7 @@ const ironMaiden = [
         release_date: "11.05.1992",
         genre: "Heavy Metal",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/e/eb/Iron_Maiden_-_Fear_Of_The_Dark.jpg",
-        rank: "silver",
+        rank: "gold",
         tracks: [
             { title: "Be Quick or Be Dead", duration: "3:24", composer: ["Bruce Dickinson", "Janick Gers"] },
             { title: "Fear of the Dark", duration: "7:16", composer: ["Steve Harris"] },
@@ -286,7 +287,7 @@ const ironMaiden = [
         release_date: "29.05.2000",
         genre: "Heavy Metal",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/0/03/Iron_Maiden_-_Brave_New_World.jpg",
-        rank: "bronze",
+        rank: "silver",
         tracks: [
             { title: "The Wicker Man", duration: "4:35", composer: ["Bruce Dickinson", "Adrian Smith"] },
             { title: "Ghost of the Navigator", duration: "6:50", composer: ["Bruce Dickinson", "Steve Harris"] },
@@ -299,7 +300,7 @@ const ironMaiden = [
         release_date: "01.10.1990",
         genre: "Heavy Metal",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/5/5c/IronMaidenNoPrayerForTheDying.jpg",
-        rank: "common",
+        rank: "bronze",
         tracks: [
             { title: "Tailgunner", duration: "4:15", composer: ["Bruce Dickinson", "Steve Harris"] },
             { title: "Holy Smoke", duration: "3:49", composer: ["Bruce Dickinson", "Steve Harris"] },
@@ -312,7 +313,7 @@ const ironMaiden = [
         release_date: "29.09.1986",
         genre: "Heavy Metal",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/9/9b/Iron_Maiden_-_Somewhere_in_Time.jpg",
-        rank: "silver",
+        rank: "common",
         tracks: [
             { title: "Caught Somewhere in Time", duration: "7:25", composer: ["Steve Harris"] },
             { title: "Wasted Years", duration: "5:06", composer: ["Adrian Smith"] },
@@ -354,7 +355,7 @@ const judasPriest = [
         release_date: "20.01.1984",
         genre: "Heavy Metal",
         cover_img_url: "https://m.media-amazon.com/images/I/81m9KXiKtfL.jpg",
-        rank: "silver",
+        rank: "gold",
         tracks: [
             { title: "Freewheel Burning", duration: "4:24", composer: ["Halford", "Tipton", "Downing"] },
             { title: "Jawbreaker", duration: "3:25", composer: ["Halford", "Tipton", "Downing"] },
@@ -393,7 +394,7 @@ const judasPriest = [
         release_date: "27.02.1981",
         genre: "Heavy Metal",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/a/a6/Judas_priest_-_point_of_entry_a.jpg",
-        rank: "bronze",
+        rank: "common",
         tracks: [
             { title: "Heading Out to the Highway", duration: "3:47", composer: ["Halford", "Tipton", "Downing"] },
             { title: "Don't Go", duration: "3:18", composer: ["Halford", "Tipton", "Downing"] },
@@ -406,7 +407,7 @@ const judasPriest = [
         release_date: "17.11.1978",
         genre: "Heavy Metal",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/7/70/Judas_Priest_-_Killing_Machine_album_coverart.jpg",
-        rank: "bronze",
+        rank: "common",
         tracks: [
             { title: "Hell Bent for Leather", duration: "2:40", composer: ["Halford", "Tipton", "Downing"] },
             { title: "Delivering the Goods", duration: "4:15", composer: ["Halford", "Tipton", "Downing"] },
@@ -419,7 +420,7 @@ const judasPriest = [
         release_date: "10.02.1978",
         genre: "Heavy Metal",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/b/bc/Jpstandclass.jpg",
-        rank: "bronze",
+        rank: "common",
         tracks: [
             { title: "Exciter", duration: "5:34", composer: ["Halford", "Tipton"] },
             { title: "Beyond the Realms of Death", duration: "6:52", composer: ["Halford", "Tipton"] },
@@ -435,7 +436,7 @@ const metallica = [
         release_date: "25.08.1988",
         genre: "Heavy Metal",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/b/bd/Metallica_-_...And_Justice_for_All_cover.jpg",
-        rank: "silver",
+        rank: "gold",
         tracks: [
             { title: "Blackened", duration: "6:40", composer: ["James Hetfield", "Lars Ulrich"] },
             { title: "...And Justice for All", duration: "9:45", composer: ["James Hetfield", "Lars Ulrich"] },
@@ -448,7 +449,7 @@ const metallica = [
         release_date: "12.09.2008",
         genre: "Heavy Metal",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/5/53/Metallica_-_Death_Magnetic_cover.jpg",
-        rank: "bronze",
+        rank: "silver",
         tracks: [
             { title: "That Was Just Your Life", duration: "7:08", composer: ["Hetfield", "Ulrich", "Hammett", "Trujillo"] },
             { title: "The Day That Never Comes", duration: "7:56", composer: ["Hetfield", "Ulrich", "Hammett", "Trujillo"] },
