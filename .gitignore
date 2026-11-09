@@ -19,6 +19,7 @@ nodemon.json
 
 # Environment files
 .env
+.env.production
 environments
 
 # Angular CLI and build artefacts

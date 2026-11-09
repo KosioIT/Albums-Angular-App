@@ -40,6 +40,10 @@ MONGO_URI=mongodb://localhost:27017/your-db-name
 JWT_SECRET=yourSecretKey
 ```
 
+For production (`NODE_ENV=production`) the backend reads `backend/.env.production` instead.
+Copy `backend/.env.production.example` to `backend/.env.production` and fill in the real values;
+the real file is gitignored, so it is never committed.
+
 Create an environment.ts file in the frontend/src/environments folder with the following code:
 ```ts
 export const environment = {
