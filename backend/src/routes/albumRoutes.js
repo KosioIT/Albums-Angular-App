@@ -2,7 +2,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { validateAlbumCreate, validateAlbumUpdate } from '../validators/albumsValidators.js';
 import {protect, admin } from '../middleware/authMiddleware.js';
-import { getAllAlbums, filterAlbums, createAlbum, updateAlbum, deleteAlbum, downloadAlbum, getPreviews } from '../controllers/albumController.js';
+import { getAllAlbums, filterAlbums, createAlbum, updateAlbum, deleteAlbum, downloadAlbum, streamAlbumFile, getPreviews } from '../controllers/albumController.js';
 import { listenToAlbum, toggleLike } from '../controllers/userController.js';
 
 const router = express.Router();
@@ -22,6 +22,7 @@ router.post('/:id/listen', protect, listenToAlbum);
 /* ======== All users routes ======== */
 router.get('/', getAllAlbums);
 router.get('/:id/previews', previewsLimiter, getPreviews); // before /:filterField/:filterVal
+router.get('/:id/file', streamAlbumFile); // the one-minute ticket from POST /:id/download is the auth
 router.get("/:filterField/:filterVal", filterAlbums);
 
 /* ======== Admin routes ======== */

@@ -113,24 +113,13 @@ export class AlbumsListComponent implements OnInit {
     return this.player.isCurrent(album) && this.player.playing();
   }
 
+  // The backend sends the archive as a normal file download: the page stays, the browser saves the file
   download(album: Album): void {
     if (!this.requireLogin('download')) return;
-    // Opened right away (during the click), otherwise the browser blocks it as a pop-up
-    const tab = window.open('', '_blank');
-    this.run(
-      album,
-      'download',
-      this.albumService.download(album.id),
-      ({ url, counted }) => {
-        if (tab) {
-          tab.opener = null;
-          tab.location.href = url;
-        } else {
-          window.location.href = url;
-        }
-        if (counted) album.downloads = (album.downloads ?? 0) + 1;
-      },
-      () => tab?.close(),
-    );
+    this.run(album, 'download', this.albumService.download(album.id), ({ path, counted }) => {
+      window.location.assign(this.albumService.fileUrl(path));
+      if (counted) album.downloads = (album.downloads ?? 0) + 1;
+    });
   }
+
 }

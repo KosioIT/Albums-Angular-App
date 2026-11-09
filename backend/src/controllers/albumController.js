@@ -4,6 +4,7 @@ import { matchedData } from "express-validator";
 import { loadOwnedAlbumOrThrow, getAllAlbumsFromFirestore, findAlbums, findAlbumById, SEARCHABLE_FIELDS } from "../services/albumService.js";
 import { recordDownload } from '../services/activityService.js';
 import { getAlbumPreviews } from '../services/previewService.js';
+import { createDownloadTicket, readDownloadTicket, openMegaFile, attachmentHeader } from '../services/downloadService.js';
 
 const ALBUMS = db.collection("albums");
 
@@ -113,9 +114,9 @@ export const deleteAlbum = async (req, res) => {
   }
 };
 
-// POST /api/albums/:id/download -> { url, counted }
-// Signed-in users only. The link is returned instead of a redirect, because the browser cannot
-// send the Authorization header when it simply follows a link.
+// POST /api/albums/:id/download -> { path, counted }
+// Signed-in users only. Counts the download and returns a one-minute link to the file itself
+// (GET /api/albums/:id/file?ticket=...), which the browser opens to start a normal download.
 export const downloadAlbum = async (req, res) => {
   try {
     const albumId = req.params.id;
@@ -124,18 +125,55 @@ export const downloadAlbum = async (req, res) => {
     if (!doc.exists) {
       return res.status(404).json({ success: false, message: "Album not found!" });
     }
-
-    const { downloadUrl } = doc.data();
-    if (!downloadUrl) {
+    if (!doc.data().downloadUrl) {
       return res.status(404).json({ success: false, message: "This album is not available for download yet!" });
     }
 
     const counted = await recordDownload(req.user.id, albumId);
-    return res.json({ success: true, url: downloadUrl, counted });
+    const ticket = createDownloadTicket(req.user.id, albumId);
+    return res.json({
+      success: true,
+      path: `/albums/${encodeURIComponent(albumId)}/file?ticket=${encodeURIComponent(ticket)}`,
+      counted,
+    });
 
   } catch (err) {
     console.error("Download error:", err);
     return res.status(500).json({ success: false, message: "Server error!" });
+  }
+};
+
+// GET /api/albums/:id/file?ticket=... -> the archive, streamed from Mega as an attachment
+export const streamAlbumFile = async (req, res) => {
+  const albumId = req.params.id;
+  if (!readDownloadTicket(req.query.ticket, albumId)) {
+    return res.status(403).send("This download link has expired. Please press the download button again.");
+  }
+
+  try {
+    const doc = await ALBUMS.doc(albumId).get();
+    const megaUrl = doc.exists ? doc.data().downloadUrl : null;
+    if (!megaUrl) return res.status(404).send("This album is not available for download.");
+
+    const file = await openMegaFile(megaUrl);
+    res.set({
+      "Content-Type": "application/octet-stream",
+      "Content-Length": String(file.size),
+      "Content-Disposition": attachmentHeader(file.name),
+      "Cache-Control": "no-store",
+    });
+
+    const stream = file.stream();
+    stream.on("error", (err) => {
+      console.error("Mega stream error:", err.message);
+      res.destroy(err); // the browser shows the download as failed instead of saving a broken file
+    });
+    req.on("close", () => stream.destroy()); // the user cancelled the download
+    stream.pipe(res);
+
+  } catch (err) {
+    console.error("Album file error:", err.message);
+    if (!res.headersSent) res.status(502).send("The file could not be fetched right now. Please try again later.");
   }
 };
 

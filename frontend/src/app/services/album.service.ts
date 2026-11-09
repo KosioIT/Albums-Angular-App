@@ -57,8 +57,14 @@ export class AlbumService {
     return apiBody(api.post(`/albums/${this.encode(id)}/listen`));
   }
 
-  download(id: string): Observable<{ url: string; counted: boolean }> {
+  // Counts the download and returns a one-minute link to the file (streamed by the backend)
+  download(id: string): Observable<{ path: string; counted: boolean }> {
     return apiBody(api.post(`/albums/${this.encode(id)}/download`));
+  }
+
+  // Full URL of that link on the API server
+  fileUrl(path: string): string {
+    return `${api.defaults.baseURL}${path}`;
   }
 
   // 30-second Deezer previews for the built-in player (public)
