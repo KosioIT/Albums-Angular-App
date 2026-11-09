@@ -56,7 +56,7 @@ export async function getActivitySummary(userId) {
     const albums = relevant
         .filter(a => albumsById.has(a.albumId))
         .map(a => {
-            const { downloadUrl, ...album } = albumsById.get(a.albumId); // never expose the download link
+            const { downloadKey, downloadUrl, ...album } = albumsById.get(a.albumId); // never expose where the archive is
             return {
                 albumId: a.albumId,
                 ...album,

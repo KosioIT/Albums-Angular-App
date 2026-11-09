@@ -7,7 +7,7 @@
   3rd bronze, the rest common. A reissue counts with its original album (as RIAA certifies them),
   e.g. Appetite for Destruction (Super Deluxe Edition) carries the original's sales.
   The document id is the slug of the title (Album model), so titles must stay unique.
-  Apart from AC/DC, these are the albums with an archive in the Mega folder (see update-download-links.js).
+  Apart from AC/DC, these are the albums with an archive in R2 / the Mega folder (see link-downloads.js).
   Covers are Deezer images; track durations are from Deezer, the rest from the albums' Wikipedia pages.
 */
 

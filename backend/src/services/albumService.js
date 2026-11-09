@@ -43,16 +43,3 @@ export async function findAlbums(field, value) {
   const querySnapshot = await ALBUMS.where(field, "==", value).get();
   return querySnapshot.docs.map(doc => new Album(doc.data(), doc.id).toPublic());
 }
-
-export async function updateAlbumDownloadUrl(albumTitle, downloadUrl) {
-  const slug = makeSlug(albumTitle);
-
-  try {
-    await ALBUMS.doc(slug).update({
-      downloadUrl
-    });
-    console.log(`✔ Firestore updated: ${slug} → ${downloadUrl}`);
-  } catch (err) {
-    console.log("Error updating Firestore: ", err.message);
-  }
-}

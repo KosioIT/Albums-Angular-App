@@ -40,14 +40,14 @@ export class Album extends BaseModel {
     // Deezer album used for the 30-second previews (found automatically, can be set by hand)
     this.deezerAlbumId = data.deezerAlbumId || null;
 
-    // Download URL (any provider; never sent to clients, see toPublic)
-    this.downloadUrl = data.downloadUrl || null;
+    // Object key of the archive in the R2 bucket, e.g. "load.zip" (never sent to clients, see toPublic)
+    this.downloadKey = data.downloadKey || null;
   }
 
-  // Public representation: hides the download link
+  // Public representation: hides where the archive is stored
   toPublic() {
-    const { downloadUrl, ...safe } = this;
-    return { ...safe, hasDownload: !!downloadUrl };
+    const { downloadKey, ...safe } = this;
+    return { ...safe, hasDownload: !!downloadKey };
   }
 
   /**

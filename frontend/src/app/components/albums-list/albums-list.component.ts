@@ -113,11 +113,11 @@ export class AlbumsListComponent implements OnInit {
     return this.player.isCurrent(album) && this.player.playing();
   }
 
-  // The backend sends the archive as a normal file download: the page stays, the browser saves the file
+  // The link answers with "Content-Disposition: attachment": the page stays, the browser saves the file
   download(album: Album): void {
     if (!this.requireLogin('download')) return;
-    this.run(album, 'download', this.albumService.download(album.id), ({ path, counted }) => {
-      window.location.assign(this.albumService.fileUrl(path));
+    this.run(album, 'download', this.albumService.download(album.id), ({ url, counted }) => {
+      window.location.assign(url);
       if (counted) album.downloads = (album.downloads ?? 0) + 1;
     });
   }

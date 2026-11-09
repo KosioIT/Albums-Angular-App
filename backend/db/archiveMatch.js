@@ -1,6 +1,6 @@
 import { makeSlug } from '../src/utils/slugify.js';
 
-// Matching Mega archives to albums (used by update-download-links.js)
+// Matching archive files (in R2 or Mega) to albums by file name
 
 export const ARCHIVE_RE = /\.(zip|rar|7z)$/i;
 

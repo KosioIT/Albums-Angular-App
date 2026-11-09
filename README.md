@@ -54,8 +54,8 @@ export const environment = {
 
 ## Sample data
 
-The album seed scripts live in `backend/db` and need the Firebase service account key
-(`backend/src/config/firebase/serviceAccountKey.json`). Run them from the `backend` folder:
+The album scripts live in `backend/db` and need the Firebase service account key
+(`backend/src/config/firebase/serviceAccountKey.json`). Run them from the `backend` folder.
 
 ```bash
 npm run seed:albums -- --check
@@ -63,16 +63,30 @@ npm run seed:albums -- --check
 validates `db/albums.data.js` with the same rules as the API, without touching the database.
 
 ```bash
-npm run seed:albums
+npm run seed
 ```
-adds the albums that are missing (existing ones are skipped; `-- --force` updates their metadata
-but keeps likes, listens, downloads and download links).
+makes the albums in the database match `db/albums.data.js` (adds and updates them, removes seeded
+albums that are no longer listed; likes, listens and downloads are kept) and links each album to its
+archive in Cloudflare R2.
 
-```bash
-npm run seed:downloads
-```
-matches the archives in the Mega folder from `MEGA_ALBUMS_FOLDER_URL` (backend `.env`, in double quotes because of the `#`) to albums
-and shows the result; add `-- --write` to save the links (`-- --write --overwrite` replaces existing ones).
+### Album downloads (Cloudflare R2)
+
+The archives are kept in a private R2 bucket. A signed-in user gets a link that works for one minute
+and downloads the file straight from Cloudflare (no download fees, nothing goes through the server).
+
+1. In Cloudflare create a private bucket and an **Account API token** with *Object Read & Write* on
+   that bucket only, then put `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and
+   `R2_BUCKET` in `backend/.env` (see `.env.example`).
+2. Copy the archives from the Mega folder (`MEGA_ALBUMS_FOLDER_URL` in `backend/.env`, in double
+   quotes) into the bucket; files that are already there are skipped:
+   ```bash
+   npm run r2:upload
+   ```
+3. Link the albums to the files (`npm run seed` does this too):
+   ```bash
+   npm run seed:downloads -- --write
+   ```
+   Files are matched by name: `kill_'em_all.zip` belongs to *Kill 'Em All*.
 
 ## MongoDB Setup
 This project uses MongoDB as its database. To run it locally:

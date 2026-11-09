@@ -6,13 +6,6 @@ const MAX_TRACKS = 100;
 const DURATION_RE = /^\d{1,3}:[0-5]\d$/;
 const LENGTH_RE = /^(\d{1,3}|\d{1,2}:[0-5]\d):[0-5]\d$/; // "65:24" or "2:16:38"
 
-const ALLOWED_DOWNLOAD_HOSTS = [
-    'mega.nz', 'drive.google.com', 'dropbox.com', 'onedrive.live.com', '1drv.ms',
-];
-// matches the host itself and its subdomains (e.g. www.dropbox.com)
-const HOST_WHITELIST = ALLOWED_DOWNLOAD_HOSTS.map(
-    h => new RegExp(`(^|\\.)${h.replace(/\./g, '\\.')}$`)
-);
 
 // partial = true → every field is optional (used for updates)
 function required(name, partial) {
@@ -79,16 +72,13 @@ function albumRules(partial) {
             .matches(DURATION_RE).withMessage('Track duration must be in m:ss format'),
         ...stringArray('tracks.*.composer', { required: true }),
 
-        // null clears the link; anything else must be an https URL on an allowed host
-        body('downloadUrl')
+        // Object key of the archive in the R2 bucket ("load.zip"); null removes the download
+        body('downloadKey')
             .optional({ values: 'null' })
-            .isURL({
-                protocols: ['https'],
-                require_protocol: true,
-                disallow_auth: true,
-                host_whitelist: HOST_WHITELIST,
-            })
-            .withMessage(`downloadUrl must be an https link on: ${ALLOWED_DOWNLOAD_HOSTS.join(', ')}`),
+            .isString().bail()
+            .trim()
+            .isLength({ min: 1, max: 500 }).withMessage('downloadKey must be 1-500 characters')
+            .not().matches(/(^\/)|(\.\.)/).withMessage('downloadKey must be a plain object key'),
 
         validationResultHandler,
     ];
