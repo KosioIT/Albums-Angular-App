@@ -26,13 +26,9 @@ cd Albums-Angular-App
 
 ```
 ### 2. Install the dependencies
+From the project root (installs the root tools, the backend and the frontend with the exact versions from the lockfiles):
 ```bash
-cd frontend
-npm install
-```
-```bash
-cd backend
-npm install
+npm run install:all
 ```
 
 ### 3. Create environment files
@@ -70,14 +66,21 @@ Tip: You can use the 'mongo' command to test the connection.
 mongod
 ```
 
-### Backend server
-```
-cd backend
+### Backend and frontend together
+From the project root, in one terminal:
+```bash
 npm run dev
 ```
+The backend (`api`, port 3000) and the frontend (`web`, http://localhost:4200) run side by side with prefixed logs.
 
-### Frontend server
+### Only one of them
+```bash
+npm run dev:backend
 ```
-cd frontend
-ng serve
+```bash
+npm run dev:frontend
 ```
+
+### Other scripts
+- `npm run build` builds the frontend for production
+- `npm test` runs the frontend unit tests once
