@@ -16,7 +16,7 @@ export async function searchAlbums(req, res) {
     });
 
   } catch (err) {
-    console.log("Error in searchAlbums: ", err);
-    return res.status(500).json({ success: false, message: err.message });
+    console.error("Error in searchAlbums: ", err);
+    return res.status(500).json({ success: false, message: "Search failed!" });
   }
 }

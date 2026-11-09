@@ -28,12 +28,13 @@ export const protect = async (req, res, next) => {
     req.auth = decoded;
     return next();
   } catch (err) {
-    //console.error('protect error:', err.name, '-', err.message);
-    return res.status(401).json({
-      success: false,
-      message: 'Unauthorized!',
-      debug: `${err.name}: ${err.message}`, // temporary, remove after debugging
-    });
+    // A bad or expired token is the client's problem (401, the frontend refreshes);
+    // anything else (e.g. Firestore down) must not look like a logout
+    if (err instanceof jwt.JsonWebTokenError) { // also covers TokenExpiredError
+      return res.status(401).json({ success: false, message: 'Unauthorized!' });
+    }
+    console.error('protect error:', err);
+    return res.status(500).json({ success: false, message: 'Server error!' });
   }
 };
 
