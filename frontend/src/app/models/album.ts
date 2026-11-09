@@ -5,6 +5,7 @@ export interface Album {
   title: string;
   artist: string;
   release_date: string; // DD.MM.YYYY
+  length?: string | null; // total running time, "m:ss" or "h:mm:ss"
   producers: string[]; 
   cover_img_url: string;
   genre: string;

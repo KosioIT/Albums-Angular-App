@@ -13,6 +13,9 @@
           <h3>{{ album.title }}</h3>
           <div class="caption-line">Release Date: {{album.release_date}}</div>
           <div class="caption-line">Genre: {{album.genre}}</div>
+          @if (album.length) {
+            <div class="caption-line">Length: {{ album.length }}</div>
+          }
           <div class="caption-line">{{albumService.getProducersString(album.producers)}}</div>
 
           @if (album.tracks.length) {

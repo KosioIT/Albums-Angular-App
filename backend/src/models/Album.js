@@ -14,6 +14,7 @@ export class Album extends BaseModel {
     this.genre = data.genre;
     this.release_date = data.release_date;
     this.cover_img_url = data.cover_img_url || null;
+    this.length = data.length || null; // total running time, "m:ss" or "h:mm:ss"
 
     // Optional fields
     this.rank = data.rank || 'common';
