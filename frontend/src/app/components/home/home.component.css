@@ -75,4 +75,10 @@ h2 {
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
+  max-width: 220px;
+}
+
+.no-albums-message{
+  color: red;
+  font-size: 24px;
 }
