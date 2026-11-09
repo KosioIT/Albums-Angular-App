@@ -97,7 +97,7 @@ h2 {
   opacity: 0.45;
 }
 
-/* Liked by the current user */
+/* Liked by the current user / album loaded in the player */
 .stat.active {
   color: #4da3ff;
 }
@@ -105,4 +105,12 @@ h2 {
 .stat.active img {
   box-shadow: 0 0 0 3px #4da3ff;
   border-radius: 50%;
+}
+
+.stat.active:first-child {
+  color: lime;
+}
+
+.stat.active:first-child img {
+  box-shadow: 0 0 0 3px lime;
 }

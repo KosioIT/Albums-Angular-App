@@ -13,6 +13,7 @@ export interface Album {
   rank: 'gold' | 'silver' | 'bronze' | 'common';
   tracks: Track[];
   hasDownload?: boolean; // the link itself never leaves the backend
+  deezerAlbumId?: number | null; // Deezer album behind the previews
   createdBy: string | null; // User ID of the creator
   likes?: number;
   listens?: number;

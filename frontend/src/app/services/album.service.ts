@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Album } from '../models/album';
+import { PreviewTrack } from '../models/preview-track';
 import { api } from '../core/api';
 import { apiBody, apiRequest } from '../core/api-request';
 import { ApiSuccessResponse } from '../core/api-repsonse';
@@ -60,9 +61,9 @@ export class AlbumService {
     return apiBody(api.post(`/albums/${this.encode(id)}/download`));
   }
 
-  // Where "listen" takes the user: a YouTube search for the album
-  listenUrl(album: Album): string {
-    return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${album.artist} ${album.title} full album`)}`;
+  // 30-second Deezer previews for the built-in player (public)
+  getPreviews(id: string): Observable<{ deezerAlbumId: number; tracks: PreviewTrack[] }> {
+    return apiRequest(api.get(`/albums/${this.encode(id)}/previews`));
   }
 
   // ===== Helper Methods =====

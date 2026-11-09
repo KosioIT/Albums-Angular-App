@@ -53,6 +53,11 @@ function albumRules(partial) {
             .isString().bail()
             .matches(LENGTH_RE).withMessage('length must be in m:ss or h:mm:ss format'),
 
+        body('deezerAlbumId')
+            .optional({ values: 'null' })
+            .isInt({ min: 1 }).withMessage('deezerAlbumId must be a Deezer album id')
+            .toInt(),
+
         body('rank').optional()
             .isIn(VALID_RANKS).withMessage(`rank must be one of: ${VALID_RANKS.join(', ')}`),
 

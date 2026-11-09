@@ -37,6 +37,9 @@ export class Album extends BaseModel {
     // User (id) who created the album
     this.createdBy = data.createdBy || null;
 
+    // Deezer album used for the 30-second previews (found automatically, can be set by hand)
+    this.deezerAlbumId = data.deezerAlbumId || null;
+
     // Download URL (any provider; never sent to clients, see toPublic)
     this.downloadUrl = data.downloadUrl || null;
   }

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DecimalPipe } from '@angular/common';
 import { Observable, finalize } from 'rxjs';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -7,6 +8,7 @@ import { Album } from '../../models/album';
 import { AlbumService } from '../../services/album.service';
 import { AuthService } from '../../services/auth.service';
 import { CustomToastrService } from '../../services/custom-toastr.service';
+import { PlayerService } from '../../services/player.service';
 import { FavoritesTemplateComponent } from '../favorites/favorites-template/favorites-template.component';
 
 @Component({
@@ -26,6 +28,8 @@ export class AlbumsListComponent implements OnInit {
   selectedPlaylistId: string = '';
 
   busy = new Set<string>(); // "<albumId>:<action>" while a request runs
+  readonly player = inject(PlayerService);
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     public albumService: AlbumService,
@@ -37,6 +41,12 @@ export class AlbumsListComponent implements OnInit {
 
   ngOnInit(): void {
     this.isLoggedIn = this.authService.isLoggedIn();
+
+    // The player counts a listen when an album starts; show it on the card right away
+    this.player.listenCounted$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((albumId) => {
+      const album = this.albums.find((a) => a.id === albumId);
+      if (album) album.listens = (album.listens ?? 0) + 1;
+    });
 
     this.route.queryParams.subscribe((params) => {
       this.band = params['band'] ? decodeURIComponent(params['band']) : '';
@@ -93,13 +103,14 @@ export class AlbumsListComponent implements OnInit {
     });
   }
 
-  // Opens the album on YouTube and counts the listen
+  // Plays the album's 30-second previews in the player bar (pauses / resumes if it is already loaded)
   listen(album: Album): void {
     if (!this.requireLogin('listen to')) return;
-    window.open(this.albumService.listenUrl(album), '_blank', 'noopener');
-    this.run(album, 'listen', this.albumService.listen(album.id), ({ counted }) => {
-      if (counted) album.listens = (album.listens ?? 0) + 1;
-    });
+    this.player.playAlbum(album);
+  }
+
+  isPlaying(album: Album): boolean {
+    return this.player.isCurrent(album) && this.player.playing();
   }
 
   download(album: Album): void {

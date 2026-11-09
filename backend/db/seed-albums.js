@@ -4,7 +4,7 @@
     npm run seed:albums              adds albums that are not in the database yet
     npm run seed:albums -- --check   only validates the data, does not touch the database
     npm run seed:albums -- --force   also overwrites the metadata of existing albums
-                                     (likes, listens, downloads and downloadUrl are kept)
+                                     (likes, listens, downloads, downloadUrl and deezerAlbumId are kept)
 
   Every album goes through the same validators as POST /api/albums.
 */
@@ -16,7 +16,7 @@ const CHECK_ONLY = process.argv.includes('--check');
 const FORCE = process.argv.includes('--force');
 
 // Fields the app changes at runtime; a re-seed must never reset them
-const RUNTIME_FIELDS = ['likes', 'listens', 'downloads', 'downloadUrl', 'created_at', 'createdBy'];
+const RUNTIME_FIELDS = ['likes', 'listens', 'downloads', 'downloadUrl', 'deezerAlbumId', 'created_at', 'createdBy'];
 
 async function buildAlbums() {
     const problems = [];

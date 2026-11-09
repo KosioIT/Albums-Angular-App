@@ -1,5 +1,6 @@
 <h1>Famous rock & metal bands</h1>
 <app-navbar></app-navbar>
-<div class="content-wrapper">
+<div class="content-wrapper" [class.with-player]="player.album()">
   <router-outlet></router-outlet>
 </div>
+<app-player></app-player>

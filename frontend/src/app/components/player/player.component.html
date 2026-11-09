@@ -1,0 +1,112 @@
+@if (player.album(); as album) {
+  <div class="player" role="region" aria-label="Music player">
+    @if (showTracks && player.tracks().length) {
+      <ol class="tracklist" aria-label="Tracks">
+        @for (track of player.tracks(); track $index) {
+          <li>
+            <button
+              type="button"
+              [class.active]="$index === player.index()"
+              [attr.aria-current]="$index === player.index() ? 'true' : null"
+              (click)="pick($index)"
+            >
+              <span class="no">{{ $index + 1 }}</span>
+              <span class="name">{{ track.title }}</span>
+              <span class="len">{{ formatTime(track.duration) }}</span>
+            </button>
+          </li>
+        }
+      </ol>
+    }
+
+    <div class="now">
+      <img class="cover" [src]="album.cover_img_url" alt="" />
+      <div class="meta">
+        <div class="track-title">
+          {{ player.loading() ? 'Loading…' : player.current()?.title }}
+        </div>
+        <div class="album-line">{{ album.title }} · {{ album.artist }}</div>
+      </div>
+    </div>
+
+    <div class="center">
+      <div class="controls">
+        <button type="button" class="ctrl" aria-label="Previous track" (click)="player.prev()" [disabled]="!player.current()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9 12z" /></svg>
+        </button>
+        <button
+          type="button"
+          class="ctrl play"
+          [attr.aria-label]="player.playing() ? 'Pause' : 'Play'"
+          (click)="player.toggle()"
+          [disabled]="!player.current()"
+        >
+          @if (player.playing()) {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
+          } @else {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+          }
+        </button>
+        <button
+          type="button"
+          class="ctrl"
+          aria-label="Next track"
+          (click)="player.next()"
+          [disabled]="player.index() >= player.tracks().length - 1"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l11-7z" /></svg>
+        </button>
+      </div>
+
+      <div class="seek">
+        <span class="time">{{ formatTime(player.currentTime()) }}</span>
+        <input
+          type="range"
+          min="0"
+          [max]="player.duration()"
+          step="0.1"
+          [value]="player.currentTime()"
+          (input)="onSeek($event)"
+          aria-label="Seek"
+          [disabled]="!player.current()"
+        />
+        <span class="time">{{ formatTime(player.duration()) }}</span>
+      </div>
+    </div>
+
+    <div class="side">
+      <button
+        type="button"
+        class="ctrl small"
+        [class.on]="showTracks"
+        [attr.aria-expanded]="showTracks"
+        aria-label="Track list"
+        title="Track list"
+        (click)="showTracks = !showTracks"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h13v2H3zm0 5h13v2H3zm0 5h9v2H3zm15-6v8.2a3 3 0 1 0 2 2.8V8h3V6h-5z" /></svg>
+      </button>
+
+      <div class="volume">
+        <button type="button" class="ctrl small" [attr.aria-label]="player.volume() ? 'Mute' : 'Unmute'" (click)="toggleMute()">
+          @if (player.volume() > 0) {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4z" /></svg>
+          } @else {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9zm18.3 6.9-1.4 1.4-2.9-2.9-2.9 2.9-1.4-1.4 2.9-2.9-2.9-2.9 1.4-1.4 2.9 2.9 2.9-2.9 1.4 1.4-2.9 2.9z" /></svg>
+          }
+        </button>
+        <input type="range" min="0" max="1" step="0.01" [value]="player.volume()" (input)="onVolume($event)" aria-label="Volume" />
+      </div>
+
+      @if (player.current(); as track) {
+        <a class="deezer" [href]="track.link" target="_blank" rel="noopener" title="30-second preview. Full track on Deezer">
+          Deezer
+        </a>
+      }
+
+      <button type="button" class="ctrl small" aria-label="Close player" title="Close" (click)="player.close()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4z" /></svg>
+      </button>
+    </div>
+  </div>
+}

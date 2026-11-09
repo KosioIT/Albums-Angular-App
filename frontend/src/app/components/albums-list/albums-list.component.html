@@ -34,8 +34,9 @@
             <button
               type="button"
               class="stat"
-              title="Listen on YouTube"
-              [disabled]="isBusy(album, 'listen')"
+              [class.active]="player.isCurrent(album)"
+              [title]="isPlaying(album) ? 'Pause' : 'Listen (30-second previews)'"
+              [attr.aria-pressed]="isPlaying(album)"
               (click)="listen(album)"
             >
               <img src="assets/images/music_btn-green.png" alt="Listens" />

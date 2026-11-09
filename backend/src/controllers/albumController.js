@@ -3,6 +3,7 @@ import { Album } from "../models/Album.js";
 import { matchedData } from "express-validator";
 import { loadOwnedAlbumOrThrow, getAllAlbumsFromFirestore, findAlbums, findAlbumById, SEARCHABLE_FIELDS } from "../services/albumService.js";
 import { recordDownload } from '../services/activityService.js';
+import { getAlbumPreviews } from '../services/previewService.js';
 
 const ALBUMS = db.collection("albums");
 
@@ -134,6 +135,41 @@ export const downloadAlbum = async (req, res) => {
 
   } catch (err) {
     console.error("Download error:", err);
+    return res.status(500).json({ success: false, message: "Server error!" });
+  }
+};
+
+// GET /api/albums/:id/previews -> { deezerAlbumId, tracks: [{ title, duration, preview, link }] }
+// 30-second previews from Deezer for the built-in player; public, like the album pages.
+export const getPreviews = async (req, res) => {
+  try {
+    const ref = ALBUMS.doc(req.params.id);
+    const doc = await ref.get();
+    if (!doc.exists) {
+      return res.status(404).json({ success: false, message: "Album not found!" });
+    }
+
+    const album = { id: doc.id, ...doc.data() };
+    let previews;
+    try {
+      previews = await getAlbumPreviews(album);
+    } catch (err) {
+      console.error("Deezer error:", err.message);
+      return res.status(502).json({ success: false, message: "Previews are unavailable right now. Please try again later." });
+    }
+
+    if (!previews) {
+      return res.status(404).json({ success: false, message: "No previews for this album yet." });
+    }
+
+    // Remember the match, so later requests skip the search (an admin can correct it by hand)
+    if (album.deezerAlbumId !== previews.deezerAlbumId) {
+      ref.update({ deezerAlbumId: previews.deezerAlbumId }).catch((err) => console.error("Save Deezer id error:", err));
+    }
+
+    return res.json({ success: true, data: previews });
+  } catch (err) {
+    console.error("Previews error:", err);
     return res.status(500).json({ success: false, message: "Server error!" });
   }
 };

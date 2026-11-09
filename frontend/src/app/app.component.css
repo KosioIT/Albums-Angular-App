@@ -9,3 +9,8 @@ h1 {
   font-weight: bold;
   text-align: center;
 }
+
+/* Room for the player bar, so it never covers the end of the page */
+.with-player {
+  padding-bottom: 110px;
+}
