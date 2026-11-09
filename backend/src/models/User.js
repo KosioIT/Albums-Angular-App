@@ -30,7 +30,13 @@ export class User extends BaseModel {
 
   // Minimal user info for the client (login, refresh, /me)
   toBasic() {
-    return { id: this.id, username: this.username, email: this.email, role: this.role };
+    return {
+      id: this.id,
+      username: this.username,
+      email: this.email,
+      role: this.role,
+      likedAlbums: this.likedAlbums, // the UI marks the albums the user already liked
+    };
   }
 
   // Public representation without sensitive fields, plus simple stats

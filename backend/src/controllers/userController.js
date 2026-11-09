@@ -154,14 +154,15 @@ export async function deleteUser(req, res) {
 
 /* ----- ALBUMS-RELATED OPERATIONS ----- */
 
+// POST /api/albums/:id/listen -> { counted } (false when the same user listened less than a minute ago)
 export async function listenToAlbum(req, res) {
   try {
-    const { albumId } = req.params;
+    const albumId = req.params.id;
     if (!(await checkExistingAlbum(albumId))) {
       return res.status(404).json({ success: false, message: 'Album not found!' });
     }
-    await recordListen(req.user.id, albumId);
-    return res.json({ success: true });
+    const counted = await recordListen(req.user.id, albumId);
+    return res.json({ success: true, counted });
   } catch (err) {
     console.error('Listen error:', err);
     return res.status(500).json({ success: false, message: 'Could not record listen!' });
@@ -265,10 +266,14 @@ export async function removeFromFavorites(req, res) {
 }
 
 // Add/remove like
+// POST /api/albums/:id/like -> { liked, likes }; liking again removes the like
 export async function toggleLike(req, res) {
   try {
     const user = req.user;
-    const albumId = req.params.albumId;
+    const albumId = req.params.id;
+    if (!(await checkExistingAlbum(albumId))) {
+      return res.status(404).json({ success: false, message: "Album not found!" });
+    }
 
     const albumRef = ALBUMS.doc(albumId);
     const userRef = USERS.doc(user.id);
@@ -305,6 +310,7 @@ export async function toggleLike(req, res) {
     return res.json({
       success: true,
       action: result.liked ? "liked" : "unliked",
+      liked: result.liked,
       message: result.liked ? "Album liked!" : "Album unliked!",
       likes: result.likes,
     });

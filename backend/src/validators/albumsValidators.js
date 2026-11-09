@@ -4,6 +4,7 @@ import { MAX_TEXT, stringArray, validationResultHandler } from './sharedValidato
 const VALID_RANKS = ['gold', 'silver', 'bronze', 'common'];
 const MAX_TRACKS = 100;
 const DURATION_RE = /^\d{1,3}:[0-5]\d$/;
+const LENGTH_RE = /^(\d{1,3}|\d{1,2}:[0-5]\d):[0-5]\d$/; // "65:24" or "2:16:38"
 
 const ALLOWED_DOWNLOAD_HOSTS = [
     'mega.nz', 'drive.google.com', 'dropbox.com', 'onedrive.live.com', '1drv.ms',
@@ -46,6 +47,11 @@ function albumRules(partial) {
             .isURL({ protocols: ['http', 'https'], require_protocol: true, disallow_auth: true })
             .withMessage('cover_img_url must be an http(s) link')
             .isLength({ max: 2000 }).withMessage('cover_img_url is too long'),
+
+        body('length')
+            .optional({ values: 'null' })
+            .isString().bail()
+            .matches(LENGTH_RE).withMessage('length must be in m:ss or h:mm:ss format'),
 
         body('rank').optional()
             .isIn(VALID_RANKS).withMessage(`rank must be one of: ${VALID_RANKS.join(', ')}`),

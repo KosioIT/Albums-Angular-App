@@ -1,7 +1,7 @@
 <h2>Albums from {{ this.band }}:</h2>
 <div class="album-wrapper">
   <div class="album-container">
-    @for (album of albums; track album) {
+    @for (album of albums; track album.id) {
       <div class="album-card">
         <div
           class="albumImg-wrapper"
@@ -13,7 +13,57 @@
           <h3>{{ album.title }}</h3>
           <div class="caption-line">Release Date: {{album.release_date}}</div>
           <div class="caption-line">Genre: {{album.genre}}</div>
+          @if (album.length) {
+            <div class="caption-line">Length: {{ album.length }}</div>
+          }
           <div class="caption-line">{{albumService.getProducersString(album.producers)}}</div>
+
+          @if (album.tracks.length) {
+            <ol class="tracks">
+              @for (track of album.tracks; track $index) {
+                <li>
+                  <span class="track-no">{{ $index + 1 }}.</span>
+                  <span class="track-title">{{ track.title }}</span>
+                  <span class="track-duration">{{ track.duration }}</span>
+                </li>
+              }
+            </ol>
+          }
+
+          <div class="album-stats">
+            <button
+              type="button"
+              class="stat"
+              title="Listen on YouTube"
+              [disabled]="isBusy(album, 'listen')"
+              (click)="listen(album)"
+            >
+              <img src="assets/images/music_btn-green.png" alt="Listens" />
+              {{ album.listens ?? 0 | number }}
+            </button>
+            <button
+              type="button"
+              class="stat"
+              [class.active]="authService.hasLiked(album.id)"
+              [attr.aria-pressed]="authService.hasLiked(album.id)"
+              [title]="authService.hasLiked(album.id) ? 'Unlike' : 'Like'"
+              [disabled]="isBusy(album, 'like')"
+              (click)="toggleLike(album)"
+            >
+              <img src="assets/images/like_btn-blue.png" alt="Likes" />
+              {{ album.likes ?? 0 | number }}
+            </button>
+            <button
+              type="button"
+              class="stat"
+              [title]="album.hasDownload ? 'Download' : 'Not available for download yet'"
+              [disabled]="!album.hasDownload || isBusy(album, 'download')"
+              (click)="download(album)"
+            >
+              <img src="assets/images/download_icon2-orange.png" alt="Downloads" />
+              {{ album.downloads ?? 0 | number }}
+            </button>
+          </div>
           <app-favorites-template [albumId]="album.id"></app-favorites-template>
         </div>
       </div>

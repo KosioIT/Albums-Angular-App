@@ -18,3 +18,13 @@ export function apiRequest<T>(
     }),
   );
 }
+
+// For endpoints that answer with top-level fields instead of `data` (e.g. { success, liked, likes })
+export function apiBody<T>(promise: Promise<AxiosResponse<T>>): Observable<T> {
+  return from(promise).pipe(
+    map((res) => res.data),
+    catchError((err) => {
+      throw normalizeApiError(err);
+    }),
+  );
+}

@@ -7,25 +7,31 @@ function activityRef(userId, albumId) {
     return USERS.doc(userId).collection('activity').doc(albumId);
 }
 
-export async function recordListen(userId, albumId) {
-    const batch = db.batch();
-    batch.set(activityRef(userId, albumId), {
-        listenCount: FieldValue.increment(1),
-        lastListenedAt: new Date().toISOString(),
-    }, { merge: true });
-    batch.update(db.collection('albums').doc(albumId), { listens: FieldValue.increment(1) });
-    await batch.commit();
+// One user can add at most one listen / download per album per minute (stops double clicks and spamming)
+const REPEAT_COOLDOWN_MS = 60 * 1000;
+
+/*
+  Adds one to the album counter and the user's activity, unless the same user did it less than a minute ago.
+  kind: "listen" | "download". Returns true when it was counted.
+*/
+async function recordOnce(userId, albumId, kind) {
+    const countField = `${kind}Count`;
+    const lastField = kind === 'listen' ? 'lastListenedAt' : 'lastDownloadedAt';
+    const albumField = kind === 'listen' ? 'listens' : 'downloads';
+    const ref = activityRef(userId, albumId);
+
+    return db.runTransaction(async (t) => {
+        const last = (await t.get(ref)).data()?.[lastField];
+        if (last && Date.now() - new Date(last).getTime() < REPEAT_COOLDOWN_MS) return false;
+
+        t.set(ref, { [countField]: FieldValue.increment(1), [lastField]: new Date().toISOString() }, { merge: true });
+        t.update(db.collection('albums').doc(albumId), { [albumField]: FieldValue.increment(1) });
+        return true;
+    });
 }
 
-export async function recordDownload(userId, albumId) {
-    const batch = db.batch();
-    batch.set(activityRef(userId, albumId), {
-        downloadCount: FieldValue.increment(1),
-        lastDownloadedAt: new Date().toISOString(),
-    }, { merge: true });
-    batch.update(db.collection('albums').doc(albumId), { downloads: FieldValue.increment(1) });
-    await batch.commit();
-}
+export const recordListen = (userId, albumId) => recordOnce(userId, albumId, 'listen');
+export const recordDownload = (userId, albumId) => recordOnce(userId, albumId, 'download');
 
 export async function setLiked(userId, albumId, liked) {
     await activityRef(userId, albumId).set({

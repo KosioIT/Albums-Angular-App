@@ -25,3 +25,84 @@ h2 {
 .loginLink:hover {
   text-decoration: underline;
 }
+
+/* Featured tracks */
+.tracks {
+  list-style: none;
+  padding: 0;
+  margin: 12px auto 0;
+  max-width: 360px;
+  font-size: 18px;
+  font-weight: 400;
+  text-align: left;
+}
+
+.tracks li {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.track-no {
+  min-width: 1.4em;
+}
+
+.track-title {
+  flex: 1;
+}
+
+.track-duration {
+  color: #bbb;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Listens, likes, downloads */
+.album-stats {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin-top: 14px;
+  font-size: 20px;
+}
+
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.stat img {
+  width: 30px;
+  height: 30px;
+  transition: transform 0.2s ease;
+}
+
+.stat:hover:not(:disabled) img {
+  transform: scale(1.15);
+}
+
+.stat:focus-visible {
+  outline: 2px solid lime;
+}
+
+.stat:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+/* Liked by the current user */
+.stat.active {
+  color: #4da3ff;
+}
+
+.stat.active img {
+  box-shadow: 0 0 0 3px #4da3ff;
+  border-radius: 50%;
+}
