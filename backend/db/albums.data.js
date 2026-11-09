@@ -2,23 +2,24 @@
   Seed data for the "albums" collection (used by seed-albums.js).
   Shape follows the Album model and the album validators:
   release_date "DD.MM.YYYY", tracks[].composer as an array, rank gold|silver|bronze|common.
-  Within each band the order is the rank: 1st gold, 2nd silver, 3rd bronze, the rest common.
+  Within each band the order is the rank by sales (US certifications): 1st gold, 2nd silver,
+  3rd bronze, the rest common.
   The document id is the slug of the title (Album model), so titles must stay unique.
 */
 
 const acdc = [
     {
-        title: "Let There Be Rock",
+        title: "Who Made Who",
         artist: "AC/DC",
-        release_date: "25.03.1977",
+        release_date: "26.05.1986",
         producers: ["Harry Vanda", "George Young"],
-        genre: "Hard Rock",
-        cover_img_url: "https://upload.wikimedia.org/wikipedia/en/thumb/d/d7/ACDC-LetThereBeRock.jpg/250px-ACDC-LetThereBeRock.jpg",
+        genre: "Soundtrack",
+        cover_img_url: "https://upload.wikimedia.org/wikipedia/en/a/a2/Whomadewho.jpg",
         rank: "gold",
         tracks: [
-            { title: "Go Down", duration: "5:13", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
-            { title: "Dog Eat Dog", duration: "3:39", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
-            { title: "Let There Be Rock", duration: "6:07", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
+            { title: "Who Made Who", duration: "3:27", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
+            { title: "You Shook Me All Night Long", duration: "3:30", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
+            { title: "Shake a Leg", duration: "4:06", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
         ],
     },
     {
@@ -36,31 +37,45 @@ const acdc = [
         ],
     },
     {
+        title: "Black Ice",
+        artist: "AC/DC",
+        release_date: "20.10.2008",
+        producers: ["Brendan O'Brien"],
+        genre: "Hard Rock",
+        cover_img_url: "https://upload.wikimedia.org/wikipedia/en/3/3e/Black_ice_red.jpg",
+        rank: "bronze",
+        tracks: [
+            { title: "Rock 'n' Roll Train", duration: "4:21", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
+            { title: "Big Jack", duration: "3:57", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
+            { title: "Black Ice", duration: "4:08", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
+        ],
+    },
+    {
+        title: "Let There Be Rock",
+        artist: "AC/DC",
+        release_date: "25.03.1977",
+        producers: ["Harry Vanda", "George Young"],
+        genre: "Hard Rock",
+        cover_img_url: "https://upload.wikimedia.org/wikipedia/en/thumb/d/d7/ACDC-LetThereBeRock.jpg/250px-ACDC-LetThereBeRock.jpg",
+        rank: "common",
+        tracks: [
+            { title: "Go Down", duration: "5:13", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
+            { title: "Dog Eat Dog", duration: "3:39", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
+            { title: "Let There Be Rock", duration: "6:07", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
+        ],
+    },
+    {
         title: "If You Want Blood You've Got It",
         artist: "AC/DC",
         release_date: "27.10.1978",
         producers: ["Harry Vanda", "George Young"],
         genre: "Live",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/thumb/f/f6/Acdc_If_You_Want_Blood_You%27ve_Got_It.JPG/250px-Acdc_If_You_Want_Blood_You%27ve_Got_It.JPG",
-        rank: "bronze",
+        rank: "common",
         tracks: [
             { title: "Live Wire", duration: "5:24", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
             { title: "T.N.T. (Live)", duration: "3:40", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
             { title: "Whole Lotta Rosie (Live)", duration: "6:14", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
-        ],
-    },
-    {
-        title: "Who Made Who",
-        artist: "AC/DC",
-        release_date: "26.05.1986",
-        producers: ["Harry Vanda", "George Young"],
-        genre: "Soundtrack",
-        cover_img_url: "https://upload.wikimedia.org/wikipedia/en/a/a2/Whomadewho.jpg",
-        rank: "common",
-        tracks: [
-            { title: "Who Made Who", duration: "3:27", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
-            { title: "You Shook Me All Night Long", duration: "3:30", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
-            { title: "Shake a Leg", duration: "4:06", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
         ],
     },
     {
@@ -77,37 +92,9 @@ const acdc = [
             { title: "Burnin' Alive", duration: "4:04", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
         ],
     },
-    {
-        title: "Black Ice",
-        artist: "AC/DC",
-        release_date: "20.10.2008",
-        producers: ["Brendan O'Brien"],
-        genre: "Hard Rock",
-        cover_img_url: "https://upload.wikimedia.org/wikipedia/en/3/3e/Black_ice_red.jpg",
-        rank: "common",
-        tracks: [
-            { title: "Rock 'n' Roll Train", duration: "4:21", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
-            { title: "Big Jack", duration: "3:57", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
-            { title: "Black Ice", duration: "4:08", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
-        ],
-    },
 ];
 
 const gunsNRoses = [
-    {
-        title: "Live Era '87–'93",
-        artist: "Guns N' Roses",
-        release_date: "23.11.1999",
-        producers: ["Guns N' Roses"],
-        genre: "Hard Rock / Live",
-        cover_img_url: "https://upload.wikimedia.org/wikipedia/en/2/2c/Live_Era_87-93Guns%27n%27roses.jpg",
-        rank: "gold",
-        tracks: [
-            { title: "Nightrain (Live)", duration: "5:59", composer: ["Axl Rose", "Slash", "Izzy Stradlin"] },
-            { title: "Mr. Brownstone (Live)", duration: "4:58", composer: ["Axl Rose", "Izzy Stradlin"] },
-            { title: "It's So Easy (Live)", duration: "3:57", composer: ["Duff McKagan", "West Arkeen"] },
-        ],
-    },
     {
         title: "Greatest Hits",
         artist: "Guns N' Roses",
@@ -115,11 +102,25 @@ const gunsNRoses = [
         producers: ["Various"],
         genre: "Compilation",
         cover_img_url: "https://i.discogs.com/CjFOO1WqKCOEi0oQtSUEbmky_IiUAnEtO3Phd6K6HrY/rs:fit/g:sm/q:90/h:554/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEzNjAy/NjQ5LTE1NTczNzA1/OTktNjcwOS5qcGVn.jpeg",
-        rank: "silver",
+        rank: "gold",
         tracks: [
             { title: "Welcome to the Jungle", duration: "4:31", composer: ["Axl Rose", "Slash"] },
             { title: "Sweet Child o' Mine", duration: "5:56", composer: ["Axl Rose", "Slash", "Izzy Stradlin"] },
             { title: "Knockin' on Heaven's Door", duration: "5:36", composer: ["Bob Dylan"] },
+        ],
+    },
+    {
+        title: "Live Era '87–'93",
+        artist: "Guns N' Roses",
+        release_date: "23.11.1999",
+        producers: ["Guns N' Roses"],
+        genre: "Hard Rock / Live",
+        cover_img_url: "https://upload.wikimedia.org/wikipedia/en/2/2c/Live_Era_87-93Guns%27n%27roses.jpg",
+        rank: "silver",
+        tracks: [
+            { title: "Nightrain (Live)", duration: "5:59", composer: ["Axl Rose", "Slash", "Izzy Stradlin"] },
+            { title: "Mr. Brownstone (Live)", duration: "4:58", composer: ["Axl Rose", "Izzy Stradlin"] },
+            { title: "It's So Easy (Live)", duration: "3:57", composer: ["Duff McKagan", "West Arkeen"] },
         ],
     },
     {
