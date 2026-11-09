@@ -113,8 +113,8 @@ From the project root (stop a running `npm run dev` with Ctrl+C first):
 ```bash
 npm run update
 ```
-pulls the latest code, reinstalls the dependencies, updates the albums in the database
-(`seed --force`: likes, listens, downloads and download links are kept) and starts both servers.
+pulls the latest code, reinstalls the dependencies, updates the albums and their Mega download links
+(`npm run seed`) and starts both servers.
 
 ```bash
 npm run refresh
@@ -122,6 +122,8 @@ npm run refresh
 does the same without `git pull` and the reinstall: updates the albums and starts the servers.
 
 ### Other scripts
-- `npm run seed` updates the albums in the database from `backend/db/albums.data.js`
+- `npm run seed` makes the albums in the database match `backend/db/albums.data.js` (adds, updates,
+  removes the seeded albums that are no longer listed; likes, listens and downloads are kept), then
+  links the archives from the Mega folder when `MEGA_ALBUMS_FOLDER_URL` is set
 - `npm run build` builds the frontend for production
 - `npm test` runs the frontend unit tests once

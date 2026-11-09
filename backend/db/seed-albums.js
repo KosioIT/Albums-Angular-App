@@ -14,6 +14,7 @@ import { validateAlbum } from './validateAlbum.js';
 
 const CHECK_ONLY = process.argv.includes('--check');
 const FORCE = process.argv.includes('--force');
+const PRUNE = process.argv.includes('--prune');
 
 // Fields the app changes at runtime; a re-seed must never reset them
 const RUNTIME_FIELDS = ['likes', 'listens', 'downloads', 'downloadUrl', 'deezerAlbumId', 'created_at', 'createdBy'];
@@ -69,7 +70,17 @@ async function seed(list) {
         }
     }
 
-    console.log(`\n✔ Created ${counts.created}, updated ${counts.updated}, skipped ${counts.skipped} (already in the database${FORCE ? '' : '; use --force to update them'})`);
+    if (PRUNE) {
+        const keep = new Set(list.map((a) => a.id));
+        const stale = (await ALBUMS.get()).docs.filter((d) => !keep.has(d.id) && !d.data().createdBy);
+        for (const doc of stale) {
+            await doc.ref.delete();
+            console.log(`  - ${doc.id}`);
+        }
+        counts.deleted = stale.length;
+    }
+
+    console.log(`\n✔ Created ${counts.created}, updated ${counts.updated}, skipped ${counts.skipped} (already in the database${FORCE ? '' : '; use --force to update them'})${PRUNE ? `, deleted ${counts.deleted}` : ''}`);
 }
 
 const list = await buildAlbums();

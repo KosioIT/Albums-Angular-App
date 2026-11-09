@@ -10,19 +10,25 @@
   Keep it out of git: anyone with it can download every archive, and the app hides download links on purpose.
 
   Each archive (.zip/.rar/.7z, subfolders included) is matched to an album by name: the album's slug
-  must appear in the file path ("AC-DC - Black Ice (2008).zip" -> black-ice); the artist in the path
-  breaks ties. Anything unmatched or ambiguous is listed so you can rename the file or set it by hand.
+  must appear in the file path ("kill_'em_all.zip" or "Metallica - Kill 'Em All.zip" -> kill-em-all);
+  the artist in the path breaks ties. Anything unmatched or ambiguous is listed so you can rename the
+  file or set it by hand (see megaMatch.js).
 */
 import { File } from 'megajs';
 import { loadEnv } from '../src/config/env/loadEnv.js';
-import { makeSlug } from '../src/utils/slugify.js';
+import { ARCHIVE_RE, matchArchives } from './megaMatch.js';
 
 loadEnv();
 
 const WRITE = process.argv.includes('--write');
+const OPTIONAL = process.argv.includes('--optional'); // part of "npm run seed": skip quietly when not configured
 const OVERWRITE = process.argv.includes('--overwrite');
 const FOLDER_URL = process.argv.find((a) => a.startsWith('https://mega.nz/')) || process.env.MEGA_ALBUMS_FOLDER_URL;
-const ARCHIVE_RE = /\.(zip|rar|7z)$/i;
+
+if (!FOLDER_URL && OPTIONAL) {
+    console.log('Download links skipped: MEGA_ALBUMS_FOLDER_URL is not set in backend/.env');
+    process.exit(0);
+}
 
 const folderMatch = FOLDER_URL?.match(/^https:\/\/mega\.nz\/folder\/([\w-]+)#([\w-]+)/);
 if (!folderMatch && /^https:\/\/mega\.nz\/folder\/[\w-]+$/.test(FOLDER_URL || '')) {
@@ -46,22 +52,6 @@ function listArchives(node, path = []) {
     );
 }
 
-// "-a-b-" contains "-b-": whole slug words only, so "turbo" does not match "turbocharged"
-const containsSlug = (haystack, needle) => `-${haystack}-`.includes(`-${needle}-`);
-
-function bestAlbumFor(pathSlug, albums) {
-    const scored = albums
-        .filter((a) => containsSlug(pathSlug, a.id))
-        .map((a) => ({ album: a, score: (containsSlug(pathSlug, makeSlug(a.artist)) ? 1000 : 0) + a.id.length }))
-        .sort((x, y) => y.score - x.score);
-
-    if (scored.length === 0) return { album: null };
-    if (scored.length > 1 && scored[0].score === scored[1].score) {
-        return { album: null, ambiguous: scored.filter((s) => s.score === scored[0].score).map((s) => s.album.id) };
-    }
-    return { album: scored[0].album };
-}
-
 async function main() {
     console.log('Reading the Mega folder...');
     const root = File.fromURL(FOLDER_URL);
@@ -73,22 +63,8 @@ async function main() {
     const ALBUMS = db.collection('albums');
     const albums = (await ALBUMS.get()).docs.map((d) => ({ id: d.id, ...d.data() }));
 
-    const plan = new Map(); // album id -> { album, archive, link }
-    const unmatched = [];
-    const ambiguous = [];
-    const duplicates = [];
-
-    for (const archive of archives) {
-        const pathSlug = makeSlug(archive.path.replace(ARCHIVE_RE, ''));
-        const { album, ambiguous: tied } = bestAlbumFor(pathSlug, albums);
-
-        if (tied) ambiguous.push(`${archive.path}  ->  ${tied.join(' | ')}`);
-        else if (!album) unmatched.push(archive.path);
-        else if (plan.has(album.id)) duplicates.push(`${album.id}: "${plan.get(album.id).archive.path}" and "${archive.path}"`);
-        else plan.set(album.id, { album, archive, link: fileLink(archive.file) });
-    }
-    // An album matched by two files gets neither; which one is right is your call
-    duplicates.forEach((d) => plan.delete(d.split(':')[0]));
+    const { matched, unmatched, ambiguous, duplicates } = matchArchives(archives, albums);
+    const plan = new Map([...matched].map(([id, m]) => [id, { ...m, link: fileLink(m.archive.file) }]));
 
     const toWrite = [...plan.values()].filter((p) => OVERWRITE || !p.album.downloadUrl);
     const alreadySet = plan.size - toWrite.length;
