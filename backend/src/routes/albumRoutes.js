@@ -7,8 +7,7 @@ import { listenToAlbum, toggleLike } from '../controllers/userController.js';
 const router = express.Router();
 
 /* ======== Registered only users routes ======== */
-// Before "/:filterField/:filterVal", which would otherwise also match "/<id>/download"
-router.get("/:id/download", protect, downloadAlbum);
+router.post("/:id/download", protect, downloadAlbum);
 router.post('/:id/like', protect, toggleLike);
 router.post('/:id/listen', protect, listenToAlbum);
 

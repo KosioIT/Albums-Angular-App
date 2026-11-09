@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Album } from '../models/album';
 import { api } from '../core/api';
-import { apiRequest } from '../core/api-request';
+import { apiBody, apiRequest } from '../core/api-request';
 import { ApiSuccessResponse } from '../core/api-repsonse';
 
 @Injectable({
@@ -42,6 +42,27 @@ export class AlbumService {
 
   delete(id: string): Observable<ApiSuccessResponse<void>> {
     return apiRequest<ApiSuccessResponse<void>>(api.delete(`/albums/${id}`));
+  }
+
+  // ===== Listens, likes, downloads (signed-in users) =====
+
+  // Liking again removes the like
+  toggleLike(id: string): Observable<{ liked: boolean; likes: number }> {
+    return apiBody(api.post(`/albums/${this.encode(id)}/like`));
+  }
+
+  // counted = false when the same user listened less than a minute ago
+  listen(id: string): Observable<{ counted: boolean }> {
+    return apiBody(api.post(`/albums/${this.encode(id)}/listen`));
+  }
+
+  download(id: string): Observable<{ url: string; counted: boolean }> {
+    return apiBody(api.post(`/albums/${this.encode(id)}/download`));
+  }
+
+  // Where "listen" takes the user: a YouTube search for the album
+  listenUrl(album: Album): string {
+    return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${album.artist} ${album.title} full album`)}`;
   }
 
   // ===== Helper Methods =====

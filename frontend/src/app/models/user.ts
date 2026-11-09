@@ -4,12 +4,12 @@ export interface User {
   username: string;
   email: string;
   role: 'user' | 'admin';
+  likedAlbums?: string[]; // album ids
 }
 
 // Full user, as returned by the admin endpoints (User.toPublic() in the backend)
 export interface UserProfile extends User {
   favorites: string[];
-  likedAlbums: string[];
   totalLikes: number;
   created_at?: string;
   updated_at?: string | null;

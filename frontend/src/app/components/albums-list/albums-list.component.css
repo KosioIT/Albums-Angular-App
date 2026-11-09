@@ -69,9 +69,40 @@ h2 {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
 }
 
 .stat img {
   width: 30px;
   height: 30px;
+  transition: transform 0.2s ease;
+}
+
+.stat:hover:not(:disabled) img {
+  transform: scale(1.15);
+}
+
+.stat:focus-visible {
+  outline: 2px solid lime;
+}
+
+.stat:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+/* Liked by the current user */
+.stat.active {
+  color: #4da3ff;
+}
+
+.stat.active img {
+  box-shadow: 0 0 0 3px #4da3ff;
+  border-radius: 50%;
 }

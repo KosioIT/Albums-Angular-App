@@ -112,38 +112,28 @@ export const deleteAlbum = async (req, res) => {
   }
 };
 
-// Download album file (zip) from MEGA
+// POST /api/albums/:id/download -> { url, counted }
+// Signed-in users only. The link is returned instead of a redirect, because the browser cannot
+// send the Authorization header when it simply follows a link.
 export const downloadAlbum = async (req, res) => {
   try {
-    const slug = req.params.id;
-
-    const doc = await ALBUMS.doc(slug).get();
+    const albumId = req.params.id;
+    const doc = await ALBUMS.doc(albumId).get();
 
     if (!doc.exists) {
-      return res.status(404).json({
-        success: false,
-        message: "Album not found!"
-      });
+      return res.status(404).json({ success: false, message: "Album not found!" });
     }
 
-    const album = doc.data();
-
-    if (!album.downloadUrl) {
-      return res.status(404).json({
-        success: false,
-        message: "Mega download link not available!"
-      });
+    const { downloadUrl } = doc.data();
+    if (!downloadUrl) {
+      return res.status(404).json({ success: false, message: "This album is not available for download yet!" });
     }
 
-    // Redirect to Mega file
-    await recordDownload(req.user.id, slug);
-    return res.redirect(album.downloadUrl);
+    const counted = await recordDownload(req.user.id, albumId);
+    return res.json({ success: true, url: downloadUrl, counted });
 
   } catch (err) {
     console.error("Download error:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Server error!"
-    });
+    return res.status(500).json({ success: false, message: "Server error!" });
   }
 };

@@ -46,6 +46,18 @@ export class AuthService {
     return this.currentUser?.role === 'admin';
   }
 
+  hasLiked(albumId: string): boolean {
+    return !!this.currentUser?.likedAlbums?.includes(albumId);
+  }
+
+  // Keeps the local user in sync after a like / unlike
+  setLiked(albumId: string, liked: boolean): void {
+    const user = this.currentUser;
+    if (!user) return;
+    const others = (user.likedAlbums ?? []).filter((id) => id !== albumId);
+    this.userSubject.next({ ...user, likedAlbums: liked ? [...others, albumId] : others });
+  }
+
   private setSession({ token, user }: AuthResponse): User {
     authToken.set(token);
     this.userSubject.next(user);
