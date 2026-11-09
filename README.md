@@ -107,6 +107,21 @@ npm run dev:backend
 npm run dev:frontend
 ```
 
+### After pulling new changes
+From the project root (stop a running `npm run dev` with Ctrl+C first):
+
+```bash
+npm run update
+```
+pulls the latest code, reinstalls the dependencies, updates the albums in the database
+(`seed --force`: likes, listens, downloads and download links are kept) and starts both servers.
+
+```bash
+npm run refresh
+```
+does the same without `git pull` and the reinstall: updates the albums and starts the servers.
+
 ### Other scripts
+- `npm run seed` updates the albums in the database from `backend/db/albums.data.js`
 - `npm run build` builds the frontend for production
 - `npm test` runs the frontend unit tests once
