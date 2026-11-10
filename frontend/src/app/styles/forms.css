@@ -61,14 +61,18 @@ a {
   color: inherit;
 }
 
-.acc-link:hover .registerLink,
+/* .acc-link:hover .registerLink,
 .acc-link:focus-visible .registerLink {
   text-decoration: underline;
-}
+} */
 
 .acc-p {
   font-size: 25px;
   text-align: center;
   cursor: pointer;
   color: yellow;
+}
+
+.acc-p:hover{
+  text-decoration: underline;
 }
