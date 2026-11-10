@@ -50,9 +50,20 @@ a {
   text-decoration: none;
 }
 
-a.registerLink {
+.registerLink {
   color: magenta;
   font-weight: 800;
+}
+
+/* The whole "Don't have an account? Sign up" line is the link; the question keeps the
+   paragraph's colour and only "Sign up" / "Sign in" is underlined on hover */
+.acc-link {
+  color: inherit;
+}
+
+.acc-link:hover .registerLink,
+.acc-link:focus-visible .registerLink {
+  text-decoration: underline;
 }
 
 .acc-p {
