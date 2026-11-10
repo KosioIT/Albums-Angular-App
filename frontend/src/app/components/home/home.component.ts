@@ -3,7 +3,6 @@ import { Album } from '../../models/album';
 import { AlbumService } from '../../services/album.service';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { CustomToastrService } from '../../services/custom-toastr.service';
 
 @Component({
   selector: 'app-home',
@@ -17,8 +16,7 @@ export class HomeComponent implements OnInit {
   timestamp = Date.now();
 
   constructor(
-    public albumService: AlbumService,
-    private toastr: CustomToastrService,
+    public albumService: AlbumService
   ) {}
 
   ngOnInit(): void {
@@ -30,11 +28,11 @@ export class HomeComponent implements OnInit {
       next: (albums) => {
         this.gold_albums = albums;
         this.errorMessage = '';
-        this.toastr.showToast(
-          'Gold albums loaded successfully!',
-          'success',
-          'Success',
-        );
+        // this.toastr.showToast(
+        //   'Gold albums loaded successfully!',
+        //   'success',
+        //   'Success',
+        // );
       },
       error: (err: Error) => {
         this.gold_albums = [];

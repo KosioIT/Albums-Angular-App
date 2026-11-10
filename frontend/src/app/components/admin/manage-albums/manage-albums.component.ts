@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { FormHelperService } from '../../../services/form-helper.service';
+import { CustomToastrService } from '../../../services/custom-toastr.service';
 
 @Component({
     selector: 'app-manage-albums',
@@ -22,7 +23,7 @@ export class ManageAlbumsComponent {
   producersString: string = '';
   stringArray: string[] = [];
 
-  constructor(public albumService: AlbumService, private formHelperService: FormHelperService) {
+  constructor(public albumService: AlbumService, private formHelperService: FormHelperService, private toastr: CustomToastrService) {
     this.albumService.getAll().subscribe((albums) => {
       this.albums = albums;
     });
@@ -56,6 +57,7 @@ export class ManageAlbumsComponent {
   saveEdit(album: Album): void {
     this.editStates[album.id] = false;
     this.updateAlbum(album.id, album);
+
   }
 
   onProducersChange(album: Album): void {
@@ -78,12 +80,15 @@ export class ManageAlbumsComponent {
       } else {
         this.albums.push(album);
       }
+      this.toastr.showToast(`Album '${album.title}' updated successfully!`, 'success', 'Success');
     });
+    
   }
 
   deleteAlbum(id: string): void {
     this.albumService.delete(id).subscribe(() => {
       this.albums = this.albums.filter((album) => album.id !== id);
+      this.toastr.showToast(`Album '${this.albums.find((a) => a.id === id)?.title}' deleted successfully!`, 'success', 'Success');
     });
   }
 }
