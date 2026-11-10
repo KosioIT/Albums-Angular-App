@@ -51,11 +51,13 @@ export class ValidationService {
     },
     title: {
       required: this.requiredMessageFor('Title'),
+      minlength: this.minLengthMessageFor('Title'),
       customMinLength: this.minLengthMessageFor('Title'),
       albumExists: 'Album with this title already exists!',
     },
     artist: {
       required: this.requiredMessageFor('Artist'),
+      minlength: this.minLengthMessageFor('Artist'),
       customMinLength: this.minLengthMessageFor('Artist'),
     },
     release_date: {
@@ -64,6 +66,7 @@ export class ValidationService {
     },
     genre: {
       required: this.requiredMessageFor('Genre'),
+      minlength: this.minLengthMessageFor('Genre'),
       customMinLength: this.minLengthMessageFor('Genre'),
     },
     cover_img_url: {
@@ -73,6 +76,7 @@ export class ValidationService {
     },
     producers: {
       required: this.requiredMessageFor('Producers'),
+      minlength: this.minLengthMessageFor('Producers'),
       customMinLength: this.minLengthMessageFor('Producers'),
     },
   };

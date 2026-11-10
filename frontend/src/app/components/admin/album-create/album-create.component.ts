@@ -1,71 +1,45 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { AlbumService } from '../../../services/album.service';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AlbumService } from '../../../services/album.service';
 import { albumExistsValidator } from '../../../validators/album/albumExists';
-import { multiFieldMinLengthValidator } from '../../../validators/multiFieldLength';
 import { ValidationMessageDirective } from '../../../directives/validation-message.directive';
 import { FormHelperService } from '../../../services/form-helper.service';
 import { notInFutureValidator } from '../../../validators/album/notInFuture';
-import { ToastrService } from 'ngx-toastr'; 
-import { FormValidationError } from '../../../errors/form-errors/form-validation-error';
+import { CustomToastrService } from '../../../services/custom-toastr.service';
+import { Album } from '../../../models/album';
+
+// <input type="date"> gives "1987-07-21"; the API stores "21.07.1987"
+export function toApiDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-');
+  return `${day}.${month}.${year}`;
+}
 
 @Component({
-    selector: 'app-album-create',
-    imports: [ReactiveFormsModule, ValidationMessageDirective],
-    templateUrl: './album-create.component.html',
-    styleUrls: ['./album-create.component.css', '../../../styles/forms.css']
+  selector: 'app-album-create',
+  imports: [ReactiveFormsModule, ValidationMessageDirective],
+  templateUrl: './album-create.component.html',
+  styleUrls: ['./album-create.component.css', '../../../styles/forms.css'],
 })
 export class AlbumCreateComponent implements OnInit {
-  albumForm!: FormGroup;
-  producersString: string = '';
-  stringArray: string[] = [];
-  isSubmitting: boolean = false;
+  albumForm: FormGroup;
+  isSubmitting = false;
 
   constructor(
     public albumService: AlbumService,
     public formHelperService: FormHelperService,
-    @Inject(ToastrService) private toastr: ToastrService,
+    private toastr: CustomToastrService,
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
   ) {
-    this.albumForm = this.fb.group(
-      {
-        title: [
-          '',
-          [Validators.required],
-          [albumExistsValidator(this.albumService)],
-        ],
-        artist: ['', [Validators.required]],
-        release_date: ['', [Validators.required, notInFutureValidator()]],
-        genre: ['', [Validators.required]],
-        cover_img_url: [
-          '',
-          [
-            Validators.required,
-            Validators.pattern(
-              /^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/
-            ),
-          ],
-        ],
-        producers: ['', [Validators.required]],
-      },
-      {
-        validators: multiFieldMinLengthValidator({
-          title: 3,
-          artist: 3,
-          cover_img_url: 3,
-          genre: 3,
-          producers: 3,
-        }),
-      }
-    );
+    this.albumForm = this.fb.group({
+      title: ['', [Validators.required, Validators.minLength(3)], [albumExistsValidator(this.albumService)]],
+      artist: ['', [Validators.required, Validators.minLength(3)]],
+      release_date: ['', [Validators.required, notInFutureValidator()]],
+      genre: ['', [Validators.required, Validators.minLength(3)]],
+      cover_img_url: ['', [Validators.required, Validators.pattern(/^https?:\/\/\S+$/)]],
+      producers: ['', [Validators.required, Validators.minLength(3)]], // comma separated
+    });
   }
 
   ngOnInit(): void {
@@ -73,29 +47,28 @@ export class AlbumCreateComponent implements OnInit {
   }
 
   onCreateFormSubmit(): void {
-    if (this.albumForm.valid) {
-      const albumData = this.albumForm.value;
-      this.stringArray = this.formHelperService.parseStringToArray(
-        this.producersString
-      );
-      this.albumForm.patchValue({ producers: this.stringArray });
-      this.isSubmitting = true;
+    if (this.isSubmitting) return;
+    const form = this.formHelperService.submit<Record<string, string>>(); // shows the errors if invalid
 
-      this.albumService.create(albumData).subscribe({
-        next: () => {
-          this.isSubmitting = false;
-          this.router.navigate(['/admin/manage-albums']);
-          this.toastr.success('Album created successfully!', 'Success');
-          this.albumForm.reset();
-        },
-        error: (error) => {
-          console.error('Error creating album:', error);
-          throw error;
-        },
-      });
-    } else {
-      this.formHelperService.markAllAsTouched(this.albumForm);
-      throw new FormValidationError();
-    }
+    const album = {
+      title: form['title'].trim(),
+      artist: form['artist'].trim(),
+      genre: form['genre'].trim(),
+      cover_img_url: form['cover_img_url'].trim(),
+      release_date: toApiDate(form['release_date']),
+      producers: this.formHelperService.parseStringToArray(form['producers']),
+    } as Partial<Album>;
+
+    this.isSubmitting = true;
+    this.albumService.create(album as Album).subscribe({
+      next: () => {
+        this.toastr.showToast(`"${album.title}" was added.`, 'success', 'Album created');
+        this.router.navigate(['/admin/albums']);
+      },
+      error: (err: Error) => {
+        this.isSubmitting = false;
+        this.toastr.showToast(err.message, 'error', 'Could not create the album');
+      },
+    });
   }
 }

@@ -56,6 +56,7 @@
           <input
             type="url"
             id="coverImgUrl"
+            placeholder="https://..."
             class="form-control"
             formControlName="cover_img_url"
             [appValidationMessage]="'cover_img_url'"
@@ -69,6 +70,7 @@
             id="producers"
             class="form-control"
             formControlName="producers"
+            placeholder="e.g. Mike Clink, Guns N' Roses"
             [appValidationMessage]="'producers'"
             required  
             (blur)="formHelperService.onBlur('producers')"
@@ -79,9 +81,9 @@
           <button
             type="submit"
             class="btn btn-primary"
-            [disabled]="albumForm.invalid"
+            [disabled]="albumForm.invalid || isSubmitting"
           >
-            Create Album
+            {{ isSubmitting ? 'Creating...' : 'Create Album' }}
           </button>
         </div>
       </form>
