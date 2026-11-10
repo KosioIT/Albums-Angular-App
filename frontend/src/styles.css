@@ -10,6 +10,8 @@ body {
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
+  /* tied to the window, so it also covers pages longer than the body (e.g. the add album form) */
+  background-attachment: fixed;
   font-family: Harrington !important;
 }
 
