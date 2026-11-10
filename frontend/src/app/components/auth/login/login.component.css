@@ -10,19 +10,6 @@
     text-decoration: underline;
 }
 
-p#registerP{
-    text-align: center;
-    color: white;
-    font-size: 23px;
-    cursor: pointer;
-}
-
-#registerLink{
-    text-decoration: none;
-    color: magenta;
-    font-weight: 800;
-}
-
 #registerLink:hover{
     text-decoration: underline;
 }

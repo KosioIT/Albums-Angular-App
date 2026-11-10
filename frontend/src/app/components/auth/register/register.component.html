@@ -67,12 +67,12 @@
             class="btn btn-primary submit-btn"
             [disabled]="registerForm.invalid || submitting"
           >
-            {{ submitting ? 'Creating account...' : 'Sign up' }}
+            {{ submitting ? "Creating account..." : "Sign up" }}
           </button>
 
-          <p class="w-100 text-center mt-4">
+          <p class="acc-p w-100 text-center mt-4">
             Already have an account?
-            <a routerLink="/login">Sign in</a>
+            <a class="ms-2 registerLink" routerLink="/login">Sign in</a>
           </p>
         </div>
       </form>
