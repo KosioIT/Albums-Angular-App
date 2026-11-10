@@ -7,7 +7,8 @@
   3rd bronze, the rest common. A reissue counts with its original album (as RIAA certifies them),
   e.g. Appetite for Destruction (Super Deluxe Edition) carries the original's sales.
   The document id is the slug of the title (Album model), so titles must stay unique.
-  Apart from AC/DC, these are the albums with an archive in R2 / the Mega folder (see link-downloads.js).
+  Six albums per band. Apart from AC/DC and Appetite for Destruction, each has an archive in R2 /
+  the Mega folder (see link-downloads.js).
   Covers are Deezer images; track durations are from Deezer, the rest from the albums' Wikipedia pages.
 */
 
@@ -288,36 +289,6 @@ const ironMaiden = [
             { title: "Killers", duration: "5:01", composer: ["Paul Di'Anno","Steve Harris"] },
         ],
     },
-    {
-        title: "Fear of the Dark",
-        artist: "Iron Maiden",
-        release_date: "11.05.1992",
-        length: "57:58",
-        producers: ["Martin Birch","Steve Harris"],
-        genre: "Heavy Metal",
-        cover_img_url: "https://upload.wikimedia.org/wikipedia/en/e/eb/Iron_Maiden_-_Fear_Of_The_Dark.jpg",
-        rank: "common",
-        tracks: [
-            { title: "Be Quick or Be Dead", duration: "3:24", composer: ["Bruce Dickinson","Janick Gers"] },
-            { title: "Fear of the Dark", duration: "7:16", composer: ["Steve Harris"] },
-            { title: "Afraid to Shoot Strangers", duration: "6:56", composer: ["Steve Harris"] },
-        ],
-    },
-    {
-        title: "Brave New World",
-        artist: "Iron Maiden",
-        release_date: "29.05.2000",
-        length: "66:59",
-        producers: ["Kevin Shirley","Steve Harris"],
-        genre: "Heavy Metal",
-        cover_img_url: "https://upload.wikimedia.org/wikipedia/en/0/03/Iron_Maiden_-_Brave_New_World.jpg",
-        rank: "common",
-        tracks: [
-            { title: "The Wicker Man", duration: "4:35", composer: ["Bruce Dickinson","Adrian Smith"] },
-            { title: "Ghost of the Navigator", duration: "6:50", composer: ["Bruce Dickinson","Steve Harris"] },
-            { title: "Blood Brothers", duration: "7:14", composer: ["Steve Harris"] },
-        ],
-    },
 ];
 
 const judasPriest = [
@@ -507,6 +478,21 @@ const scorpions = [
 
 const gunsNRoses = [
     {
+        title: "Appetite for Destruction",
+        artist: "Guns N' Roses",
+        release_date: "21.07.1987",
+        length: "53:51",
+        producers: ["Mike Clink"],
+        genre: "Hard Rock",
+        cover_img_url: "https://cdn-images.dzcdn.net/images/cover/75c0f08e23dca1c8e25b298ee67a41d1/1000x1000-000000-80-0-0.jpg",
+        rank: "gold",
+        tracks: [
+            { title: "Welcome to the Jungle", duration: "4:31", composer: ["Guns N' Roses"] },
+            { title: "Paradise City", duration: "6:46", composer: ["Guns N' Roses"] },
+            { title: "Sweet Child o' Mine", duration: "5:55", composer: ["Guns N' Roses"] },
+        ],
+    },
+    {
         title: "Use Your Illusion II",
         artist: "Guns N' Roses",
         release_date: "17.09.1991",
@@ -514,7 +500,7 @@ const gunsNRoses = [
         producers: ["Mike Clink","Guns N' Roses"],
         genre: "Hard Rock",
         cover_img_url: "https://cdn-images.dzcdn.net/images/cover/c32f893b8670d5a3d9b1e70078bbc8fa/1000x1000-000000-80-0-0.jpg",
-        rank: "gold",
+        rank: "silver",
         tracks: [
             { title: "Civil War", duration: "7:42", composer: ["Axl Rose","Slash","Duff McKagan"] },
             { title: "Knockin' on Heaven's Door", duration: "5:36", composer: ["Bob Dylan"] },
@@ -529,7 +515,7 @@ const gunsNRoses = [
         producers: ["Mike Clink","Guns N' Roses"],
         genre: "Hard Rock",
         cover_img_url: "https://cdn-images.dzcdn.net/images/cover/acb1f96336d79b145cf6e83c6ae4d2bb/1000x1000-000000-80-0-0.jpg",
-        rank: "silver",
+        rank: "bronze",
         tracks: [
             { title: "Don't Cry", duration: "4:42", composer: ["Axl Rose","Izzy Stradlin"] },
             { title: "Live and Let Die", duration: "2:59", composer: ["Paul McCartney","Linda McCartney"] },
@@ -544,7 +530,7 @@ const gunsNRoses = [
         producers: ["Mike Clink","Guns N' Roses"],
         genre: "Hard Rock",
         cover_img_url: "https://cdn-images.dzcdn.net/images/cover/3859af303ac402533e784e17e3ecb13a/1000x1000-000000-80-0-0.jpg",
-        rank: "bronze",
+        rank: "common",
         tracks: [
             { title: "Patience", duration: "5:53", composer: ["Guns N' Roses"] },
             { title: "Used to Love Her", duration: "3:10", composer: ["Guns N' Roses"] },
