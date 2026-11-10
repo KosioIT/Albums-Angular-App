@@ -131,6 +131,11 @@ pulls the latest code, reinstalls the dependencies, updates the albums and their
 (`npm run seed`) and starts both servers.
 
 ```bash
+npm run pull
+```
+only pulls the latest code and starts both servers (no reinstall, no database changes).
+
+```bash
 npm run refresh
 ```
 does the same without `git pull` and the reinstall: updates the albums and starts the servers.
