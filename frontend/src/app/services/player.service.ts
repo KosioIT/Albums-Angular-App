@@ -3,7 +3,6 @@ import { Subject } from 'rxjs';
 import { Album } from '../models/album';
 import { PreviewTrack } from '../models/preview-track';
 import { AlbumService } from './album.service';
-import { AuthService } from './auth.service';
 import { CustomToastrService } from './custom-toastr.service';
 
 const VOLUME_KEY = 'player.volume';
@@ -24,7 +23,6 @@ function savedVolume(): number {
 @Injectable({ providedIn: 'root' })
 export class PlayerService {
   private albumService = inject(AlbumService);
-  private authService = inject(AuthService);
   private toastr = inject(CustomToastrService);
 
   readonly album = signal<Album | null>(null);
@@ -38,7 +36,7 @@ export class PlayerService {
   readonly current = computed<PreviewTrack | null>(() => this.tracks()[this.index()] ?? null);
 
   // Fires when a listen was counted on the server, so a page can update its counter
-  readonly listenCounted$ = new Subject<string>();
+  readonly listenCounted$ = new Subject<{ albumId: string; guest: boolean }>();
 
   private audio = new Audio();
   private request = 0; // ignores answers for an album the user already left
@@ -174,11 +172,10 @@ export class PlayerService {
     });
   }
 
-  // One listen per album start, for signed-in users (the server ignores repeats within a minute)
+  // One listen per album start, for members and guests alike (the server ignores repeats within a minute)
   private countListen(album: Album): void {
-    if (!this.authService.isLoggedIn()) return;
     this.albumService.listen(album.id).subscribe({
-      next: ({ counted }) => counted && this.listenCounted$.next(album.id),
+      next: ({ counted, guest }) => counted && this.listenCounted$.next({ albumId: album.id, guest }),
       error: () => {},
     });
   }

@@ -43,9 +43,11 @@ export class AlbumsListComponent implements OnInit {
     this.isLoggedIn = this.authService.isLoggedIn();
 
     // The player counts a listen when an album starts; show it on the card right away
-    this.player.listenCounted$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((albumId) => {
+    this.player.listenCounted$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(({ albumId, guest }) => {
       const album = this.albums.find((a) => a.id === albumId);
-      if (album) album.listens = (album.listens ?? 0) + 1;
+      if (!album) return;
+      if (guest) album.guestListens = (album.guestListens ?? 0) + 1;
+      else album.listens = (album.listens ?? 0) + 1;
     });
 
     this.route.queryParams.subscribe((params) => {
@@ -103,9 +105,9 @@ export class AlbumsListComponent implements OnInit {
     });
   }
 
-  // Plays the album's 30-second previews in the player bar (pauses / resumes if it is already loaded)
+  // Plays the album's 30-second previews in the player bar (pauses / resumes if it is already loaded).
+  // Open to guests: only liking and downloading need an account.
   listen(album: Album): void {
-    if (!this.requireLogin('listen to')) return;
     this.player.playAlbum(album);
   }
 

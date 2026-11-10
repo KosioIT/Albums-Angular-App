@@ -16,6 +16,7 @@ export interface Album {
   deezerAlbumId?: number | null; // Deezer album behind the previews
   createdBy: string | null; // User ID of the creator
   likes?: number;
-  listens?: number;
+  listens?: number; // by signed-in users
+  guestListens?: number; // by visitors without an account
   downloads?: number;
 }

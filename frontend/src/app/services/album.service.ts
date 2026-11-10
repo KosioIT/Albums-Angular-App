@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Album } from '../models/album';
 import { PreviewTrack } from '../models/preview-track';
+import { guestId } from '../core/guest-id';
 import { api } from '../core/api';
 import { apiBody, apiRequest } from '../core/api-request';
 import { ApiSuccessResponse } from '../core/api-repsonse';
@@ -52,9 +53,14 @@ export class AlbumService {
     return apiBody(api.post(`/albums/${this.encode(id)}/like`));
   }
 
-  // counted = false when the same user listened less than a minute ago
-  listen(id: string): Observable<{ counted: boolean }> {
-    return apiBody(api.post(`/albums/${this.encode(id)}/listen`));
+  // Open to guests too (counted separately). counted = false for a repeat within a minute
+  listen(id: string): Observable<{ counted: boolean; guest: boolean }> {
+    return apiBody(api.post(`/albums/${this.encode(id)}/listen`, null, { headers: { 'X-Guest-Id': guestId() } }));
+  }
+
+  // Listens by members and guests together
+  totalListens(album: Album): number {
+    return (album.listens ?? 0) + (album.guestListens ?? 0);
   }
 
   // Counts the download and returns a one-minute link to the archive (served by Cloudflare R2)

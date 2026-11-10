@@ -38,6 +38,13 @@ export const protect = async (req, res, next) => {
   }
 };
 
+// Like protect, but a request without a token goes on as a guest (req.user stays undefined).
+// A token that is sent but invalid or expired is still a 401, so the frontend refreshes it and retries.
+export const optionalAuth = (req, res, next) => {
+  if (!req.headers.authorization) return next();
+  return protect(req, res, next);
+};
+
 // The refresh cookie is sent automatically by the browser, so require a header that a cross-site form or image request cannot add
 export const requireCsrfHeader = (req, res, next) => {
   if (req.get('X-Requested-With') !== 'XMLHttpRequest') {

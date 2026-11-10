@@ -24,7 +24,8 @@ export class Album extends BaseModel {
 
     // Counters (changed only with FieldValue.increment in Firestore)
     this.likes = data.likes || 0;
-    this.listens = data.listens || 0;
+    this.listens = data.listens || 0; // by signed-in users
+    this.guestListens = data.guestListens || 0; // by visitors without an account
     this.downloads = data.downloads || 0;
 
     // Tracks

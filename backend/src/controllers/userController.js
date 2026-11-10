@@ -5,7 +5,7 @@ import { User } from "../models/User.js";
 import { Album } from "../models/Album.js";
 import { validateFavoriteOperation } from "../utils/favoritesUtils.js";
 import { getUserBy, checkExistingCredential } from "../services/userService.js";
-import { recordListen, getActivitySummary } from '../services/activityService.js';
+import { recordListen, recordGuestListen, getActivitySummary } from '../services/activityService.js';
 import { checkExistingAlbum } from "../services/albumService.js";
 import { sendWelcomeEmail } from '../utils/email/sendWelcomeEmail.js';
 import { revokeAllSessions, createSession } from '../services/sessionService.js';
@@ -154,15 +154,24 @@ export async function deleteUser(req, res) {
 
 /* ----- ALBUMS-RELATED OPERATIONS ----- */
 
-// POST /api/albums/:id/listen -> { counted } (false when the same user listened less than a minute ago)
+// POST /api/albums/:id/listen -> { counted, guest }
+// Signed-in users get it in their activity; guests (header X-Guest-Id: a random id kept in the
+// browser) only add to album.guestListens. counted = false for a repeat within a minute.
 export async function listenToAlbum(req, res) {
   try {
     const albumId = req.params.id;
     if (!(await checkExistingAlbum(albumId))) {
       return res.status(404).json({ success: false, message: 'Album not found!' });
     }
-    const counted = await recordListen(req.user.id, albumId);
-    return res.json({ success: true, counted });
+
+    if (req.user) {
+      const counted = await recordListen(req.user.id, albumId);
+      return res.json({ success: true, counted, guest: false });
+    }
+
+    const guestId = /^[\w-]{8,64}$/.test(req.get('X-Guest-Id') || '') ? req.get('X-Guest-Id') : null;
+    const counted = await recordGuestListen(albumId, guestId, req.ip);
+    return res.json({ success: true, counted, guest: true });
   } catch (err) {
     console.error('Listen error:', err);
     return res.status(500).json({ success: false, message: 'Could not record listen!' });

@@ -17,7 +17,7 @@ const FORCE = process.argv.includes('--force');
 const PRUNE = process.argv.includes('--prune');
 
 // Fields the app changes at runtime; a re-seed must never reset them
-const RUNTIME_FIELDS = ['likes', 'listens', 'downloads', 'downloadKey', 'deezerAlbumId', 'created_at', 'createdBy'];
+const RUNTIME_FIELDS = ['likes', 'listens', 'guestListens', 'downloads', 'downloadKey', 'deezerAlbumId', 'created_at', 'createdBy'];
 
 async function buildAlbums() {
     const problems = [];

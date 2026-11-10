@@ -40,7 +40,7 @@
               (click)="listen(album)"
             >
               <img src="assets/images/music_btn-green.png" alt="Listens" />
-              {{ album.listens ?? 0 | number }}
+              {{ albumService.totalListens(album) | number }}
             </button>
             <button
               type="button"

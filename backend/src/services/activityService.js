@@ -31,6 +31,33 @@ async function recordOnce(userId, albumId, kind) {
 }
 
 export const recordListen = (userId, albumId) => recordOnce(userId, albumId, 'listen');
+
+/*
+  A visitor without an account: counted in album.guestListens only (no personal history).
+  At most once a minute per album for the same browser id AND for the same IP address,
+  so clearing the browser data alone does not add more listens.
+  Kept in memory: enough for one server, and a restart only forgets the last minute.
+*/
+const guestSeen = new Map(); // "albumId|kind|value" -> time of the last counted listen
+
+function recentlyCounted(key, now) {
+    const last = guestSeen.get(key);
+    return last !== undefined && now - last < REPEAT_COOLDOWN_MS;
+}
+
+export async function recordGuestListen(albumId, guestId, ip) {
+    const now = Date.now();
+    const keys = [`${albumId}|ip|${ip}`, ...(guestId ? [`${albumId}|guest|${guestId}`] : [])];
+    if (keys.some((k) => recentlyCounted(k, now))) return false;
+
+    keys.forEach((k) => guestSeen.set(k, now));
+    if (guestSeen.size > 50000) {
+        for (const [k, t] of guestSeen) if (now - t >= REPEAT_COOLDOWN_MS) guestSeen.delete(k);
+    }
+
+    await db.collection('albums').doc(albumId).update({ guestListens: FieldValue.increment(1) });
+    return true;
+}
 export const recordDownload = (userId, albumId) => recordOnce(userId, albumId, 'download');
 
 export async function setLiked(userId, albumId, liked) {

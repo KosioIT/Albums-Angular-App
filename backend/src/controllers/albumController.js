@@ -86,7 +86,7 @@ export const updateAlbum = async (req, res) => {
     album.update(changes);
     album.setUpdateDate();
 
-    const { id, likes, listens, downloads, ...data } = album.toFirestore();
+    const { id, likes, listens, guestListens, downloads, ...data } = album.toFirestore();
     await ALBUMS.doc(album.id).update(data);
 
     return res.json({

@@ -8,6 +8,13 @@ import cookieParser from 'cookie-parser';
 
 const app = express();
 
+// Behind a reverse proxy (Nginx, Render, Heroku...) set TRUST_PROXY=1, so req.ip is the visitor's
+// address and not the proxy's: guest listens and the rate limits are counted per visitor.
+if (process.env.TRUST_PROXY) {
+  const value = process.env.TRUST_PROXY;
+  app.set('trust proxy', /^\d+$/.test(value) ? Number(value) : value);
+}
+
 // CORS: an explicit origin list is required, because the refresh cookie makes the requests credentialed
 app.use(cors({
   origin: (process.env.CLIENT_ORIGIN || 'http://localhost:4200').split(','),
