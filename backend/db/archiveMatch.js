@@ -10,14 +10,27 @@ export const pathSlug = (path) => makeSlug(path.replace(ARCHIVE_RE, '').replace(
 // "-a-b-" contains "-b-": whole slug words only, so "load" does not match "reload"
 const containsSlug = (haystack, needle) => `-${haystack}-`.includes(`-${needle}-`);
 
+// "For Those About to Rock (We Salute You)" -> "for-those-about-to-rock"
+const baseSlug = (title) => makeSlug(String(title).replace(/\(.*?\)/g, ' '));
+
 /*
-  The album's slug (its id) must appear in the file path; the artist in the path breaks ties,
-  then the longer (more specific) id wins. Returns { album } or { ambiguous: [ids] } or {}.
+  The album's slug (its id) must appear in the file path, or its title without the "(...)" part
+  ("for_those_about_to_rock.zip"); a full match beats a short one, the artist in the path breaks
+  ties, then the longer (more specific) slug wins. Returns { album } or { ambiguous: [ids] } or {}.
 */
 export function bestAlbumFor(slug, albums) {
     const scored = albums
-        .filter((a) => containsSlug(slug, a.id))
-        .map((a) => ({ album: a, score: (containsSlug(slug, makeSlug(a.artist)) ? 1000 : 0) + a.id.length }))
+        .map((a) => {
+            const base = a.title ? baseSlug(a.title) : a.id;
+            const artist = makeSlug(a.artist);
+            const full = containsSlug(slug, a.id);
+            // the short title alone is not enough when it is just the band's name ("Metallica")
+            const short = !full && base && base !== a.id && base !== artist && containsSlug(slug, base);
+            if (!full && !short) return null;
+            const score = (containsSlug(slug, artist) ? 1000 : 0) + (full ? 500 : 0) + (full ? a.id : base).length;
+            return { album: a, score };
+        })
+        .filter(Boolean)
         .sort((x, y) => y.score - x.score);
 
     if (scored.length === 0) return {};

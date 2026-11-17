@@ -7,25 +7,69 @@
   3rd bronze, the rest common. A reissue counts with its original album (as RIAA certifies them),
   e.g. Appetite for Destruction (Super Deluxe Edition) carries the original's sales.
   The document id is the slug of the title (Album model), so titles must stay unique.
-  Six albums per band. Apart from AC/DC and Appetite for Destruction, each has an archive in R2 /
-  the Mega folder (see link-downloads.js).
+  Six albums per band, each with an archive in the R2 bucket (see link-downloads.js).
   Covers are Deezer images; track durations are from Deezer, the rest from the albums' Wikipedia pages.
 */
 
 const acdc = [
     {
-        title: "Who Made Who",
+        title: "Back in Black",
         artist: "AC/DC",
-        release_date: "26.05.1986",
-        length: "37:50",
-        producers: ["Harry Vanda", "George Young"],
-        genre: "Soundtrack",
-        cover_img_url: "https://upload.wikimedia.org/wikipedia/en/a/a2/Whomadewho.jpg",
+        release_date: "25.07.1980",
+        length: "42:11",
+        producers: ["Robert John \"Mutt\" Lange"],
+        genre: "Hard Rock",
+        cover_img_url: "https://cdn-images.dzcdn.net/images/cover/41041b14873956eff0459c8ea2c296a8/1000x1000-000000-80-0-0.jpg",
         rank: "gold",
         tracks: [
-            { title: "Who Made Who", duration: "3:27", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
-            { title: "You Shook Me All Night Long", duration: "3:30", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
-            { title: "Shake a Leg", duration: "4:06", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
+            { title: "Hells Bells", duration: "5:09", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
+            { title: "Shoot to Thrill", duration: "5:14", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
+            { title: "Back in Black", duration: "4:13", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
+        ],
+    },
+    {
+        title: "Highway to Hell",
+        artist: "AC/DC",
+        release_date: "27.07.1979",
+        length: "41:38",
+        producers: ["Robert John \"Mutt\" Lange"],
+        genre: "Hard Rock",
+        cover_img_url: "https://cdn-images.dzcdn.net/images/cover/de48d988a82fc401f4b9bafc2639f7d0/1000x1000-000000-80-0-0.jpg",
+        rank: "silver",
+        tracks: [
+            { title: "Highway to Hell", duration: "3:26", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
+            { title: "Girls Got Rhythm", duration: "3:23", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
+            { title: "Touch Too Much", duration: "4:24", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
+        ],
+    },
+    {
+        title: "Dirty Deeds Done Dirt Cheap",
+        artist: "AC/DC",
+        release_date: "20.09.1976",
+        length: "42:24",
+        producers: ["Harry Vanda", "George Young"],
+        genre: "Hard Rock",
+        cover_img_url: "https://cdn-images.dzcdn.net/images/cover/b883fcb8dbd8aae4eee413c443aef952/1000x1000-000000-80-0-0.jpg",
+        rank: "bronze",
+        tracks: [
+            { title: "Dirty Deeds Done Dirt Cheap", duration: "3:51", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
+            { title: "Problem Child", duration: "5:43", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
+            { title: "Big Balls", duration: "2:39", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
+        ],
+    },
+    {
+        title: "The Razors Edge",
+        artist: "AC/DC",
+        release_date: "24.09.1990",
+        length: "46:29",
+        producers: ["Bruce Fairbairn"],
+        genre: "Hard Rock",
+        cover_img_url: "https://cdn-images.dzcdn.net/images/cover/e715766b21a8db6076f6a9a89e25cf82/1000x1000-000000-80-0-0.jpg",
+        rank: "common",
+        tracks: [
+            { title: "Thunderstruck", duration: "4:52", composer: ["Angus Young", "Malcolm Young"] },
+            { title: "Moneytalks", duration: "3:45", composer: ["Angus Young", "Malcolm Young"] },
+            { title: "Are You Ready", duration: "4:10", composer: ["Angus Young", "Malcolm Young"] },
         ],
     },
     {
@@ -36,26 +80,11 @@ const acdc = [
         producers: ['Robert John "Mutt" Lange'],
         genre: "Hard Rock",
         cover_img_url: "https://upload.wikimedia.org/wikipedia/en/5/5c/ForThoseAboutToRock_ACDCalbum.jpg",
-        rank: "silver",
+        rank: "common",
         tracks: [
             { title: "For Those About to Rock (We Salute You)", duration: "5:44", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
             { title: "Put the Finger on You", duration: "3:24", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
             { title: "Let's Get It Up", duration: "3:54", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
-        ],
-    },
-    {
-        title: "Black Ice",
-        artist: "AC/DC",
-        release_date: "20.10.2008",
-        length: "55:38",
-        producers: ["Brendan O'Brien"],
-        genre: "Hard Rock",
-        cover_img_url: "https://upload.wikimedia.org/wikipedia/en/3/3e/Black_ice_red.jpg",
-        rank: "bronze",
-        tracks: [
-            { title: "Rock 'n' Roll Train", duration: "4:21", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
-            { title: "Big Jack", duration: "3:57", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
-            { title: "Black Ice", duration: "4:08", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
         ],
     },
     {
@@ -71,36 +100,6 @@ const acdc = [
             { title: "Go Down", duration: "5:13", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
             { title: "Dog Eat Dog", duration: "3:39", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
             { title: "Let There Be Rock", duration: "6:07", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
-        ],
-    },
-    {
-        title: "If You Want Blood You've Got It",
-        artist: "AC/DC",
-        release_date: "27.10.1978",
-        length: "52:42",
-        producers: ["Harry Vanda", "George Young"],
-        genre: "Live",
-        cover_img_url: "https://upload.wikimedia.org/wikipedia/en/thumb/f/f6/Acdc_If_You_Want_Blood_You%27ve_Got_It.JPG/250px-Acdc_If_You_Want_Blood_You%27ve_Got_It.JPG",
-        rank: "common",
-        tracks: [
-            { title: "Live Wire", duration: "5:24", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
-            { title: "T.N.T. (Live)", duration: "3:40", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
-            { title: "Whole Lotta Rosie (Live)", duration: "6:14", composer: ["Angus Young", "Malcolm Young", "Bon Scott"] },
-        ],
-    },
-    {
-        title: "Ballbreaker",
-        artist: "AC/DC",
-        release_date: "26.09.1995",
-        length: "49:11",
-        producers: ["Rick Rubin"],
-        genre: "Hard Rock",
-        cover_img_url: "https://upload.wikimedia.org/wikipedia/en/5/52/Ballbreaker.jpg",
-        rank: "common",
-        tracks: [
-            { title: "Hard as a Rock", duration: "4:34", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
-            { title: "Cover You in Oil", duration: "3:20", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
-            { title: "Burnin' Alive", duration: "4:04", composer: ["Angus Young", "Malcolm Young", "Brian Johnson"] },
         ],
     },
 ];
