@@ -4,7 +4,8 @@ import { matchedData } from "express-validator";
 import { loadOwnedAlbumOrThrow, getAllAlbumsFromFirestore, findAlbums, findAlbumById, SEARCHABLE_FIELDS } from "../services/albumService.js";
 import { recordDownload } from '../services/activityService.js';
 import { getAlbumPreviews } from '../services/previewService.js';
-import { createDownloadLink } from '../services/storageService.js';
+import { createDownloadLink, isStorageConfigured } from '../services/storageService.js';
+import { deleteAlbumFiles } from '../services/songService.js';
 import { withFullTracks } from "../services/fullTrackService.js";
 import { albumDownloadLink } from "../services/albumZipService.js";
 import { fullTrackFor } from "../utils/trackMatch.js";
@@ -72,7 +73,8 @@ export const createAlbum = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      id: album.id
+      id: album.id,
+      data: album.toPublic(),
     });
 
   } catch (err) {
@@ -109,6 +111,10 @@ export const deleteAlbum = async (req, res) => {
     console.debug("[deleteAlbum] User role = ", req.user.role);
     const album = await loadOwnedAlbumOrThrow(req.user, req.params.id);
     await ALBUMS.doc(album.id).delete();
+    // its songs, cover and packed download in R2 go too (the album's original archive, if any, is kept)
+    if (isStorageConfigured()) {
+      deleteAlbumFiles(album.id).catch((err) => console.error("Album files not deleted:", err.message));
+    }
 
     return res.json({ success: true, message: "Album removed successfully!" });
   } catch (err) {

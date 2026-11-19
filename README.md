@@ -108,6 +108,29 @@ them). Files that match no song are listed and skipped; songs without a file sta
 
 The biggest image in the archive is kept as the album's cover (`tracks/<album id>/cover.jpg`).
 
+### Uploading songs from the admin pages
+
+Admins add an album's songs on its **Songs** page (*Manage albums → Songs*, and right after
+*Add album*): choose the MP3s (and a cover image), check which song each file is (they are matched by
+title, the rest is picked from the list) and upload. The browser sends the files straight to R2, so the
+bucket needs a CORS rule. In Cloudflare: *R2 → your bucket → Settings → CORS Policy → Add CORS policy*:
+
+```json
+[
+  {
+    "AllowedOrigins": ["http://localhost:4200"],
+    "AllowedMethods": ["PUT"],
+    "AllowedHeaders": ["content-type"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+(add the address of the deployed site to `AllowedOrigins` when there is one). Songs replaced or
+deleted there are removed from R2 too, and deleting an album removes all of its files.
+
+The songs are linked to the album's tracks on Deezer, so an album that Deezer does not have cannot get
+songs.
+
 ### How album downloads are made
 
 Album downloads are packed from these files: the first download of an album makes

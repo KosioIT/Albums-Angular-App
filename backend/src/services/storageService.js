@@ -1,4 +1,4 @@
-import { S3Client, GetObjectCommand, HeadObjectCommand, DeleteObjectCommand, paginateListObjectsV2 } from '@aws-sdk/client-s3';
+import { S3Client, GetObjectCommand, HeadObjectCommand, DeleteObjectCommand, PutObjectCommand, paginateListObjectsV2 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -63,6 +63,14 @@ export async function createDownloadLink(key, fileName = key.split('/').pop()) {
 export async function createStreamLink(key) {
     const command = new GetObjectCommand({ Bucket: bucket(), Key: key });
     return getSignedUrl(s3(), command, { expiresIn: STREAM_TTL_SECONDS });
+}
+
+// Link the admin's browser uploads one file to (PUT, with exactly this Content-Type), so the file
+// goes straight to R2 and not through this server. The bucket needs a CORS rule for it (see README).
+const UPLOAD_TTL_SECONDS = 30 * 60;
+export async function createUploadLink(key, contentType) {
+    const command = new PutObjectCommand({ Bucket: bucket(), Key: key, ContentType: contentType });
+    return getSignedUrl(s3(), command, { expiresIn: UPLOAD_TTL_SECONDS });
 }
 
 // The object's content as a stream (to save an archive to a temporary file)

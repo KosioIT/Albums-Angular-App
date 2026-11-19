@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Album } from '../models/album';
 import { PreviewTrack } from '../models/preview-track';
+import { AlbumSongs, SongTarget, SongUpload } from '../models/album-songs';
 import { guestId } from '../core/guest-id';
 import { api } from '../core/api';
 import { apiBody, apiRequest } from '../core/api-request';
@@ -72,6 +73,30 @@ export class AlbumService {
   // One-minute link to one song (trackId = the Deezer track id from the previews)
   downloadTrack(albumId: string, trackId: number): Observable<{ url: string }> {
     return apiBody(api.post(`/albums/${this.encode(albumId)}/tracks/${trackId}/download`));
+  }
+
+  // ===== Song files (admins, the "Songs" page) =====
+  songs(id: string): Observable<AlbumSongs> {
+    return apiRequest(api.get(`/albums/${this.encode(id)}/songs`));
+  }
+
+  // Which chosen file is which song (by title), for the admin to check
+  matchSongFiles(id: string, names: string[]): Observable<{ name: string; target: SongTarget | null }[]> {
+    return apiRequest(api.post(`/albums/${this.encode(id)}/songs/match`, { names }));
+  }
+
+  // Upload links, one per file (the browser then sends the files straight to R2)
+  createSongUploads(id: string, files: { name: string; size: number; target: SongTarget }[]): Observable<SongUpload[]> {
+    return apiRequest(api.post(`/albums/${this.encode(id)}/songs/uploads`, { files }));
+  }
+
+  // Saves the uploaded files to the album
+  completeSongUploads(id: string, files: { key: string; target: SongTarget }[]): Observable<AlbumSongs> {
+    return apiRequest(api.post(`/albums/${this.encode(id)}/songs/complete`, { files }, { timeout: 60 * 1000 }));
+  }
+
+  removeSong(id: string, target: SongTarget): Observable<AlbumSongs> {
+    return apiRequest(api.delete(`/albums/${this.encode(id)}/songs/${target}`));
   }
 
   // 30-second Deezer previews for the built-in player (public)

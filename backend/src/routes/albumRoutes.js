@@ -4,6 +4,7 @@ import { validateAlbumCreate, validateAlbumUpdate } from '../validators/albumsVa
 import { protect, admin, optionalAuth } from '../middleware/authMiddleware.js';
 import { getAllAlbums, filterAlbums, createAlbum, updateAlbum, deleteAlbum, downloadAlbum, downloadTrack, getPreviews } from '../controllers/albumController.js';
 import { listenToAlbum, toggleLike } from '../controllers/userController.js';
+import * as songs from '../controllers/songController.js';
 
 const router = express.Router();
 
@@ -25,6 +26,13 @@ const previewsLimiter = rateLimit({
 router.post("/:id/download", protect, downloadAlbum);
 router.post("/:id/tracks/:trackId/download", protect, downloadTrack);
 router.post('/:id/like', protect, toggleLike);
+
+/* ======== Admin: an album's song files (before /:filterField/:filterVal) ======== */
+router.get('/:id/songs', protect, admin, songs.getSongs);
+router.post('/:id/songs/match', protect, admin, songs.matchFiles);
+router.post('/:id/songs/uploads', protect, admin, songs.createUploads);
+router.post('/:id/songs/complete', protect, admin, songs.completeUploads);
+router.delete('/:id/songs/:target', protect, admin, songs.removeSong);
 
 /* ======== All users routes ======== */
 router.get('/', getAllAlbums);

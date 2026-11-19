@@ -34,6 +34,7 @@ export const zipFileName = (album) => safeFileName(`${album.artist} - ${album.ti
 // What the archive is made of; another value means the stored archive is out of date
 export function zipFingerprint(album) {
     const parts = {
+        format: 2, // raise when the way albums are packed changes, so stored zips are packed again
         title: album.title,
         artist: album.artist,
         songs: inOrder(album.fullTracks).map((t) => [t.key, t.size]),
@@ -45,7 +46,8 @@ export function zipFingerprint(album) {
 // "03 - Nightrain - Guns N' Roses.mp3": the stored file name, numbered in album order
 export function entryNames(album) {
     return inOrder(album.fullTracks).map((t, i) => {
-        const base = t.key.split('/').pop().replace(/^\d{1,3}[\s.)_-]+(?=\D)/, '');
+        // an old number only with punctuation after it ("01 - ", "01. ", "1) "), so "2 x 4" keeps its name
+        const base = t.key.split('/').pop().replace(/^\d{1,3}\s*[.)_-]\s*(?=\D)/, '');
         return { key: t.key, name: `${String(i + 1).padStart(2, '0')} - ${base}` };
     });
 }

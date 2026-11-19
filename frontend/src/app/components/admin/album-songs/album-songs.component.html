@@ -1,0 +1,161 @@
+<div class="songs-page">
+  <a class="back" routerLink="/admin/albums">‹ Manage albums</a>
+
+  @if (error()) {
+    <p class="note error">{{ error() }}</p>
+  }
+
+  @if (data(); as d) {
+    <div class="head">
+      @if (d.album.cover_img_url) {
+        <img class="art" [src]="d.album.cover_img_url" alt="" />
+      }
+      <div>
+        <h2>{{ d.album.title }}</h2>
+        <p class="sub">{{ d.album.artist }} · {{ stored() }} of {{ d.tracks.length }} songs stored</p>
+      </div>
+    </div>
+
+    <p class="note">
+      Guests hear the 30-second Deezer previews. Signed-in users hear and download the songs stored here;
+      album downloads are packed from them.
+    </p>
+
+    <!-- Upload -->
+    <section class="panel">
+      <h3>Add songs</h3>
+      <label
+        class="drop"
+        [class.over]="dragOver"
+        (dragover)="$event.preventDefault(); dragOver = true"
+        (dragleave)="dragOver = false"
+        (drop)="onDrop($event)"
+      >
+        <input type="file" multiple accept="audio/*,.mp3,.m4a,.flac,.ogg,.wav,image/jpeg,image/png,image/webp" (change)="onInput($event)" [disabled]="uploading()" />
+        <strong>Choose files</strong> or drop them here
+        <span class="hint">MP3 (or M4A, FLAC, OGG, WAV) for the songs, a JPG / PNG image for the cover</span>
+      </label>
+
+      @if (picked().length) {
+        <table class="files">
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Song</th>
+              <th class="num">Size</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of picked(); track p.file.name) {
+              <tr [class.failed]="p.state === 'failed'">
+                <td class="name">
+                  {{ p.file.name }}
+                  @if (p.state === 'uploading' || p.state === 'done') {
+                    <span class="bar"><span [style.width.%]="p.progress * 100"></span></span>
+                  }
+                  @if (p.error) {
+                    <span class="problem">{{ p.error }}</span>
+                  }
+                </td>
+                <td>
+                  @if (p.problem) {
+                    <span class="problem">{{ p.problem }}</span>
+                  } @else {
+                    <select
+                      [class.clash]="clashes().has(p.target)"
+                      [disabled]="uploading()"
+                      (change)="setTarget(p, $any($event.target).value)"
+                      [attr.aria-label]="'Song for ' + p.file.name"
+                    >
+                      <option value="" [selected]="!p.target">— skip —</option>
+                      @if (isImage(p)) {
+                        <option [value]="COVER" [selected]="p.target === COVER">Album cover{{ d.cover ? ' (replace)' : '' }}</option>
+                      } @else {
+                        @for (t of d.tracks; track t.id) {
+                          <option [value]="'' + t.id" [selected]="p.target === '' + t.id">{{ trackLabel(t) }}</option>
+                        }
+                      }
+                    </select>
+                    @if (clashes().has(p.target)) {
+                      <span class="problem">Chosen for another file too</span>
+                    }
+                  }
+                </td>
+                <td class="num">{{ size(p.file.size) }}</td>
+                <td>
+                  <button type="button" class="icon" title="Remove from the list" [disabled]="uploading()" (click)="removePicked(p)">✕</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <div class="actions">
+          @if (matching()) {
+            <span class="hint">Matching the files to the songs…</span>
+          }
+          <button type="button" class="btn-plain" [disabled]="uploading()" (click)="clearPicked()">Clear</button>
+          <button type="button" class="btn-main" [disabled]="!canUpload()" (click)="upload()">
+            {{ uploading() ? 'Uploading…' : 'Upload ' + toUpload().length + ' file(s)' }}
+          </button>
+        </div>
+      }
+    </section>
+
+    <!-- What is stored -->
+    <section class="panel">
+      <h3>Songs</h3>
+      <table class="tracks">
+        <tbody>
+          @for (t of d.tracks; track t.id) {
+            <tr>
+              <td class="pos">{{ t.position + 1 }}</td>
+              <td>{{ t.title }}</td>
+              <td class="num">{{ formatTime(t.duration) }}</td>
+              <td class="state">
+                @if (t.file) {
+                  <span class="ok" [title]="t.file.name">✔ Whole song</span>
+                  <span class="file">{{ t.file.name }} {{ size(t.file.size) }}</span>
+                } @else {
+                  <span class="muted">Preview only</span>
+                }
+              </td>
+              <td>
+                @if (t.file) {
+                  <button
+                    type="button"
+                    class="icon"
+                    title="Delete the file"
+                    [disabled]="removing() === '' + t.id"
+                    (click)="remove(t.id, t.title)"
+                  >🗑</button>
+                }
+              </td>
+            </tr>
+          }
+          <tr class="cover-row">
+            <td class="pos"></td>
+            <td>Cover in downloads</td>
+            <td></td>
+            <td class="state">
+              @if (d.cover) {
+                <img class="thumb" [src]="d.cover.url" alt="" />
+                <span class="file">{{ d.cover.name }}</span>
+              } @else {
+                <span class="muted">The cover from Deezer is used</span>
+              }
+            </td>
+            <td>
+              @if (d.cover) {
+                <button type="button" class="icon" title="Delete the cover file" [disabled]="removing() === COVER" (click)="remove(COVER, 'the cover')">🗑</button>
+              }
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  } @else if (!error()) {
+    <p class="note">Loading…</p>
+  }
+</div>

@@ -61,9 +61,10 @@ export class AlbumCreateComponent implements OnInit {
 
     this.isSubmitting = true;
     this.albumService.create(album as Album).subscribe({
-      next: () => {
-        this.toastr.showToast(`"${album.title}" was added.`, 'success', 'Album created');
-        this.router.navigate(['/admin/albums']);
+      // straight on to its songs, so the album can be played and downloaded whole
+      next: (created) => {
+        this.toastr.showToast(`"${album.title}" was added. Now upload its songs.`, 'success', 'Album created');
+        this.router.navigate(created?.id ? ['/admin/albums', created.id, 'songs'] : ['/admin/albums']);
       },
       error: (err: Error) => {
         this.isSubmitting = false;
