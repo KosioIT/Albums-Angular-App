@@ -19,7 +19,7 @@
     [class.show]="!isNavbarCollapsed"
     id="navbarContent"
   >
-    <ul class="navbar-nav mr-auto">
+    <ul class="navbar-nav me-auto align-items-md-center">
       <!-- Rock bands -->
       <li
         class="nav-item dropdown"
@@ -95,9 +95,8 @@
           >
         </div>
       </li>
-    </ul>
 
-    <ul class="navbar-nav ms-auto" style="margin-right: 100px">
+      <!-- User menu: next to the band menus, so its submenus have room to open to the right -->
       <app-login-status></app-login-status>
     </ul>
   </div>

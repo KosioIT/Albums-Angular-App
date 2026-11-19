@@ -30,16 +30,48 @@
       <a class="dropdown-item" routerLink="/register">Sign up</a>
     } @else {
       @if (authService.isAdmin()) {
-        <a class="dropdown-item" routerLink="/admin/albums">Manage albums</a>
-        <a class="dropdown-item" routerLink="/admin/users">Manage users</a>
-        <a class="dropdown-item" routerLink="/admin/stats">Statistics</a>
+        <ng-container
+          *ngTemplateOutlet="submenu; context: { name: 'admin', label: 'Admin', items: adminItems }"
+        ></ng-container>
       }
+      <ng-container
+        *ngTemplateOutlet="submenu; context: { name: 'music', label: 'My music', items: musicItems }"
+      ></ng-container>
+      <ng-container
+        *ngTemplateOutlet="submenu; context: { name: 'account', label: 'Account', items: accountItems }"
+      ></ng-container>
 
-      <a class="dropdown-item" routerLink="/account/activity">My activity</a>
-      <a class="dropdown-item" routerLink="/favorites">Favorite albums</a>
-      <a class="dropdown-item" routerLink="/account/sessions">Active sessions</a>
+      <div class="dropdown-divider"></div>
       <a class="dropdown-item" role="button" (click)="logout()">Sign out</a>
-      <a class="dropdown-item" role="button" (click)="logoutAll()">Sign out of all devices</a>
     }
   </div>
 </li>
+
+<!-- A group with its own second-level menu -->
+<ng-template #submenu let-name="name" let-label="label" let-items="items">
+  <div
+    class="submenu-wrap"
+    [class.open]="openSubmenu === name"
+    (mouseenter)="hoverSubmenu(name)"
+    (mouseleave)="hoverSubmenu(null)"
+  >
+    <button
+      type="button"
+      class="dropdown-item submenu-toggle"
+      aria-haspopup="true"
+      [attr.aria-expanded]="openSubmenu === name"
+      (click)="toggleSubmenu(name, $event)"
+    >
+      <span class="caret" aria-hidden="true"></span>{{ label }}
+    </button>
+    <div class="dropdown-menu submenu" [class.show]="openSubmenu === name">
+      @for (item of items; track item.label) {
+        @if (item.link) {
+          <a class="dropdown-item" [routerLink]="item.link">{{ item.label }}</a>
+        } @else {
+          <a class="dropdown-item" role="button" (click)="item.action()">{{ item.label }}</a>
+        }
+      }
+    </div>
+  </div>
+</ng-template>
