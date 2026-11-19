@@ -142,6 +142,10 @@ export async function deleteUser(req, res) {
       await batch.commit(); // one batch holds up to 500 writes, plenty for now
     }
 
+    // Their playlists go too
+    const owned = await db.collection("playlists").where("ownerId", "==", email).get();
+    await Promise.all(owned.docs.map((d) => d.ref.delete()));
+
     await db.recursiveDelete(ref); // the user and the "activity" subcollection
 
     return res.json({ success: true, message: `User ${email} deleted successfully!` });

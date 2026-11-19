@@ -75,7 +75,7 @@ async function findDeezerAlbumId(album) {
 
 /*
   album: { id, title, artist, deezerAlbumId? }
-  Returns { deezerAlbumId, tracks: [{ title, duration, preview, link }] } or null when Deezer has no such album.
+  Returns { deezerAlbumId, tracks: [{ id, title, duration, preview, link }] } or null when Deezer has no such album.
   deezerAlbumId lets the caller remember the match (and an admin can set it by hand if the match is wrong).
 */
 export async function getAlbumPreviews(album) {
@@ -89,7 +89,7 @@ export async function getAlbumPreviews(album) {
         const { data = [] } = await deezer(`/album/${deezerAlbumId}/tracks?limit=100`);
         const tracks = data
             .filter((t) => t.preview)
-            .map((t) => ({ title: t.title, duration: t.duration, preview: t.preview, link: t.link }));
+            .map((t) => ({ id: t.id, title: t.title, duration: t.duration, preview: t.preview, link: t.link }));
         value = tracks.length ? { deezerAlbumId, tracks } : null;
     }
 

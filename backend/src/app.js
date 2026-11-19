@@ -5,6 +5,7 @@ import userRoutes from './routes/userRoutes.js';
 import albumsRoutes from './routes/albumRoutes.js';
 import favoriteRoutes from './routes/favoriteRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
+import playlistRoutes from './routes/playlistRoutes.js';
 import cookieParser from 'cookie-parser';
 
 const app = express();
@@ -35,6 +36,9 @@ app.use('/api/albums', albumsRoutes);
 
 // Favorites routes
 app.use('/api/favorites', favoriteRoutes);
+
+// Playlists of tracks
+app.use('/api/playlists', playlistRoutes);
 
 // Site statistics (admins only)
 app.use('/api/stats', statsRoutes);
