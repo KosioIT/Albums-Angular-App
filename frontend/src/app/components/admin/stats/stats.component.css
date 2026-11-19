@@ -131,6 +131,7 @@ tbody tr:last-child td {
 
 tbody th a {
   color: lime;
+  text-decoration: none;
 }
 
 tbody th a:hover {

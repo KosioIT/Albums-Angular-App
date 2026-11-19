@@ -1,8 +1,9 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { Album } from '../models/album';
 import { PreviewTrack } from '../models/preview-track';
 import { AlbumService } from './album.service';
+import { PlaylistService } from './playlist.service';
 import { CustomToastrService } from './custom-toastr.service';
 
 const VOLUME_KEY = 'player.volume';
@@ -23,9 +24,13 @@ function savedVolume(): number {
 @Injectable({ providedIn: 'root' })
 export class PlayerService {
   private albumService = inject(AlbumService);
+  private playlistService = inject(PlaylistService);
   private toastr = inject(CustomToastrService);
 
+  // What is loaded: an album, or a playlist (tracks from many albums)
   readonly album = signal<Album | null>(null);
+  readonly playlist = signal<{ id: string; name: string } | null>(null);
+  readonly active = computed(() => !!this.album() || !!this.playlist());
   readonly tracks = signal<PreviewTrack[]>([]);
   readonly index = signal(0);
   readonly playing = signal(false);
@@ -41,6 +46,7 @@ export class PlayerService {
   private audio = new Audio();
   private request = 0; // ignores answers for an album the user already left
   private retried = false;
+  private countedAlbums = new Set<string>(); // albums whose listen was sent for the current queue
 
   constructor() {
     this.audio.preload = 'auto';
@@ -57,6 +63,10 @@ export class PlayerService {
     return this.album()?.id === album.id;
   }
 
+  isCurrentPlaylist(id: string): boolean {
+    return this.playlist()?.id === id;
+  }
+
   // Starts an album; on the album that is already loaded it just plays / pauses
   playAlbum(album: Album): void {
     if (this.isCurrent(album) && this.tracks().length) {
@@ -64,28 +74,73 @@ export class PlayerService {
       return;
     }
 
-    const request = ++this.request;
-    this.stopAudio();
-    this.album.set(album);
-    this.tracks.set([]);
-    this.index.set(0);
-    this.loading.set(true);
-
+    const request = this.startQueue({ album });
     this.albumService.getPreviews(album.id).subscribe({
       next: ({ tracks }) => {
         if (request !== this.request) return;
         this.loading.set(false);
-        this.tracks.set(tracks);
+        this.tracks.set(this.withAlbum(tracks, album));
         this.playTrack(0);
-        this.countListen(album);
       },
       error: (err: Error) => {
         if (request !== this.request) return;
-        this.loading.set(false);
-        this.album.set(null);
+        this.close();
         this.toastr.showToast(err.message, 'info', 'Cannot play this album');
       },
     });
+  }
+
+  // Starts a playlist (from a given track); on the playlist that is already loaded it plays / pauses
+  playPlaylist(id: string, startAt = 0): void {
+    if (this.isCurrentPlaylist(id) && this.tracks().length) {
+      if (startAt === this.index()) this.toggle();
+      else this.playTrack(startAt);
+      return;
+    }
+
+    const request = this.startQueue({ playlist: { id, name: '' } });
+    this.playlistService.previews(id).subscribe({
+      next: ({ playlist, tracks }) => {
+        if (request !== this.request) return;
+        this.loading.set(false);
+        if (!tracks.length) {
+          this.close();
+          this.toastr.showToast('This playlist has no tracks to play yet.', 'info', 'Empty playlist');
+          return;
+        }
+        this.playlist.set({ id: playlist.id, name: playlist.name });
+        this.tracks.set(tracks);
+        this.playTrack(Math.min(startAt, tracks.length - 1));
+      },
+      error: (err: Error) => {
+        if (request !== this.request) return;
+        this.close();
+        this.toastr.showToast(err.message, 'info', 'Cannot play this playlist');
+      },
+    });
+  }
+
+  private startQueue(source: { album?: Album; playlist?: { id: string; name: string } }): number {
+    const request = ++this.request;
+    this.stopAudio();
+    this.album.set(source.album ?? null);
+    this.playlist.set(source.playlist ?? null);
+    this.tracks.set([]);
+    this.index.set(0);
+    this.loading.set(true);
+    this.countedAlbums.clear();
+    return request;
+  }
+
+  // Album previews do not repeat their album on every track; the player and playlists need it
+  private withAlbum(tracks: PreviewTrack[], album: Album): PreviewTrack[] {
+    return tracks.map((t) => ({
+      ...t,
+      albumId: album.id,
+      albumTitle: album.title,
+      artist: album.artist,
+      cover_img_url: album.cover_img_url,
+    }));
   }
 
   playTrack(i: number): void {
@@ -96,6 +151,7 @@ export class PlayerService {
     this.duration.set(30);
     this.audio.src = track.preview;
     this.audio.play().catch(() => this.playing.set(false)); // e.g. autoplay blocked: the user presses play
+    if (track.albumId) this.countListen(track.albumId);
   }
 
   toggle(): void {
@@ -140,6 +196,7 @@ export class PlayerService {
     this.request++;
     this.stopAudio();
     this.album.set(null);
+    this.playlist.set(null);
     this.tracks.set([]);
     this.loading.set(false);
   }
@@ -154,8 +211,7 @@ export class PlayerService {
 
   // Preview links expire after a while: fetch fresh ones once and continue with the same track
   private onAudioError(): void {
-    const album = this.album();
-    if (!album || !this.audio.getAttribute('src')) return;
+    if (!this.active() || !this.audio.getAttribute('src')) return;
     this.playing.set(false);
     if (this.retried) {
       this.toastr.showToast('This preview cannot be played right now.', 'error', 'Playback error');
@@ -163,19 +219,28 @@ export class PlayerService {
     }
     this.retried = true;
     const index = this.index();
-    this.albumService.getPreviews(album.id).subscribe({
+    const request = this.request;
+    const album = this.album();
+    const playlist = this.playlist();
+    const fresh: Observable<{ tracks: PreviewTrack[] }> = album
+      ? this.albumService.getPreviews(album.id)
+      : this.playlistService.previews(playlist!.id);
+    fresh.subscribe({
       next: ({ tracks }) => {
-        if (!this.isCurrent(album)) return;
-        this.tracks.set(tracks);
+        if (request !== this.request) return;
+        this.tracks.set(album ? this.withAlbum(tracks, album) : tracks);
         this.playTrack(Math.min(index, tracks.length - 1));
       },
     });
   }
 
-  // One listen per album start, for members and guests alike (the server ignores repeats within a minute)
-  private countListen(album: Album): void {
-    this.albumService.listen(album.id).subscribe({
-      next: ({ counted, guest }) => counted && this.listenCounted$.next({ albumId: album.id, guest }),
+  // One listen per album in the current queue (an album, or each album a playlist plays from),
+  // for members and guests alike; the server also ignores repeats within a minute
+  private countListen(albumId: string): void {
+    if (this.countedAlbums.has(albumId)) return;
+    this.countedAlbums.add(albumId);
+    this.albumService.listen(albumId).subscribe({
+      next: ({ counted, guest }) => counted && this.listenCounted$.next({ albumId, guest }),
       error: () => {},
     });
   }

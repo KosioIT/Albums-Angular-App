@@ -1,31 +1,82 @@
-@if (player.album(); as album) {
+@if (player.active()) {
   <div class="player" role="region" aria-label="Music player">
     @if (showTracks && player.tracks().length) {
-      <ol class="tracklist" aria-label="Tracks">
-        @for (track of player.tracks(); track $index) {
-          <li>
-            <button
-              type="button"
-              [class.active]="$index === player.index()"
-              [attr.aria-current]="$index === player.index() ? 'true' : null"
-              (click)="pick($index)"
-            >
-              <span class="no">{{ $index + 1 }}</span>
-              <span class="name">{{ track.title }}</span>
-              <span class="len">{{ formatTime(track.duration) }}</span>
-            </button>
-          </li>
-        }
-      </ol>
+      <div class="tracklist" role="group" aria-label="Tracks">
+        <div class="tracklist-head">
+          {{ player.playlist() ? 'Playlist: ' + player.playlist()!.name : player.album()?.title }}
+        </div>
+        <ol>
+          @for (track of player.tracks(); track $index) {
+            <li>
+              <button
+                type="button"
+                class="track"
+                [class.active]="$index === player.index()"
+                [attr.aria-current]="$index === player.index() ? 'true' : null"
+                (click)="pick($index)"
+              >
+                <span class="no">{{ $index + 1 }}</span>
+                <span class="name">
+                  {{ track.title }}
+                  @if (player.playlist()) {
+                    <span class="from">{{ track.artist }}</span>
+                  }
+                </span>
+                <span class="len">{{ formatTime(track.duration) }}</span>
+              </button>
+              @if (auth.isLoggedIn() && track.albumId) {
+                <button
+                  type="button"
+                  class="add"
+                  [class.on]="addingFor === $index"
+                  title="Add to a playlist"
+                  [attr.aria-label]="'Add ' + track.title + ' to a playlist'"
+                  [attr.aria-expanded]="addingFor === $index"
+                  (click)="toggleAdd($index)"
+                >＋</button>
+              }
+            </li>
+            @if (addingFor === $index) {
+              <li class="add-menu">
+                <span class="add-title">Add to playlist</span>
+                @if (myPlaylists() === null) {
+                  <span class="muted">Loading…</span>
+                } @else {
+                  @for (pl of myPlaylists(); track pl.id) {
+                    <button type="button" class="pick" (click)="addTo(pl.id, pl.name, track)">{{ pl.name }}</button>
+                  }
+                  <form class="new" (submit)="createAndAdd($event, track)">
+                    <input
+                      type="text"
+                      name="newPlaylist"
+                      [(ngModel)]="newName"
+                      placeholder="New playlist…"
+                      maxlength="60"
+                      aria-label="New playlist name"
+                    />
+                    <button type="submit" [disabled]="!newName.trim() || busy">Create</button>
+                  </form>
+                }
+              </li>
+            }
+          }
+        </ol>
+      </div>
     }
 
     <div class="now">
-      <img class="cover" [src]="album.cover_img_url" alt="" />
+      <img class="cover" [src]="player.current()?.cover_img_url ?? player.album()?.cover_img_url" alt="" />
       <div class="meta">
         <div class="track-title">
           {{ player.loading() ? 'Loading…' : player.current()?.title }}
         </div>
-        <div class="album-line">{{ album.title }} · {{ album.artist }}</div>
+        <div class="album-line">
+          @if (player.current(); as t) {
+            {{ t.albumTitle }} · {{ t.artist }}
+          } @else {
+            {{ player.album()?.title }}
+          }
+        </div>
       </div>
     </div>
 

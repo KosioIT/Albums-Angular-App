@@ -12,11 +12,17 @@ import { FavoriteAlbumsComponent } from './components/favorites/favorite-albums/
 import { SessionsComponent } from './components/account/sessions/sessions.component';
 import { ActivityComponent } from './components/account/activity/activity.component';
 import { StatsComponent } from './components/admin/stats/stats.component';
+import { PublicPlaylistsComponent } from './components/playlists/public-playlists/public-playlists.component';
+import { MyPlaylistsComponent } from './components/playlists/my-playlists/my-playlists.component';
+import { PlaylistDetailComponent } from './components/playlists/playlist-detail/playlist-detail.component';
 import { adminGuard, authGuard, guestGuard } from './core/guards/auth.guards';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'albums-list', component: AlbumsListComponent },
+  { path: 'playlists', component: PublicPlaylistsComponent },
+  { path: 'playlists/mine', component: MyPlaylistsComponent, canActivate: [authGuard] }, // before :id
+  { path: 'playlists/:id', component: PlaylistDetailComponent }, // private ones load for their owner only
 
   { path: 'login', component: LoginComponent, canActivate: [guestGuard] },
   { path: 'register', component: RegisterComponent, canActivate: [guestGuard] },

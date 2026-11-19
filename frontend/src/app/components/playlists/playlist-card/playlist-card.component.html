@@ -1,0 +1,39 @@
+<a class="card-link" [routerLink]="['/playlists', playlist.id]">
+  <div class="art" [class.single]="playlist.covers.length < 4">
+    @if (playlist.covers.length >= 4) {
+      @for (c of playlist.covers; track c) {
+        <img [src]="c" alt="" />
+      }
+    } @else if (playlist.covers.length) {
+      <img [src]="playlist.covers[0]" alt="" />
+    } @else {
+      <span class="empty-art" aria-hidden="true">♪</span>
+    }
+    @if (playlist.trackCount) {
+      <button
+        type="button"
+        class="play"
+        [attr.aria-label]="(playing ? 'Pause ' : 'Play ') + playlist.name"
+        (click)="play($event)"
+      >
+        @if (playing) {
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
+        } @else {
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+        }
+      </button>
+    }
+  </div>
+  <div class="name">{{ playlist.name }}</div>
+  <div class="meta">
+    @if (showPrivacy) {
+      <span class="badge" [class.public]="playlist.isPublic">{{ playlist.isPublic ? 'Public' : 'Private' }}</span>
+    } @else {
+      by {{ playlist.ownerName }} ·
+    }
+    {{ playlist.trackCount }} {{ playlist.trackCount === 1 ? 'track' : 'tracks' }}
+    @if (playlist.duration) {
+      · {{ formatDuration(playlist.duration, true) }}
+    }
+  </div>
+</a>

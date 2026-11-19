@@ -96,6 +96,11 @@
         </div>
       </li>
 
+      <!-- Public playlists (everyone) -->
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/playlists" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Playlists</a>
+      </li>
+
       <!-- User menu: next to the band menus, so its submenus have room to open to the right -->
       <app-login-status></app-login-status>
     </ul>

@@ -1,0 +1,29 @@
+<div class="page">
+  <h2>My playlists</h2>
+  <p class="lead">Add tracks with the <strong>＋</strong> next to a song in the player's track list.</p>
+
+  <form class="create" (submit)="create($event)">
+    <label class="visually-hidden" for="newPlaylistName">Playlist name</label>
+    <input id="newPlaylistName" name="name" type="text" [(ngModel)]="name" placeholder="New playlist name" maxlength="60" />
+    <label class="public">
+      <input type="checkbox" name="isPublic" [(ngModel)]="isPublic" /> Public
+    </label>
+    <button type="submit" class="btn-lime" [disabled]="!name.trim() || creating">
+      {{ creating ? 'Creating...' : 'Create' }}
+    </button>
+  </form>
+
+  @if (error()) {
+    <p class="note error">{{ error() }}</p>
+  } @else if (playlists() === null) {
+    <p class="note">Loading...</p>
+  } @else if (playlists()!.length === 0) {
+    <p class="note">You have no playlists yet. Create one above.</p>
+  } @else {
+    <div class="grid">
+      @for (pl of playlists(); track pl.id) {
+        <app-playlist-card [playlist]="pl" [showPrivacy]="true"></app-playlist-card>
+      }
+    </div>
+  }
+</div>

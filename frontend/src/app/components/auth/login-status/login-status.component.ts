@@ -39,6 +39,7 @@ export class LoginStatusComponent implements OnDestroy {
   ];
 
   readonly musicItems: MenuItem[] = [
+    { label: 'My playlists', link: '/playlists/mine' },
     { label: 'Favorite albums', link: '/favorites' },
     { label: 'My activity', link: '/account/activity' },
   ];

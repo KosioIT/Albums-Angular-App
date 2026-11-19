@@ -1,0 +1,107 @@
+.card-link {
+  display: block;
+  text-decoration: none;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  transition: background 0.15s ease;
+}
+
+.card-link:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.card-link:focus-visible {
+  outline: 2px solid gold;
+  outline-offset: 2px;
+}
+
+.art {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #222;
+}
+
+.art.single {
+  grid-template-columns: 1fr;
+}
+
+.art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.empty-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  color: #555;
+}
+
+.play {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background: lime;
+  color: #111;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.play:hover {
+  transform: scale(1.08);
+}
+
+.play:focus-visible {
+  outline: 2px solid gold;
+  outline-offset: 2px;
+}
+
+.play svg {
+  width: 26px;
+  height: 26px;
+  fill: currentColor;
+}
+
+.name {
+  margin-top: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: lime;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  font-size: 15px;
+  color: #ccc;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: #555;
+  color: #fff;
+  font-size: 13px;
+}
+
+.badge.public {
+  background: #1e7d32;
+}

@@ -1,0 +1,93 @@
+<div class="page">
+  @if (error()) {
+    <p class="note error">{{ error() }}</p>
+  } @else if (playlist(); as pl) {
+    <header class="head">
+      <div class="art" [class.single]="pl.covers.length < 4">
+        @if (pl.covers.length >= 4) {
+          @for (c of pl.covers; track c) {
+            <img [src]="c" alt="" />
+          }
+        } @else if (pl.covers.length) {
+          <img [src]="pl.covers[0]" alt="" />
+        } @else {
+          <span class="empty-art" aria-hidden="true">♪</span>
+        }
+      </div>
+
+      <div class="info">
+        @if (editing) {
+          <form class="edit" (submit)="saveEdit($event)">
+            <label for="plName">Name</label>
+            <input id="plName" name="name" type="text" [(ngModel)]="editName" maxlength="60" required />
+            <label for="plDescription">Description</label>
+            <textarea id="plDescription" name="description" rows="2" [(ngModel)]="editDescription" maxlength="300"></textarea>
+            <div class="btn-row">
+              <button type="submit" class="btn-lime" [disabled]="!editName.trim() || busy">Save</button>
+              <button type="button" class="btn-ghost" (click)="editing = false">Cancel</button>
+            </div>
+          </form>
+        } @else {
+          <span class="badge" [class.public]="pl.isPublic">{{ pl.isPublic ? 'Public playlist' : 'Private playlist' }}</span>
+          <h2>{{ pl.name }}</h2>
+          @if (pl.description) {
+            <p class="description">{{ pl.description }}</p>
+          }
+          <p class="meta">
+            by {{ pl.ownerName }} · {{ pl.trackCount }} {{ pl.trackCount === 1 ? 'track' : 'tracks' }}
+            @if (pl.duration) {
+              · {{ formatDuration(pl.duration, true) }}
+            }
+          </p>
+        }
+
+        <div class="btn-row">
+          <button type="button" class="btn-lime play" (click)="play(0)" [disabled]="!pl.trackCount">
+            {{ isPlaying ? 'Pause' : 'Play' }}
+          </button>
+          @if (isOwner() && !editing) {
+            <button type="button" class="btn-ghost" (click)="startEdit()">Edit</button>
+            <button type="button" class="btn-ghost" (click)="togglePublic()" [disabled]="busy">
+              {{ pl.isPublic ? 'Make private' : 'Make public' }}
+            </button>
+            <button type="button" class="btn-danger-ghost" (click)="deletePlaylist()">Delete</button>
+          }
+        </div>
+      </div>
+    </header>
+
+    @if (!pl.tracks?.length) {
+      <p class="note">
+        No tracks yet.
+        @if (isOwner()) {
+          Play an album and use the <strong>＋</strong> next to a song in the player's track list.
+        }
+      </p>
+    } @else {
+      <ol class="tracks">
+        @for (t of pl.tracks; track t.trackId; let i = $index, first = $first, last = $last) {
+          <li [class.current]="isCurrentTrack(i)">
+            <button type="button" class="track" (click)="play(i)" [attr.aria-label]="'Play ' + t.title">
+              <span class="no">{{ i + 1 }}</span>
+              <img class="cover" [src]="t.cover_img_url" alt="" />
+              <span class="text">
+                <span class="title">{{ t.title }}</span>
+                <span class="sub">{{ t.albumTitle }} · {{ t.artist }}</span>
+              </span>
+              <span class="len">{{ formatDuration(t.duration) }}</span>
+            </button>
+            @if (isOwner()) {
+              <span class="actions">
+                <button type="button" class="icon" (click)="move(i, -1)" [disabled]="first || busy" [attr.aria-label]="'Move ' + t.title + ' up'">▲</button>
+                <button type="button" class="icon" (click)="move(i, 1)" [disabled]="last || busy" [attr.aria-label]="'Move ' + t.title + ' down'">▼</button>
+                <button type="button" class="icon danger" (click)="remove(t.trackId, t.title)" [disabled]="busy" [attr.aria-label]="'Remove ' + t.title">✕</button>
+              </span>
+            }
+          </li>
+        }
+      </ol>
+    }
+  } @else {
+    <p class="note">Loading...</p>
+  }
+</div>
