@@ -11,6 +11,9 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 */
 
 const LINK_TTL_SECONDS = 60;
+// Songs are streamed from the link (the browser asks for parts of the file while playing and
+// seeking), so it has to work for longer than one album takes to play
+const STREAM_TTL_SECONDS = 3 * 60 * 60;
 let client;
 
 export function isStorageConfigured() {
@@ -55,10 +58,22 @@ export async function createDownloadLink(key) {
     return getSignedUrl(s3(), command, { expiresIn: LINK_TTL_SECONDS });
 }
 
-// [{ key, size }] of every object in the bucket
-export async function listObjects() {
+// Link the player streams a song from (served with the type it was uploaded with, audio/mpeg)
+export async function createStreamLink(key) {
+    const command = new GetObjectCommand({ Bucket: bucket(), Key: key });
+    return getSignedUrl(s3(), command, { expiresIn: STREAM_TTL_SECONDS });
+}
+
+// The object's content as a stream (to save an archive to a temporary file)
+export async function downloadStream(key) {
+    const { Body } = await s3().send(new GetObjectCommand({ Bucket: bucket(), Key: key }));
+    return Body;
+}
+
+// [{ key, size }] of every object in the bucket (or under a prefix such as "tracks/")
+export async function listObjects(prefix) {
     const objects = [];
-    for await (const page of paginateListObjectsV2({ client: s3() }, { Bucket: bucket() })) {
+    for await (const page of paginateListObjectsV2({ client: s3() }, { Bucket: bucket(), Prefix: prefix })) {
         for (const o of page.Contents ?? []) objects.push({ key: o.Key, size: o.Size });
     }
     return objects;
@@ -76,10 +91,10 @@ export async function objectSize(key) {
 }
 
 // Streams a file into the bucket (multipart, so archives of any size work)
-export async function uploadStream(key, body) {
+export async function uploadStream(key, body, contentType = 'application/zip') {
     const upload = new Upload({
         client: s3(),
-        params: { Bucket: bucket(), Key: key, Body: body, ContentType: 'application/zip' },
+        params: { Bucket: bucket(), Key: key, Body: body, ContentType: contentType },
         queueSize: 4,
         partSize: 16 * 1024 * 1024,
     });

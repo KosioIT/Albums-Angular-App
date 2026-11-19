@@ -150,9 +150,19 @@
       </div>
 
       @if (player.current(); as track) {
-        <a class="deezer" [href]="track.link" target="_blank" rel="noopener" title="30-second preview. Full track on Deezer">
-          Deezer
-        </a>
+        @if (player.full()) {
+          <span class="deezer full" title="The whole song">Full track</span>
+        } @else {
+          <a
+            class="deezer"
+            [href]="track.link"
+            target="_blank"
+            rel="noopener"
+            [title]="auth.isLoggedIn() ? '30-second preview. Full track on Deezer' : '30-second preview. Sign in to hear whole songs, or listen on Deezer'"
+          >
+            30s · Deezer
+          </a>
+        }
       }
 
       <button type="button" class="ctrl small" aria-label="Close player" title="Close" (click)="player.close()">

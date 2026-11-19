@@ -29,7 +29,7 @@ router.post('/:id/like', protect, toggleLike);
 router.get('/', getAllAlbums);
 // Guests can play the previews too; their listens are counted separately (see listenToAlbum)
 router.post('/:id/listen', guestListenLimiter, optionalAuth, listenToAlbum);
-router.get('/:id/previews', previewsLimiter, getPreviews); // before /:filterField/:filterVal
+router.get('/:id/previews', previewsLimiter, optionalAuth, getPreviews); // before /:filterField/:filterVal; whole songs when logged in
 router.get("/:filterField/:filterVal", filterAlbums);
 
 /* ======== Admin routes ======== */

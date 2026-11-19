@@ -43,12 +43,16 @@ export class Album extends BaseModel {
 
     // Object key of the archive in the R2 bucket, e.g. "load.zip" (never sent to clients, see toPublic)
     this.downloadKey = data.downloadKey || null;
+
+    // Whole songs taken out of the archive ("npm run r2:tracks"): [{ trackId, title, key, size }],
+    // trackId is the Deezer track. Logged-in users get links to them with the previews.
+    this.fullTracks = data.fullTracks || [];
   }
 
-  // Public representation: hides where the archive is stored
+  // Public representation: hides where the archive and the songs are stored
   toPublic() {
-    const { downloadKey, ...safe } = this;
-    return { ...safe, hasDownload: !!downloadKey };
+    const { downloadKey, fullTracks, ...safe } = this;
+    return { ...safe, hasDownload: !!downloadKey, hasFullTracks: fullTracks.length > 0 };
   }
 
   /**

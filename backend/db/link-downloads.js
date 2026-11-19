@@ -11,7 +11,7 @@
 */
 import { FieldValue } from 'firebase-admin/firestore';
 import { loadEnv } from '../src/config/env/loadEnv.js';
-import { matchArchives } from './archiveMatch.js';
+import { isAlbumArchive, matchArchives } from './archiveMatch.js';
 import { isStorageConfigured, listObjects } from '../src/services/storageService.js';
 
 loadEnv();
@@ -31,8 +31,8 @@ if (!isStorageConfigured()) {
 }
 
 async function main() {
-    const objects = await listObjects();
-    console.log(`Found ${objects.length} file(s) in the R2 bucket\n`);
+    const objects = (await listObjects()).filter((o) => isAlbumArchive(o.key));
+    console.log(`Found ${objects.length} archive(s) in the R2 bucket\n`);
 
     const { db } = await import('../src/config/firebase/firebase.js');
     const ALBUMS = db.collection('albums');

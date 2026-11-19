@@ -88,6 +88,24 @@ and downloads the file straight from Cloudflare (no download fees, nothing goes 
    ```
    Files are matched by name: `kill_'em_all.zip` belongs to *Kill 'Em All*.
 
+### Whole songs for signed-in users
+
+Guests hear the 30-second Deezer previews; signed-in users hear the whole songs, streamed from R2.
+The songs are taken out of the album archives (only `.zip`) and stored one by one under
+`tracks/<album id>/`:
+
+```bash
+npm run r2:tracks -- --dry-run
+```
+shows how the files in each archive match the album's songs on Deezer (by title:
+`Welcome To The Jungle - Guns N' Roses.mp3` is *Welcome To The Jungle*); nothing is uploaded.
+
+```bash
+npm run r2:tracks
+```
+uploads the songs of every album that has none yet (`--album=<id>` for one album, `--force` to redo
+them). Files that match no song are listed and skipped; songs without a file stay previews.
+
 ## MongoDB Setup
 This project uses MongoDB as its database. To run it locally:
 

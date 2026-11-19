@@ -4,6 +4,12 @@ import { makeSlug } from '../src/utils/slugify.js';
 
 export const ARCHIVE_RE = /\.(zip|rar|7z)$/i;
 
+// Songs taken out of the archives ("npm run r2:tracks") live under this prefix in the bucket
+export const TRACKS_PREFIX = 'tracks/';
+
+// Only the album archives, not the single songs next to them
+export const isAlbumArchive = (key) => ARCHIVE_RE.test(key) && !key.startsWith(TRACKS_PREFIX);
+
 // "kill_'em_all.zip" -> "kill-em-all"; "/" separates folders in the path
 export const pathSlug = (path) => makeSlug(path.replace(ARCHIVE_RE, '').replace(/[_/]+/g, ' '));
 

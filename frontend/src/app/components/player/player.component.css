@@ -186,6 +186,13 @@ input[type='range'] {
   text-decoration: underline;
 }
 
+.deezer.full,
+.deezer.full:hover {
+  color: var(--accent);
+  text-decoration: none;
+  cursor: default;
+}
+
 /* Track list, opens above the bar */
 .tracklist {
   position: absolute;

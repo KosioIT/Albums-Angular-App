@@ -1,5 +1,6 @@
 import { db } from '../config/firebase/firebase.js';
 import { getAlbumPreviews } from './previewService.js';
+import { withFullTracks } from './fullTrackService.js';
 
 /*
   Playlists of tracks (30-second Deezer previews) from any album.
@@ -186,11 +187,12 @@ export async function getPlaylistPreviews(id, user) {
         const album = albums.get(albumId);
         previewsByAlbum.set(albumId, album ? await getAlbumPreviews(album) : null);
     }
-    const tracks = playlist.tracks
+    const previews = playlist.tracks
         .map((t) => {
             const p = previewsByAlbum.get(t.albumId)?.tracks.find((x) => x.id === t.trackId);
             return p && { ...p, albumId: t.albumId, albumTitle: t.albumTitle, artist: t.artist, cover_img_url: t.cover_img_url };
         })
         .filter(Boolean);
+    const tracks = await withFullTracks(previews, (t) => albums.get(t.albumId), user);
     return { playlist: { id: playlist.id, name: playlist.name, ownerName: playlist.ownerName }, tracks };
 }

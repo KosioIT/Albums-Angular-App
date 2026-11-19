@@ -5,6 +5,7 @@ import { loadOwnedAlbumOrThrow, getAllAlbumsFromFirestore, findAlbums, findAlbum
 import { recordDownload } from '../services/activityService.js';
 import { getAlbumPreviews } from '../services/previewService.js';
 import { createDownloadLink } from '../services/storageService.js';
+import { withFullTracks } from "../services/fullTrackService.js";
 
 const ALBUMS = db.collection("albums");
 
@@ -140,8 +141,9 @@ export const downloadAlbum = async (req, res) => {
   }
 };
 
-// GET /api/albums/:id/previews -> { deezerAlbumId, tracks: [{ title, duration, preview, link }] }
+// GET /api/albums/:id/previews -> { deezerAlbumId, tracks: [{ title, duration, preview, link, fullUrl? }] }
 // 30-second previews from Deezer for the built-in player; public, like the album pages.
+// Logged-in users also get fullUrl for the songs that are stored whole (see fullTrackService).
 export const getPreviews = async (req, res) => {
   try {
     const ref = ALBUMS.doc(req.params.id);
@@ -168,7 +170,8 @@ export const getPreviews = async (req, res) => {
       ref.update({ deezerAlbumId: previews.deezerAlbumId }).catch((err) => console.error("Save Deezer id error:", err));
     }
 
-    return res.json({ success: true, data: previews });
+    const tracks = await withFullTracks(previews.tracks, () => album, req.user);
+    return res.json({ success: true, data: { ...previews, tracks } });
   } catch (err) {
     console.error("Previews error:", err);
     return res.status(500).json({ success: false, message: "Server error!" });

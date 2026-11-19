@@ -105,7 +105,7 @@ export class AlbumsListComponent implements OnInit {
     });
   }
 
-  // Plays the album's 30-second previews in the player bar (pauses / resumes if it is already loaded).
+  // Plays the album in the player bar (whole songs when logged in and stored, otherwise 30-second previews) (pauses / resumes if it is already loaded).
   // Open to guests: only liking and downloading need an account.
   listen(album: Album): void {
     this.player.playAlbum(album);

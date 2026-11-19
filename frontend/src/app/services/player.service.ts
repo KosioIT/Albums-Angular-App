@@ -1,10 +1,11 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, distinctUntilChanged, map, skip } from 'rxjs';
 import { Album } from '../models/album';
 import { PreviewTrack } from '../models/preview-track';
 import { AlbumService } from './album.service';
 import { PlaylistService } from './playlist.service';
 import { CustomToastrService } from './custom-toastr.service';
+import { AuthService } from './auth.service';
 
 const VOLUME_KEY = 'player.volume';
 
@@ -18,14 +19,16 @@ function savedVolume(): number {
 }
 
 /*
-  The built-in player: one <audio> element for the whole app, playing the 30-second Deezer
-  previews of an album one after another. The bar itself is PlayerComponent.
+  The built-in player: one <audio> element for the whole app, playing the songs of an album
+  (or a playlist) one after another. Logged-in users hear the whole song when it is stored
+  (fullUrl), everyone else the 30-second Deezer preview. The bar itself is PlayerComponent.
 */
 @Injectable({ providedIn: 'root' })
 export class PlayerService {
   private albumService = inject(AlbumService);
   private playlistService = inject(PlaylistService);
   private toastr = inject(CustomToastrService);
+  private auth = inject(AuthService);
 
   // What is loaded: an album, or a playlist (tracks from many albums)
   readonly album = signal<Album | null>(null);
@@ -37,6 +40,7 @@ export class PlayerService {
   readonly loading = signal(false);
   readonly currentTime = signal(0);
   readonly duration = signal(30);
+  readonly full = signal(false); // the audio playing is the whole song, not the preview
   readonly volume = signal(savedVolume());
   readonly current = computed<PreviewTrack | null>(() => this.tracks()[this.index()] ?? null);
 
@@ -57,6 +61,15 @@ export class PlayerService {
     this.audio.addEventListener('pause', () => this.playing.set(false));
     this.audio.addEventListener('ended', () => this.next(true));
     this.audio.addEventListener('error', () => this.onAudioError());
+
+    // Signing in or out changes which songs are whole: reload the queue that is playing
+    this.auth.user$
+      .pipe(
+        map((user) => !!user),
+        distinctUntilChanged(),
+        skip(1),
+      )
+      .subscribe(() => this.reloadQueue());
   }
 
   isCurrent(album: Album): boolean {
@@ -148,8 +161,9 @@ export class PlayerService {
     if (!track) return;
     this.index.set(i);
     this.currentTime.set(0);
-    this.duration.set(30);
-    this.audio.src = track.preview;
+    this.duration.set(track.fullUrl ? track.duration : 30);
+    this.full.set(!!track.fullUrl);
+    this.audio.src = track.fullUrl ?? track.preview;
     this.audio.play().catch(() => this.playing.set(false)); // e.g. autoplay blocked: the user presses play
     if (track.albumId) this.countListen(track.albumId);
   }
@@ -209,27 +223,63 @@ export class PlayerService {
     this.retried = false;
   }
 
-  // Preview links expire after a while: fetch fresh ones once and continue with the same track
+  // The current queue's tracks, fetched again (fresh links, whole songs or previews)
+  private freshTracks(): Observable<PreviewTrack[]> {
+    const album = this.album();
+    return album
+      ? this.albumService.getPreviews(album.id).pipe(map(({ tracks }) => this.withAlbum(tracks, album)))
+      : this.playlistService.previews(this.playlist()!.id).pipe(map(({ tracks }) => tracks));
+  }
+
+  // Links expire after a while: fetch fresh ones once and continue with the same track
   private onAudioError(): void {
     if (!this.active() || !this.audio.getAttribute('src')) return;
     this.playing.set(false);
     if (this.retried) {
-      this.toastr.showToast('This preview cannot be played right now.', 'error', 'Playback error');
+      this.toastr.showToast('This track cannot be played right now.', 'error', 'Playback error');
       return;
     }
     this.retried = true;
     const index = this.index();
     const request = this.request;
-    const album = this.album();
-    const playlist = this.playlist();
-    const fresh: Observable<{ tracks: PreviewTrack[] }> = album
-      ? this.albumService.getPreviews(album.id)
-      : this.playlistService.previews(playlist!.id);
-    fresh.subscribe({
-      next: ({ tracks }) => {
+    this.freshTracks().subscribe({
+      next: (tracks) => {
         if (request !== this.request) return;
-        this.tracks.set(album ? this.withAlbum(tracks, album) : tracks);
+        this.tracks.set(tracks);
         this.playTrack(Math.min(index, tracks.length - 1));
+      },
+    });
+  }
+
+  /*
+    After signing in the next songs play whole (the current preview just goes on); after signing
+    out a whole song that is playing switches to its preview, since guests only get previews.
+  */
+  private reloadQueue(): void {
+    if (!this.active() || this.loading() || !this.tracks().length) return;
+    const request = this.request;
+    const current = this.current();
+    this.freshTracks().subscribe({
+      next: (tracks) => {
+        if (request !== this.request || !tracks.length) return;
+        const index = Math.max(0, tracks.findIndex((t) => t.id === current?.id && t.albumId === current?.albumId));
+        const wasFull = this.full();
+        const wasPlaying = this.playing();
+        this.tracks.set(tracks);
+        this.index.set(index);
+        if (wasFull && !tracks[index].fullUrl) {
+          if (wasPlaying) this.playTrack(index);
+          else {
+            this.audio.src = tracks[index].preview; // paused: play starts the preview
+            this.currentTime.set(0);
+            this.duration.set(30);
+            this.full.set(false);
+          }
+        }
+      },
+      error: () => {
+        // the queue could not be reloaded: at least do not keep playing whole songs to a guest
+        if (request === this.request && !this.auth.isLoggedIn()) this.close();
       },
     });
   }

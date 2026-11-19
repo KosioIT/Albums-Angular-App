@@ -35,7 +35,7 @@
               type="button"
               class="stat"
               [class.active]="player.isCurrent(album)"
-              [title]="isPlaying(album) ? 'Pause' : 'Listen (30-second previews)'"
+              [title]="isPlaying(album) ? 'Pause' : isLoggedIn && album.hasFullTracks ? 'Listen' : 'Listen (30-second previews)'"
               [attr.aria-pressed]="isPlaying(album)"
               (click)="listen(album)"
             >

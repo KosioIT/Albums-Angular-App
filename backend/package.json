@@ -9,7 +9,8 @@
     "seed:albums": "node db/seed-albums.js",
     "seed:downloads": "node db/link-downloads.js",
     "seed": "node db/seed-albums.js --force --prune && node db/link-downloads.js --write --optional",
-    "r2:upload": "node db/upload-to-r2.js"
+    "r2:upload": "node db/upload-to-r2.js",
+    "r2:tracks": "node db/extract-tracks.js"
   },
   "keywords": [],
   "author": "",
@@ -37,7 +38,8 @@
     "nodemailer": "^10.4.0",
     "openai": "^6.49.0",
     "slugify": "^1.6.9",
-    "url": "^0.11.4"
+    "url": "^0.11.4",
+    "yauzl": "^3.4.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
