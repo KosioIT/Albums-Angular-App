@@ -60,10 +60,7 @@ export class LoginStatusComponent implements OnDestroy {
     },
     {
       title: 'Account',
-      items: [
-        { label: 'Active sessions', link: '/account/sessions' },
-        { label: 'Sign out of all devices', action: () => this.logoutAll() },
-      ],
+      items: [{ label: 'Active sessions', link: '/account/sessions' }],
     },
   ];
 

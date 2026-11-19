@@ -76,8 +76,10 @@
         }
       }
 
+      <!-- Both ways to sign out together, at the bottom -->
       <div class="dropdown-divider"></div>
       <a class="dropdown-item" role="button" tabindex="0" (click)="logout()" (keydown.enter)="logout()">Sign out</a>
+      <a class="dropdown-item" role="button" tabindex="0" (click)="logoutAll()" (keydown.enter)="logoutAll()">Sign out of all devices</a>
     }
   </div>
 </li>
