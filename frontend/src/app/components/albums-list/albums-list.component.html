@@ -4,10 +4,25 @@
     @for (album of albums; track album.id) {
       <div class="album-card">
         <div
-          class="albumImg-wrapper"
+          class="albumImg-wrapper playable"
+          [class.is-current]="player.isCurrent(album)"
           [style.border-color]="albumService.getBorderColor(album.rank)"
+          role="button"
+          tabindex="0"
+          [attr.aria-label]="(isPlaying(album) ? 'Pause ' : 'Play ') + album.title"
+          [title]="isPlaying(album) ? 'Pause' : 'Play'"
+          (click)="listen(album)"
+          (keydown.enter)="listen(album)"
+          (keydown.space)="$event.preventDefault(); listen(album)"
           >
           <img class="albumImg" [src]="album.cover_img_url" [alt]="album.title" />
+          <span class="cover-play" aria-hidden="true">
+            @if (isPlaying(album)) {
+              <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z" /></svg>
+            } @else {
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+            }
+          </span>
         </div>
         <div class="album-info">
           <h3>{{ album.title }}</h3>
