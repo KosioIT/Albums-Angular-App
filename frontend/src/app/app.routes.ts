@@ -10,6 +10,8 @@ import { ManageUsersComponent } from './components/admin/manage-users/manage-use
 import { AlbumCreateComponent } from './components/admin/album-create/album-create.component';
 import { FavoriteAlbumsComponent } from './components/favorites/favorite-albums/favorite-albums.component';
 import { SessionsComponent } from './components/account/sessions/sessions.component';
+import { ActivityComponent } from './components/account/activity/activity.component';
+import { StatsComponent } from './components/admin/stats/stats.component';
 import { adminGuard, authGuard, guestGuard } from './core/guards/auth.guards';
 
 export const routes: Routes = [
@@ -23,10 +25,12 @@ export const routes: Routes = [
 
   { path: 'favorites', component: FavoriteAlbumsComponent, canActivate: [authGuard] },
   { path: 'account/sessions', component: SessionsComponent, canActivate: [authGuard] },
+  { path: 'account/activity', component: ActivityComponent, canActivate: [authGuard] },
 
   { path: 'admin/albums', component: ManageAlbumsComponent, canActivate: [adminGuard] },
   { path: 'admin/users', component: ManageUsersComponent, canActivate: [adminGuard] },
   { path: 'admin/add-album', component: AlbumCreateComponent, canActivate: [adminGuard] },
+  { path: 'admin/stats', component: StatsComponent, canActivate: [adminGuard] },
 
   { path: '**', redirectTo: '', pathMatch: 'full' },
 ];

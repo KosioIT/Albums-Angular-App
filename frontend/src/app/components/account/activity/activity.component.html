@@ -1,0 +1,86 @@
+<div class="activity-page">
+  <h2>My activity</h2>
+
+  @if (loading()) {
+    <p class="note">Loading...</p>
+  } @else if (error()) {
+    <p class="note error">{{ error() }}</p>
+  } @else if (activity(); as data) {
+    <div class="tiles">
+      <div class="tile">
+        <img src="assets/images/like_btn-blue.png" alt="" />
+        <span class="value">{{ data.stats.likedAlbums | number }}</span>
+        <span class="label">liked albums</span>
+      </div>
+      <div class="tile">
+        <img src="assets/images/music_btn-green.png" alt="" />
+        <span class="value">{{ data.stats.totalListens | number }}</span>
+        <span class="label">listens · {{ data.stats.listenedAlbums }} albums</span>
+      </div>
+      <div class="tile">
+        <img src="assets/images/download_icon2-orange.png" alt="" />
+        <span class="value">{{ data.stats.totalDownloads | number }}</span>
+        <span class="label">downloads · {{ data.stats.downloadedAlbums }} albums</span>
+      </div>
+    </div>
+
+    @if (data.albums.length === 0) {
+      <p class="note">
+        Nothing here yet. Pick a band from the menu and listen to, like or download an album.
+      </p>
+    } @else {
+      <div class="filters" role="tablist" aria-label="Show">
+        @for (f of filters; track f.value) {
+          <button
+            type="button"
+            role="tab"
+            [class.active]="filter() === f.value"
+            [attr.aria-selected]="filter() === f.value"
+            (click)="filter.set(f.value)"
+          >
+            {{ f.label }} <span class="badge-count">{{ count(f.value) }}</span>
+          </button>
+        }
+      </div>
+
+      <ul class="albums">
+        @for (album of shown(); track album.albumId) {
+          <li>
+            <img
+              class="cover"
+              [src]="album.cover_img_url"
+              [alt]="album.title"
+              [style.border-color]="albumService.getBorderColor(album.rank)"
+            />
+            <div class="info">
+              <a class="title" [routerLink]="['/albums-list']" [queryParams]="{ band: albumService.encode(album.artist) }">
+                {{ album.title }}
+              </a>
+              <div class="artist">{{ album.artist }}</div>
+              <div class="when">Last activity {{ album.lastActivityAt | date: 'medium' }}</div>
+            </div>
+            <div class="mine">
+              @if (album.liked) {
+                <span class="pill" title="You liked this album">
+                  <img src="assets/images/like_btn-blue.png" alt="" /> Liked
+                </span>
+              }
+              @if (album.listenCount) {
+                <span class="pill" title="Your listens">
+                  <img src="assets/images/music_btn-green.png" alt="" /> {{ album.listenCount | number }}
+                </span>
+              }
+              @if (album.downloadCount) {
+                <span class="pill" title="Your downloads">
+                  <img src="assets/images/download_icon2-orange.png" alt="" /> {{ album.downloadCount | number }}
+                </span>
+              }
+            </div>
+          </li>
+        } @empty {
+          <li class="note">No albums in this list.</li>
+        }
+      </ul>
+    }
+  }
+</div>

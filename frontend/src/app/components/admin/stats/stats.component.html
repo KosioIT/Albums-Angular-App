@@ -1,0 +1,104 @@
+<div class="stats-page">
+  <div class="head">
+    <h2>Statistics</h2>
+    <button type="button" class="refresh" (click)="load()" [disabled]="loading()">
+      {{ loading() ? 'Loading...' : 'Refresh' }}
+    </button>
+  </div>
+
+  @if (error()) {
+    <p class="note error">{{ error() }}</p>
+  }
+
+  @if (stats(); as s) {
+    <div class="tiles">
+      <div class="tile">
+        <span class="value">{{ s.totals.users | number }}</span>
+        <span class="label">users</span>
+      </div>
+      <div class="tile">
+        <span class="value">{{ s.totals.albums | number }}</span>
+        <span class="label">albums</span>
+      </div>
+      <div class="tile">
+        <img src="assets/images/music_btn-green.png" alt="" />
+        <span class="value">{{ s.totals.totalListens | number }}</span>
+        <span class="label">
+          listens · {{ s.totals.listens | number }} members, {{ s.totals.guestListens | number }} guests
+          ({{ guestShare(s) }}%)
+        </span>
+      </div>
+      <div class="tile">
+        <img src="assets/images/like_btn-blue.png" alt="" />
+        <span class="value">{{ s.totals.likes | number }}</span>
+        <span class="label">likes</span>
+      </div>
+      <div class="tile">
+        <img src="assets/images/download_icon2-orange.png" alt="" />
+        <span class="value">{{ s.totals.downloads | number }}</span>
+        <span class="label">downloads</span>
+      </div>
+    </div>
+
+    <h3>By band</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Band</th>
+            <th scope="col" class="num">Albums</th>
+            <th scope="col" class="num">Listens</th>
+            <th scope="col" class="num">Members</th>
+            <th scope="col" class="num">Guests</th>
+            <th scope="col" class="num">Likes</th>
+            <th scope="col" class="num">Downloads</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (band of s.bands; track band.artist) {
+            <tr>
+              <th scope="row">
+                <a [routerLink]="['/albums-list']" [queryParams]="{ band: albumService.encode(band.artist) }">{{ band.artist }}</a>
+              </th>
+              <td class="num">{{ band.albums }}</td>
+              <td class="num strong">{{ band.totalListens | number }}</td>
+              <td class="num">{{ band.listens | number }}</td>
+              <td class="num">{{ band.guestListens | number }}</td>
+              <td class="num">{{ band.likes | number }}</td>
+              <td class="num">{{ band.downloads | number }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tops">
+      @for (list of topLists; track list.key) {
+        <section class="top">
+          <h3><img [src]="list.icon" alt="" /> {{ list.title }}</h3>
+          <ol>
+            @for (album of s.top[list.key]; track album.id) {
+              <li>
+                <img
+                  class="cover"
+                  [src]="album.cover_img_url"
+                  [alt]="album.title"
+                  [style.border-color]="albumService.getBorderColor(album.rank)"
+                />
+                <span class="name">
+                  <span class="t">{{ album.title }}</span>
+                  <span class="a">{{ album.artist }}</span>
+                </span>
+                <span class="n">{{ list.value(album) | number }}</span>
+              </li>
+            } @empty {
+              <li class="empty">Nothing yet.</li>
+            }
+          </ol>
+        </section>
+      }
+    </div>
+  } @else if (loading()) {
+    <p class="note">Loading...</p>
+  }
+</div>
