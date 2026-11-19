@@ -150,6 +150,19 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h13v2H3zm0 5h13v2H3zm0 5h9v2H3zm15-6v8.2a3 3 0 1 0 2 2.8V8h3V6h-5z" /></svg>
       </button>
 
+      @if (auth.isLoggedIn() && player.current()?.fullUrl && player.current()?.albumId) {
+        <button
+          type="button"
+          class="ctrl small"
+          aria-label="Download this song"
+          title="Download this song"
+          [disabled]="downloading !== null"
+          (click)="downloadTrack(player.current()!, player.index())"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4h2v8.2l3.3-3.3 1.4 1.4-5.7 5.7-5.7-5.7 1.4-1.4 3.3 3.3zM5 18h14v2H5z" /></svg>
+        </button>
+      }
+
       <div class="volume">
         <button type="button" class="ctrl small" [attr.aria-label]="player.volume() ? 'Mute' : 'Unmute'" (click)="toggleMute()">
           @if (player.volume() > 0) {
