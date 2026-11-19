@@ -6,9 +6,9 @@ import { AuthService } from '../../../services/auth.service';
 import { DropdownService } from '../../../services/dropdown.service';
 import { filter } from 'rxjs/operators';
 
-const key = "loginStatus";
-
-export type Submenu = 'admin' | 'music' | 'account';
+// Dropdown keys in DropdownService
+const ACCOUNT = 'loginStatus';
+const ADMIN = 'adminMenu';
 
 export interface MenuItem {
   label: string;
@@ -16,6 +16,15 @@ export interface MenuItem {
   action?: () => void;
 }
 
+export interface MenuSection {
+  title: string;
+  items: MenuItem[];
+}
+
+/*
+  The right side of the navbar: "Admin" (admins only) and the account menu.
+  The account menu is one level with section headings, so nothing has to fly out past the edge.
+*/
 @Component({
   selector: 'app-login-status',
   standalone: true,
@@ -28,8 +37,10 @@ export interface MenuItem {
 })
 export class LoginStatusComponent implements OnDestroy {
   user: User | null = null;
-  dropdownOpen$ = this.dropdownService.getState(key);
-  openSubmenu: Submenu | null = null; // the second-level menu that is shown
+  readonly accountOpen$ = this.dropdownService.getState(ACCOUNT);
+  readonly adminOpen$ = this.dropdownService.getState(ADMIN);
+  readonly ACCOUNT = ACCOUNT;
+  readonly ADMIN = ADMIN;
 
   readonly adminItems: MenuItem[] = [
     { label: 'Manage albums', link: '/admin/albums' },
@@ -38,20 +49,27 @@ export class LoginStatusComponent implements OnDestroy {
     { label: 'Statistics', link: '/admin/stats' },
   ];
 
-  readonly musicItems: MenuItem[] = [
-    { label: 'My playlists', link: '/playlists/mine' },
-    { label: 'Favorite albums', link: '/favorites' },
-    { label: 'My activity', link: '/account/activity' },
-  ];
-
-  readonly accountItems: MenuItem[] = [
-    { label: 'Active sessions', link: '/account/sessions' },
-    { label: 'Sign out of all devices', action: () => this.logoutAll() },
+  readonly accountSections: MenuSection[] = [
+    {
+      title: 'My music',
+      items: [
+        { label: 'My playlists', link: '/playlists/mine' },
+        { label: 'Favorite albums', link: '/favorites' },
+        { label: 'My activity', link: '/account/activity' },
+      ],
+    },
+    {
+      title: 'Account',
+      items: [
+        { label: 'Active sessions', link: '/account/sessions' },
+        { label: 'Sign out of all devices', action: () => this.logoutAll() },
+      ],
+    },
   ];
 
   private routerSub = this.router.events
     .pipe(filter((e) => e instanceof NavigationEnd))
-    .subscribe(() => this.closeMenu());
+    .subscribe(() => this.closeAll());
 
   constructor(
     public authService: AuthService,
@@ -61,49 +79,38 @@ export class LoginStatusComponent implements OnDestroy {
     this.authService.user$.subscribe((user) => (this.user = user));
   }
 
-  onMouseEnter() {
+  // Desktop: hover opens a menu. Phones: a tap toggles it
+  onMouseEnter(key: string) {
     this.dropdownService.onMouseEnter(key);
   }
 
-  onMouseLeave() {
+  onMouseLeave(key: string) {
     this.dropdownService.onMouseLeave(key);
-    if (!this.dropdownService.isMobile()) this.openSubmenu = null;
   }
 
-  // Second level: hover opens it on desktop, click (or Enter) toggles it everywhere
-  hoverSubmenu(name: Submenu | null) {
-    if (!this.dropdownService.isMobile()) this.openSubmenu = name;
-  }
-
-  toggleSubmenu(name: Submenu, event: Event) {
-    event.stopPropagation(); // the click must not close the main menu on mobile
-    this.openSubmenu = this.openSubmenu === name ? null : name;
-  }
-
-  private closeMenu() {
-    this.dropdownService.close(key);
-    this.openSubmenu = null;
-  }
-
-  @HostListener('document:keydown.escape')
-  onEscape() {
-    if (this.openSubmenu) this.openSubmenu = null;
-    else this.closeMenu();
-  }
-
-  onClick() {
+  onClick(key: string) {
     this.dropdownService.onClick(key);
   }
 
+  // Keyboard: Enter / Space on the button toggles its menu on every screen size
+  onKeyToggle(key: string, event: Event) {
+    event.preventDefault();
+    this.dropdownService.toggle(key);
+  }
+
+  @HostListener('document:keydown.escape')
+  closeAll() {
+    this.dropdownService.close(ACCOUNT);
+    this.dropdownService.close(ADMIN);
+  }
+
   logout() {
-    this.dropdownService.closeAll();
-    this.openSubmenu = null;
+    this.closeAll();
     this.authService.logout().subscribe(() => this.router.navigate(['/login']));
   }
 
   logoutAll() {
-    this.dropdownService.closeAll();
-    this.openSubmenu = null;
+    this.closeAll();
     this.authService.logoutAll().subscribe(() => this.router.navigate(['/login']));
   }
 

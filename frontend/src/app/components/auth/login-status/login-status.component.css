@@ -1,105 +1,87 @@
+/* The two menus sit in the navbar list as if they were its own items */
+:host {
+  display: contents;
+}
+
 .user-icon {
   height: 50px;
   width: 50px;
   border-radius: 50%;
 }
 
-#userDropdown {
-  min-width: 70px;
-  max-width: 200px;
-  width: auto;
-  white-space: nowrap;
-}
-
 .nav-link {
   padding: 0.5rem;
+  cursor: pointer;
 }
 
-.dropdown-menu {
-  font-size: 16px;
+.nav-link:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
-.dropdown-menu-center {
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  right: auto !important;
+.admin-menu {
+  margin-right: 12px;
 }
 
-/* ---------- Second-level menus (Admin, My music, Account) ---------- */
-.submenu-wrap {
-  position: relative;
+/* At the right edge: open under the button, aligned to its right side */
+.dropdown-menu.menu-end {
+  left: auto !important;
+  right: 0 !important;
+  transform: none;
+  min-width: 230px;
+  text-align: left;
 }
 
-.submenu-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  border: none;
-  background: none;
+.dropdown-menu.menu-end.show {
+  transform: none;
 }
 
-.submenu-wrap.open > .submenu-toggle {
-  background-color: rgba(0, 0, 0, 0.08);
+.dropdown-item {
+  font-size: 18px;
+  padding: 7px 20px;
 }
 
-/* Small arrow pointing to where the submenu opens (right on desktop) */
-.caret {
-  order: 2; /* after the label */
-  width: 0;
-  height: 0;
-  border-top: 6px solid transparent;
-  border-bottom: 6px solid transparent;
-  border-left: 7px solid currentColor;
-  transition: transform 0.15s ease-in-out;
+.dropdown-header {
+  padding: 8px 20px 2px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6c757d;
 }
 
-/* Submenus open to the right of the menu */
-.submenu {
-  top: -10px;
-  left: 100%;
-  right: auto;
-  margin-left: 4px;
-  min-width: 100%;
+/* Who is signed in */
+.who {
+  padding: 4px 20px 6px;
+}
+
+.who-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.who-email {
+  font-size: 14px;
+  color: #6c757d;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 240px;
 }
 
 .dropdown-divider {
   margin: 6px 0;
 }
 
-/* Phones: the submenu opens below its group instead of beside it */
+/* Phones (collapsed navbar): the menus open in the flow, under their button */
 @media (max-width: 768px) {
-  /* centring under the icon pushes the wider menu off the left edge of a phone */
-  .dropdown-menu-center {
-    left: 0 !important;
-    transform: none !important;
-    max-width: calc(100vw - 32px);
+  .admin-menu {
+    margin-right: 0;
   }
 
-  .submenu .dropdown-item {
-    white-space: normal;
-  }
-
-  .submenu-toggle {
-    justify-content: flex-start;
-  }
-
-  .caret {
-    transform: rotate(90deg);
-  }
-
-  .submenu-wrap.open .caret {
-    transform: rotate(-90deg);
-  }
-
-  .submenu {
+  .dropdown-menu.menu-end {
     position: static;
-    margin: 0;
-    padding: 0 0 0 16px;
-    border: none;
-    box-shadow: none;
-    transform: none;
+    max-width: calc(100vw - 32px);
   }
 }

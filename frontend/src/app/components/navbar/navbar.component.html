@@ -101,7 +101,10 @@
         <a class="nav-link" routerLink="/playlists" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Playlists</a>
       </li>
 
-      <!-- User menu: next to the band menus, so its submenus have room to open to the right -->
+    </ul>
+
+    <!-- Admin and account: apart from the content menus, at the right -->
+    <ul class="navbar-nav ms-auto align-items-md-center account-nav">
       <app-login-status></app-login-status>
     </ul>
   </div>

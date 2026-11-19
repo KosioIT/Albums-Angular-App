@@ -12,6 +12,19 @@
   margin-left: 20px;
 }
 
+/* Home stands apart from the content menus: more space and a thin line */
+@media (min-width: 769px) {
+  .navbar-brand {
+    margin-right: 28px;
+    padding-right: 28px;
+    border-right: 1px solid rgba(255, 255, 255, 0.45);
+  }
+
+  .account-nav {
+    margin-right: 12px;
+  }
+}
+
 /* NAV LINKS */
 .nav-link {
   color: white !important;

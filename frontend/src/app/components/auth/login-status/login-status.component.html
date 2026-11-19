@@ -1,77 +1,83 @@
+<!-- Admin tools: a menu of their own, next to the account menu -->
+@if (user && authService.isAdmin()) {
+  <li
+    class="nav-item dropdown admin-menu"
+    [class.show]="adminOpen$ | async"
+    (mouseenter)="onMouseEnter(ADMIN)"
+    (mouseleave)="onMouseLeave(ADMIN)"
+  >
+    <a
+      class="nav-link dropdown-toggle"
+      role="button"
+      tabindex="0"
+      aria-haspopup="true"
+      [attr.aria-expanded]="adminOpen$ | async"
+      (click)="onClick(ADMIN)"
+      (keydown.enter)="onKeyToggle(ADMIN, $event)"
+      (keydown.space)="onKeyToggle(ADMIN, $event)"
+    >
+      Admin
+    </a>
+    <div class="dropdown-menu menu-end" [class.show]="adminOpen$ | async">
+      @for (item of adminItems; track item.label) {
+        <a class="dropdown-item" [routerLink]="item.link">{{ item.label }}</a>
+      }
+    </div>
+  </li>
+}
+
+<!-- Account -->
 <li
-  class="nav-item dropdown"
-  [class.show]="dropdownOpen$ | async"
-  (mouseenter)="onMouseEnter()"
-  (mouseleave)="onMouseLeave()"
+  class="nav-item dropdown account-menu"
+  [class.show]="accountOpen$ | async"
+  (mouseenter)="onMouseEnter(ACCOUNT)"
+  (mouseleave)="onMouseLeave(ACCOUNT)"
 >
   <a
     class="nav-link d-flex align-items-center"
-    style="cursor: pointer"
-    (click)="onClick()"
-    [attr.aria-expanded]="dropdownOpen$ | async"
+    role="button"
+    tabindex="0"
+    aria-haspopup="true"
+    [attr.aria-expanded]="accountOpen$ | async"
+    [attr.aria-label]="user ? 'Account: ' + user.username : 'Sign in or sign up'"
+    (click)="onClick(ACCOUNT)"
+    (keydown.enter)="onKeyToggle(ACCOUNT, $event)"
+    (keydown.space)="onKeyToggle(ACCOUNT, $event)"
   >
     <img
       src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqgfsYn5co7FYXZi4-vGdJ2c4NZq7foww9L30axpxiKYymOSzUm4F9mDW1mZLCui-Dm7I&usqp=CAU"
-      alt="User Icon"
+      alt=""
       class="user-icon me-1"
     />
-
     @if (user) {
       <span>{{ user.username }}</span>
     }
   </a>
 
-  <div
-    class="dropdown-menu dropdown-menu-center"
-    [class.show]="dropdownOpen$ | async"
-  >
+  <div class="dropdown-menu menu-end" [class.show]="accountOpen$ | async">
     @if (!user) {
       <a class="dropdown-item" routerLink="/login">Sign in</a>
       <a class="dropdown-item" routerLink="/register">Sign up</a>
     } @else {
-      @if (authService.isAdmin()) {
-        <ng-container
-          *ngTemplateOutlet="submenu; context: { name: 'admin', label: 'Admin', items: adminItems }"
-        ></ng-container>
+      <div class="who">
+        <div class="who-name">{{ user.username }}</div>
+        <div class="who-email">{{ user.email }}</div>
+      </div>
+      <div class="dropdown-divider"></div>
+
+      @for (section of accountSections; track section.title) {
+        <h6 class="dropdown-header">{{ section.title }}</h6>
+        @for (item of section.items; track item.label) {
+          @if (item.link) {
+            <a class="dropdown-item" [routerLink]="item.link">{{ item.label }}</a>
+          } @else {
+            <a class="dropdown-item" role="button" tabindex="0" (click)="item.action!()" (keydown.enter)="item.action!()">{{ item.label }}</a>
+          }
+        }
       }
-      <ng-container
-        *ngTemplateOutlet="submenu; context: { name: 'music', label: 'My music', items: musicItems }"
-      ></ng-container>
-      <ng-container
-        *ngTemplateOutlet="submenu; context: { name: 'account', label: 'Account', items: accountItems }"
-      ></ng-container>
 
       <div class="dropdown-divider"></div>
-      <a class="dropdown-item" role="button" (click)="logout()">Sign out</a>
+      <a class="dropdown-item" role="button" tabindex="0" (click)="logout()" (keydown.enter)="logout()">Sign out</a>
     }
   </div>
 </li>
-
-<!-- A group with its own second-level menu -->
-<ng-template #submenu let-name="name" let-label="label" let-items="items">
-  <div
-    class="submenu-wrap"
-    [class.open]="openSubmenu === name"
-    (mouseenter)="hoverSubmenu(name)"
-    (mouseleave)="hoverSubmenu(null)"
-  >
-    <button
-      type="button"
-      class="dropdown-item submenu-toggle"
-      aria-haspopup="true"
-      [attr.aria-expanded]="openSubmenu === name"
-      (click)="toggleSubmenu(name, $event)"
-    >
-      <span class="caret" aria-hidden="true"></span>{{ label }}
-    </button>
-    <div class="dropdown-menu submenu" [class.show]="openSubmenu === name">
-      @for (item of items; track item.label) {
-        @if (item.link) {
-          <a class="dropdown-item" [routerLink]="item.link">{{ item.label }}</a>
-        } @else {
-          <a class="dropdown-item" role="button" (click)="item.action()">{{ item.label }}</a>
-        }
-      }
-    </div>
-  </div>
-</ng-template>
