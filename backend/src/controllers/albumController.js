@@ -6,6 +6,8 @@ import { recordDownload } from '../services/activityService.js';
 import { getAlbumPreviews } from '../services/previewService.js';
 import { createDownloadLink } from '../services/storageService.js';
 import { withFullTracks } from "../services/fullTrackService.js";
+import { albumDownloadLink } from "../services/albumZipService.js";
+import { fullTrackFor } from "../utils/trackMatch.js";
 
 const ALBUMS = db.collection("albums");
 
@@ -116,8 +118,9 @@ export const deleteAlbum = async (req, res) => {
 };
 
 // POST /api/albums/:id/download -> { url, counted }
-// Signed-in users only. Counts the download and returns a one-minute link to the archive in R2;
-// the browser downloads it straight from Cloudflare, so it never goes through this server.
+// Signed-in users only. Counts the download and returns a one-minute link to the album's zip in R2;
+// the browser downloads it straight from Cloudflare. The zip is packed from the songs on the first
+// download (and again when they change), see albumZipService.
 export const downloadAlbum = async (req, res) => {
   try {
     const albumId = req.params.id;
@@ -126,12 +129,11 @@ export const downloadAlbum = async (req, res) => {
     if (!doc.exists) {
       return res.status(404).json({ success: false, message: "Album not found!" });
     }
-    const { downloadKey } = doc.data();
-    if (!downloadKey) {
+    const url = await albumDownloadLink({ id: doc.id, ...doc.data() });
+    if (!url) {
       return res.status(404).json({ success: false, message: "This album is not available for download yet!" });
     }
 
-    const url = await createDownloadLink(downloadKey);
     const counted = await recordDownload(req.user.id, albumId);
     return res.json({ success: true, url, counted });
 
@@ -174,6 +176,35 @@ export const getPreviews = async (req, res) => {
     return res.json({ success: true, data: { ...previews, tracks } });
   } catch (err) {
     console.error("Previews error:", err);
+    return res.status(500).json({ success: false, message: "Server error!" });
+  }
+};
+
+// POST /api/albums/:id/tracks/:trackId/download -> { url }
+// One song (trackId = the Deezer track, as in the previews). Signed-in users only; not counted as an album download.
+export const downloadTrack = async (req, res) => {
+  try {
+    const doc = await ALBUMS.doc(req.params.id).get();
+    if (!doc.exists) {
+      return res.status(404).json({ success: false, message: "Album not found!" });
+    }
+    const album = { id: doc.id, ...doc.data() };
+    const trackId = Number(req.params.trackId);
+
+    let file = (album.fullTracks || []).find((t) => t.trackId === trackId);
+    if (!file && album.fullTracks?.length) {
+      // Deezer's track ids may have changed since the songs were linked: match by title instead
+      const track = (await getAlbumPreviews(album).catch(() => null))?.tracks.find((t) => t.id === trackId);
+      file = track && fullTrackFor(album.fullTracks, track, album.artist);
+    }
+    if (!file) {
+      return res.status(404).json({ success: false, message: "This song is not available for download." });
+    }
+
+    const url = await createDownloadLink(file.key);
+    return res.json({ success: true, url });
+  } catch (err) {
+    console.error("Track download error:", err);
     return res.status(500).json({ success: false, message: "Server error!" });
   }
 };

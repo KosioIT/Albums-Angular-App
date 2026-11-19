@@ -1,9 +1,11 @@
-import { S3Client, GetObjectCommand, HeadObjectCommand, paginateListObjectsV2 } from '@aws-sdk/client-s3';
+import { S3Client, GetObjectCommand, HeadObjectCommand, DeleteObjectCommand, paginateListObjectsV2 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 /*
-  Album archives in Cloudflare R2 (S3-compatible, no fees for downloads).
+  The music files in Cloudflare R2 (S3-compatible, no fees for downloads):
+    tracks/<album id>/...   the songs and the cover, one by one ("npm run r2:tracks")
+    downloads/<album id>.zip  album downloads packed from them (albumZipService)
   The bucket is private: a user only gets a presigned link that works for one minute,
   and the file then comes straight from Cloudflare, not through this server.
 
@@ -46,9 +48,8 @@ export function attachmentHeader(fileName) {
     return `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(fileName)}`;
 }
 
-// One-minute link that downloads the object as a file named like the key ("load.zip")
-export async function createDownloadLink(key) {
-    const fileName = key.split('/').pop();
+// One-minute link that downloads the object as a file, named like the key ("load.zip") unless given
+export async function createDownloadLink(key, fileName = key.split('/').pop()) {
     const command = new GetObjectCommand({
         Bucket: bucket(),
         Key: key,
@@ -99,4 +100,8 @@ export async function uploadStream(key, body, contentType = 'application/zip') {
         partSize: 16 * 1024 * 1024,
     });
     await upload.done();
+}
+
+export async function deleteObject(key) {
+    await s3().send(new DeleteObjectCommand({ Bucket: bucket(), Key: key }));
 }

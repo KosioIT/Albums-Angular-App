@@ -8,7 +8,8 @@ export const ARCHIVE_RE = /\.(zip|rar|7z)$/i;
 export const TRACKS_PREFIX = 'tracks/';
 
 // Only the album archives, not the single songs next to them
-export const isAlbumArchive = (key) => ARCHIVE_RE.test(key) && !key.startsWith(TRACKS_PREFIX);
+// Packed album downloads (see albumZipService) are under "downloads/"
+export const isAlbumArchive = (key) => ARCHIVE_RE.test(key) && !key.startsWith(TRACKS_PREFIX) && !key.startsWith('downloads/');
 
 // "kill_'em_all.zip" -> "kill-em-all"; "/" separates folders in the path
 export const pathSlug = (path) => makeSlug(path.replace(ARCHIVE_RE, '').replace(/[_/]+/g, ' '));

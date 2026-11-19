@@ -301,6 +301,18 @@ input[type='range'] {
   cursor: pointer;
 }
 
+.add svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  vertical-align: middle;
+}
+
+.add:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
 .add:hover,
 .add.on {
   border-color: var(--accent);

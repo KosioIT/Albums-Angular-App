@@ -9,6 +9,10 @@
 
   Each song goes to "tracks/<album id>/<file name>" and is linked to the Deezer track with the same
   title (album.fullTracks). Files that match no song, or several, are listed and left out.
+  The biggest image in the archive becomes the album's cover file (tracks/<album id>/cover.jpg),
+  which goes into the album download; the download itself is packed from these files when
+  someone first downloads the album (see src/services/albumZipService.js).
+  After that the original archive is no longer needed: "npm run r2:cleanup" removes it.
   Run it after "npm run r2:upload" and "npm run seed" (the albums need their downloadKey).
 */
 import fs from 'node:fs';
@@ -56,12 +60,14 @@ const readEntries = (zip) =>
 const entryStream = (zip, entry) =>
     new Promise((resolve, reject) => zip.openReadStream(entry, (err, stream) => (err ? reject(err) : resolve(stream))));
 
-// Songs in the archive, without folders and the "__MACOSX" / "._x.mp3" files macOS adds
-const isSong = (entry) => {
+// Real files of the archive, without folders and the "__MACOSX" / "._x.mp3" files macOS adds
+const isFile = (entry) => {
     const name = entry.fileName;
-    const base = name.split('/').pop();
-    return !name.endsWith('/') && !name.startsWith('__MACOSX/') && !base.startsWith('._') && AUDIO_RE.test(base);
+    return !name.endsWith('/') && !name.startsWith('__MACOSX/') && !name.split('/').pop().startsWith('._');
 };
+const isSong = (entry) => isFile(entry) && AUDIO_RE.test(entry.fileName);
+const IMAGE_RE = /\.(jpe?g|png|webp)$/i;
+const IMAGE_TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
 
 async function processAlbum(album, ref, tmpDir) {
     const label = `${album.title} (${album.artist})`;
@@ -83,7 +89,11 @@ async function processAlbum(album, ref, tmpDir) {
 
     const zip = await openZip(zipFile);
     try {
-        const songs = (await readEntries(zip)).filter(isSong);
+        const entries = await readEntries(zip);
+        const songs = entries.filter(isSong);
+        const cover = entries
+            .filter((e) => isFile(e) && IMAGE_RE.test(e.fileName))
+            .sort((a, b) => b.uncompressedSize - a.uncompressedSize)[0];
         const files = songs.map((entry) => ({ name: entry.fileName.split('/').pop(), entry }));
         const { matched, unmatched, missing } = matchTrackFiles(files, previews.tracks, album.artist);
 
@@ -98,22 +108,34 @@ async function processAlbum(album, ref, tmpDir) {
 
         const prefix = `${TRACKS_PREFIX}${album.id}/`;
         const existing = new Map((await listObjects(prefix)).map((o) => [o.key, o.size]));
+        const upload = async (entry, key, type) => {
+            if (existing.get(key) !== entry.uncompressedSize) await uploadStream(key, await entryStream(zip, entry), type);
+        };
+
         const fullTracks = [];
         for (const { file, track } of matched) {
             const key = prefix + file.name;
-            const size = file.entry.uncompressedSize;
-            if (existing.get(key) !== size) {
-                await uploadStream(key, await entryStream(zip, file.entry), audioType(file.name));
-            }
-            fullTracks.push({ trackId: track.id, title: track.title, key, size });
+            await upload(file.entry, key, audioType(file.name));
+            // position: the song's place on the album, so the download is numbered in album order
+            const position = previews.tracks.findIndex((t) => t.id === track.id);
+            fullTracks.push({ trackId: track.id, title: track.title, key, size: file.entry.uncompressedSize, position });
+        }
+        fullTracks.sort((a, b) => a.position - b.position);
+
+        let coverKey = null;
+        if (cover) {
+            const ext = cover.fileName.split('.').pop().toLowerCase().replace('jpeg', 'jpg');
+            coverKey = `${prefix}cover.${ext}`;
+            await upload(cover, coverKey, IMAGE_TYPES[ext]);
         }
 
         await ref.update({
             fullTracks,
+            coverKey,
             deezerAlbumId: previews.deezerAlbumId,
             updated_at: new Date().toISOString(),
         });
-        console.log(`    ✔ ${fullTracks.length} song(s) saved`);
+        console.log(`    ✔ ${fullTracks.length} song(s) saved${coverKey ? ', with the cover' : ''}`);
         return 'done';
     } finally {
         zip.close();

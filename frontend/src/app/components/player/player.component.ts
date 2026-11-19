@@ -6,6 +6,7 @@ import { filter } from 'rxjs';
 import { PlayerService } from '../../services/player.service';
 import { AuthService } from '../../services/auth.service';
 import { PlaylistService } from '../../services/playlist.service';
+import { AlbumService } from '../../services/album.service';
 import { CustomToastrService } from '../../services/custom-toastr.service';
 import { Playlist } from '../../models/playlist';
 import { PreviewTrack } from '../../models/preview-track';
@@ -27,6 +28,7 @@ export class PlayerComponent {
   readonly player = inject(PlayerService);
   readonly auth = inject(AuthService);
   private playlists = inject(PlaylistService);
+  private albums = inject(AlbumService);
   private toastr = inject(CustomToastrService);
   readonly formatTime = formatTime;
   showTracks = false;
@@ -109,6 +111,25 @@ export class PlayerComponent {
 
   pick(index: number): void {
     this.player.playTrack(index);
+  }
+
+  // One song as a file (the link answers with "attachment": the page and the music keep going)
+  downloading: number | null = null;
+  downloadTrack(track: PreviewTrack, index: number): void {
+    if (!track.albumId || this.downloading !== null) return;
+    this.downloading = index;
+    this.albums.downloadTrack(track.albumId, track.id).subscribe({
+      next: ({ url }) => {
+        this.downloading = null;
+        const a = document.createElement('a'); // not location.assign: the player must not be interrupted
+        a.href = url;
+        a.click();
+      },
+      error: (err: Error) => {
+        this.downloading = null;
+        this.toastr.showToast(err.message, 'error', 'Download failed');
+      },
+    });
   }
 
   // Space plays / pauses, unless the user is typing somewhere

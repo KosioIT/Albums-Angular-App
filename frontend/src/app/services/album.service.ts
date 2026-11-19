@@ -63,9 +63,15 @@ export class AlbumService {
     return (album.listens ?? 0) + (album.guestListens ?? 0);
   }
 
-  // Counts the download and returns a one-minute link to the archive (served by Cloudflare R2)
+  // Counts the download and returns a one-minute link to the album's zip (served by Cloudflare R2).
+  // The first download of an album packs its songs, which can take a while: a longer timeout
   download(id: string): Observable<{ url: string; counted: boolean }> {
-    return apiBody(api.post(`/albums/${this.encode(id)}/download`));
+    return apiBody(api.post(`/albums/${this.encode(id)}/download`, null, { timeout: 5 * 60 * 1000 }));
+  }
+
+  // One-minute link to one song (trackId = the Deezer track id from the previews)
+  downloadTrack(albumId: string, trackId: number): Observable<{ url: string }> {
+    return apiBody(api.post(`/albums/${this.encode(albumId)}/tracks/${trackId}/download`));
   }
 
   // 30-second Deezer previews for the built-in player (public)

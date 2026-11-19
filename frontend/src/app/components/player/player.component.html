@@ -24,6 +24,18 @@
                 </span>
                 <span class="len">{{ formatTime(track.duration) }}</span>
               </button>
+              @if (auth.isLoggedIn() && track.albumId && track.fullUrl) {
+                <button
+                  type="button"
+                  class="add"
+                  title="Download this song"
+                  [attr.aria-label]="'Download ' + track.title"
+                  [disabled]="downloading === $index"
+                  (click)="downloadTrack(track, $index)"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4h2v8.2l3.3-3.3 1.4 1.4-5.7 5.7-5.7-5.7 1.4-1.4 3.3 3.3zM5 18h14v2H5z" /></svg>
+                </button>
+              }
               @if (auth.isLoggedIn() && track.albumId) {
                 <button
                   type="button"

@@ -118,7 +118,13 @@ export class AlbumsListComponent implements OnInit {
   // The link answers with "Content-Disposition: attachment": the page stays, the browser saves the file
   download(album: Album): void {
     if (!this.requireLogin('download')) return;
-    this.run(album, 'download', this.albumService.download(album.id), ({ url, counted }) => {
+    // the first download of an album is packed on the server: say so when it is not instant
+    const slow = setTimeout(
+      () => this.toastr.showToast('Packing the album, this can take a moment…', 'info', 'Preparing the download'),
+      1500,
+    );
+    const request = this.albumService.download(album.id).pipe(finalize(() => clearTimeout(slow)));
+    this.run(album, 'download', request, ({ url, counted }) => {
       window.location.assign(url);
       if (counted) album.downloads = (album.downloads ?? 0) + 1;
     });

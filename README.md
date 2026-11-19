@@ -106,6 +106,22 @@ npm run r2:tracks
 uploads the songs of every album that has none yet (`--album=<id>` for one album, `--force` to redo
 them). Files that match no song are listed and skipped; songs without a file stay previews.
 
+The biggest image in the archive is kept as the album's cover (`tracks/<album id>/cover.jpg`).
+
+### How album downloads are made
+
+Album downloads are packed from these files: the first download of an album makes
+`downloads/<album id>.zip` in R2 (songs numbered in album order, plus the cover), later downloads get a
+link to that file. When the songs or the cover change, the next download packs the album again.
+Signed-in users can also download single songs from the player's track list.
+
+Once an album's songs are stored, its original archive is just a second copy:
+
+```bash
+npm run r2:cleanup
+```
+lists those archives and how much space they take; `npm run r2:cleanup -- --delete` removes them.
+
 ## MongoDB Setup
 This project uses MongoDB as its database. To run it locally:
 

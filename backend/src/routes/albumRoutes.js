@@ -2,7 +2,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { validateAlbumCreate, validateAlbumUpdate } from '../validators/albumsValidators.js';
 import { protect, admin, optionalAuth } from '../middleware/authMiddleware.js';
-import { getAllAlbums, filterAlbums, createAlbum, updateAlbum, deleteAlbum, downloadAlbum, getPreviews } from '../controllers/albumController.js';
+import { getAllAlbums, filterAlbums, createAlbum, updateAlbum, deleteAlbum, downloadAlbum, downloadTrack, getPreviews } from '../controllers/albumController.js';
 import { listenToAlbum, toggleLike } from '../controllers/userController.js';
 
 const router = express.Router();
@@ -23,6 +23,7 @@ const previewsLimiter = rateLimit({
 
 /* ======== Registered only users routes ======== */
 router.post("/:id/download", protect, downloadAlbum);
+router.post("/:id/tracks/:trackId/download", protect, downloadTrack);
 router.post('/:id/like', protect, toggleLike);
 
 /* ======== All users routes ======== */

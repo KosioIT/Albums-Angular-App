@@ -10,7 +10,8 @@
     "seed:downloads": "node db/link-downloads.js",
     "seed": "node db/seed-albums.js --force --prune && node db/link-downloads.js --write --optional",
     "r2:upload": "node db/upload-to-r2.js",
-    "r2:tracks": "node db/extract-tracks.js"
+    "r2:tracks": "node db/extract-tracks.js",
+    "r2:cleanup": "node db/cleanup-archives.js"
   },
   "keywords": [],
   "author": "",
@@ -39,7 +40,8 @@
     "openai": "^6.49.0",
     "slugify": "^1.6.9",
     "url": "^0.11.4",
-    "yauzl": "^3.4.0"
+    "yauzl": "^3.4.0",
+    "yazl": "^3.3.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

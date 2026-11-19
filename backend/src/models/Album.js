@@ -47,12 +47,17 @@ export class Album extends BaseModel {
     // Whole songs taken out of the archive ("npm run r2:tracks"): [{ trackId, title, key, size }],
     // trackId is the Deezer track. Logged-in users get links to them with the previews.
     this.fullTracks = data.fullTracks || [];
+    this.coverKey = data.coverKey || null; // the cover from the archive, packed into the download
+
+    // The zip packed from the songs: { key, fingerprint, size, packed_at } (see albumZipService)
+    this.zipCache = data.zipCache || null;
   }
 
   // Public representation: hides where the archive and the songs are stored
   toPublic() {
-    const { downloadKey, fullTracks, ...safe } = this;
-    return { ...safe, hasDownload: !!downloadKey, hasFullTracks: fullTracks.length > 0 };
+    const { downloadKey, fullTracks, coverKey, zipCache, ...safe } = this;
+    const hasFullTracks = fullTracks.length > 0;
+    return { ...safe, hasDownload: hasFullTracks || !!downloadKey, hasFullTracks };
   }
 
   /**
