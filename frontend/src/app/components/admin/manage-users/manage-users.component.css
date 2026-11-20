@@ -1,0 +1,314 @@
+.users-page {
+  max-width: 1100px;
+  margin: 40px auto 120px; /* room for the player bar */
+  padding: 0 16px;
+  color: white;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+h2 {
+  color: gold;
+  font-size: 32px;
+  margin: 0;
+}
+
+.refresh {
+  border: 2px solid lime;
+  border-radius: 20px;
+  padding: 2px 14px;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.refresh:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.note {
+  text-align: center;
+  font-size: 20px;
+  color: #ddd;
+}
+
+.note.error {
+  color: yellow;
+}
+
+/* Search, role filter, sort */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.search {
+  flex: 1 1 240px;
+  min-width: 0;
+  padding: 6px 12px;
+  border: 1px solid #666;
+  border-radius: 20px;
+  background: #222;
+  color: white;
+  font-size: 16px;
+}
+
+.search:focus,
+.sort select:focus {
+  outline: 2px solid lime;
+  outline-offset: 1px;
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+}
+
+.chips button {
+  border: 1px solid #777;
+  border-radius: 16px;
+  padding: 3px 12px;
+  background: transparent;
+  color: #ddd;
+  font-size: 15px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chips button.on {
+  border-color: lime;
+  background: green;
+  color: white;
+}
+
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  color: #ccc;
+}
+
+.sort select {
+  padding: 4px 8px;
+  border: 1px solid #666;
+  border-radius: 8px;
+  background: #222;
+  color: white;
+  font-size: 15px;
+}
+
+/* One user */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.user {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) auto minmax(140px, 0.8fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.6);
+  border-left: 4px solid transparent;
+}
+
+.user.me {
+  border-left-color: gold;
+}
+
+.user[aria-busy='true'] {
+  opacity: 0.6;
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #0d6efd;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font-size: 19px;
+  font-weight: bold;
+}
+
+.email,
+.joined {
+  color: #bbb;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.joined {
+  color: #999;
+  font-size: 13px;
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: normal;
+  vertical-align: middle;
+}
+
+.badge.admin {
+  background: gold;
+  color: black;
+}
+
+.badge.me {
+  border: 1px solid #aaa;
+  color: #ddd;
+}
+
+.stats {
+  display: flex;
+  gap: 14px;
+  margin: 0;
+}
+
+.stats div {
+  text-align: center;
+}
+
+.stats dt {
+  color: #999;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.stats dd {
+  margin: 0;
+  font-size: 17px;
+}
+
+.seen {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+.online {
+  color: lime;
+}
+
+.muted {
+  color: #999;
+}
+
+.small {
+  font-size: 13px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.act {
+  border: 1px solid #888;
+  border-radius: 16px;
+  padding: 3px 12px;
+  background: transparent;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.act:hover:not(:disabled) {
+  border-color: lime;
+}
+
+.act.danger {
+  border-color: #c33;
+  color: #ff8a8a;
+}
+
+.act.danger:hover:not(:disabled) {
+  background: #c33;
+  color: white;
+}
+
+.act:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Narrower screens: the parts go under each other */
+@media (max-width: 900px) {
+  .user {
+    grid-template-columns: 1fr auto;
+  }
+
+  .stats {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+  }
+
+  .seen {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 560px) {
+  .user {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    justify-content: flex-start;
+  }
+
+  .stats {
+    gap: 6px;
+  }
+
+  .sort {
+    flex: 1;
+  }
+}

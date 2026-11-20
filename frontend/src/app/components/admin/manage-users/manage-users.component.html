@@ -1,1 +1,109 @@
-<p>manage-users works!</p>
+<div class="users-page">
+  <div class="head">
+    <h2>Users</h2>
+    <button type="button" class="refresh" (click)="load()" [disabled]="loading()">
+      {{ loading() ? 'Loading...' : 'Refresh' }}
+    </button>
+  </div>
+
+  @if (error()) {
+    <p class="note error">{{ error() }}</p>
+  }
+
+  @if (list()) {
+    <div class="toolbar">
+      <input
+        type="search"
+        class="search"
+        placeholder="Search by name or email"
+        aria-label="Search users"
+        [value]="query()"
+        (input)="onQuery($event)"
+      />
+
+      <div class="chips" role="group" aria-label="Role">
+        <button type="button" [class.on]="role() === 'all'" (click)="role.set('all')">All {{ counts().all }}</button>
+        <button type="button" [class.on]="role() === 'admin'" (click)="role.set('admin')">Admins {{ counts().admin }}</button>
+        <button type="button" [class.on]="role() === 'user'" (click)="role.set('user')">Users {{ counts().user }}</button>
+      </div>
+
+      <label class="sort">
+        Sort
+        <select (change)="onSort($event)">
+          <option value="newest" [selected]="sortBy() === 'newest'">Newest first</option>
+          <option value="name" [selected]="sortBy() === 'name'">Name</option>
+          <option value="active" [selected]="sortBy() === 'active'">Most active</option>
+          <option value="seen" [selected]="sortBy() === 'seen'">Last seen</option>
+        </select>
+      </label>
+    </div>
+
+    @if (shown().length === 0) {
+      <p class="note">No users match.</p>
+    }
+
+    <div class="list">
+      @for (u of shown(); track u.id) {
+        <article class="user" [class.me]="isMe(u)" [attr.aria-busy]="busy() === u.id">
+          <div class="who">
+            <div class="avatar" aria-hidden="true">{{ (u.username || u.email)[0].toUpperCase() }}</div>
+            <div class="names">
+              <span class="name">
+                {{ u.username }}
+                @if (u.role === 'admin') {
+                  <span class="badge admin">Admin</span>
+                }
+                @if (isMe(u)) {
+                  <span class="badge me">You</span>
+                }
+              </span>
+              <span class="email">{{ u.email }}</span>
+              @if (u.created_at) {
+                <span class="joined" [title]="u.created_at | date: 'medium'">Joined {{ u.created_at | date: 'd MMM y' }}</span>
+              }
+            </div>
+          </div>
+
+          <dl class="stats">
+            <div><dt>Listens</dt><dd>{{ u.stats.listens | number }}</dd></div>
+            <div><dt>Downloads</dt><dd>{{ u.stats.downloads | number }}</dd></div>
+            <div><dt>Likes</dt><dd>{{ u.stats.likedCount | number }}</dd></div>
+            <div><dt>Favorites</dt><dd>{{ u.stats.favoritesCount | number }}</dd></div>
+            <div><dt>Playlists</dt><dd>{{ u.stats.playlists | number }}</dd></div>
+          </dl>
+
+          <div class="seen">
+            @if (u.stats.activeSessions) {
+              <span class="online">Signed in on {{ u.stats.activeSessions }} device{{ u.stats.activeSessions === 1 ? '' : 's' }}</span>
+              <span class="muted" [title]="u.stats.lastSeen | date: 'medium'">active {{ timeAgo(u.stats.lastSeen) }}</span>
+            } @else {
+              <span class="muted">Signed out</span>
+            }
+          </div>
+
+          <div class="actions">
+            @if (isMe(u)) {
+              <span class="muted small">Manage your account from the account menu</span>
+            } @else {
+              <button type="button" class="act" [disabled]="busy() === u.id" (click)="toggleAdmin(u)">
+                {{ u.role === 'admin' ? 'Remove admin' : 'Make admin' }}
+              </button>
+              <button
+                type="button"
+                class="act"
+                [disabled]="busy() === u.id || !u.stats.activeSessions"
+                [title]="u.stats.activeSessions ? 'Sign out on every device' : 'Not signed in anywhere'"
+                (click)="signOut(u)"
+              >
+                Sign out
+              </button>
+              <button type="button" class="act danger" [disabled]="busy() === u.id" (click)="remove(u)">Delete</button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  } @else if (!error()) {
+    <p class="note">Loading…</p>
+  }
+</div>

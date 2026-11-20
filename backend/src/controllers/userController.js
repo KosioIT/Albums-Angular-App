@@ -4,7 +4,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { User } from "../models/User.js";
 import { Album } from "../models/Album.js";
 import { validateFavoriteOperation } from "../utils/favoritesUtils.js";
-import { getUserBy, checkExistingCredential } from "../services/userService.js";
+import { getUserBy, checkExistingCredential, listUsersForAdmin, setUserRole } from "../services/userService.js";
 import { recordListen, recordGuestListen, getActivitySummary } from '../services/activityService.js';
 import { checkExistingAlbum } from "../services/albumService.js";
 import { sendWelcomeEmail } from '../utils/email/sendWelcomeEmail.js';
@@ -18,10 +18,10 @@ const ALBUMS = db.collection("albums");
 
 /* ----- USER CRUD FUNCTIONS ----- */
 
+// GET /api/users (admins): every user with their activity and sessions (see listUsersForAdmin)
 export async function getAllUsers(req, res) {
   try {
-    const usersSnapshot = await USERS.get();
-    const users = usersSnapshot.docs.map(doc => new User(doc.data(), doc.id).toPublic());
+    const users = await listUsersForAdmin();
     return res.status(200).json({ success: true, data: users, message: "Users fetched successfully!" });
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -152,6 +152,40 @@ export async function deleteUser(req, res) {
   } catch (err) {
     console.error("Delete user error:", err);
     return res.status(500).json({ success: false, message: "Could not delete user!" });
+  }
+}
+
+
+// PATCH /api/users/:email/role { role: "user" | "admin" } (admins, not on themselves)
+export async function changeUserRole(req, res) {
+  try {
+    const email = String(req.params.email || "").trim().toLowerCase();
+    const result = await setUserRole(req.user.id, email, req.body?.role);
+    if (result.status !== 200) {
+      return res.status(result.status).json({ success: false, message: result.message });
+    }
+    return res.json({ success: true, data: { role: result.role }, message: `${email} is now ${result.role === "admin" ? "an admin" : "a regular user"}.` });
+  } catch (err) {
+    console.error("Change role error:", err);
+    return res.status(500).json({ success: false, message: "Could not change the role!" });
+  }
+}
+
+// POST /api/users/:email/sessions/revoke (admins): signs the user out on every device
+export async function revokeUserSessions(req, res) {
+  try {
+    const email = String(req.params.email || "").trim().toLowerCase();
+    if (email === req.user.id) {
+      return res.status(400).json({ success: false, message: "Use \"Sign out of all devices\" in your account menu for your own sessions." });
+    }
+    if (!(await USERS.doc(email).get()).exists) {
+      return res.status(404).json({ success: false, message: "User not found!" });
+    }
+    await revokeAllSessions(email);
+    return res.json({ success: true, message: `${email} was signed out on every device.` });
+  } catch (err) {
+    console.error("Revoke sessions error:", err);
+    return res.status(500).json({ success: false, message: "Could not sign the user out!" });
   }
 }
 

@@ -23,3 +23,21 @@ export interface UserSession {
   lastUsedAt: string;
   current: boolean;
 }
+
+// A row of the admin "Users" page (GET /api/users)
+export interface AdminUser {
+  id: string; // the email
+  username: string;
+  email: string;
+  role: 'user' | 'admin';
+  created_at?: string;
+  stats: {
+    favoritesCount: number;
+    likedCount: number;
+    listens: number;
+    downloads: number;
+    playlists: number;
+    activeSessions: number; // devices the user is signed in on
+    lastSeen: string | null; // last use of any of those sessions
+  };
+}
