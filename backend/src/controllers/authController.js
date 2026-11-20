@@ -8,6 +8,7 @@ import { createSession, deleteSession, deleteSessionByToken, revokeAllSessions, 
 import { setRefreshCookie, clearRefreshCookie, readRefreshCookie } from "../utils/refreshCookie.js";
 import { sendCodeViaEmail } from "../utils/email/sendCodeViaEmail.js";
 import { sendPasswordChangedEmail } from "../utils/email/sendPasswordChangedEmail.js";
+import { bannedResponse } from "../utils/ban.js";
 
 const USERS = db.collection("users");
 
@@ -25,6 +26,12 @@ export async function loginUser(req, res) {
       return res
         .status(400)
         .json({ success: false, message: "Wrong email or password!" });
+    }
+
+    // Checked after the password, so the ban (and its reason) is shown only to the account owner
+    const ban = user.activeBan();
+    if (ban) {
+      return res.status(403).json(bannedResponse(ban));
     }
 
     // Logging in again replaces this browser's session instead of piling up a second one
@@ -104,6 +111,11 @@ export async function resetPassword(req, res) {
     const error = await getResetCodeError(user, code);
     if (error) {
       return res.status(400).json({ success: false, message: error });
+    }
+    // A new password would sign a banned user in again
+    const ban = user.activeBan();
+    if (ban) {
+      return res.status(403).json(bannedResponse(ban));
     }
 
     await USERS.doc(user.id).update({

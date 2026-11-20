@@ -4,7 +4,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { User } from "../models/User.js";
 import { Album } from "../models/Album.js";
 import { validateFavoriteOperation } from "../utils/favoritesUtils.js";
-import { getUserBy, checkExistingCredential, listUsersForAdmin, setUserRole } from "../services/userService.js";
+import { getUserBy, checkExistingCredential, listUsersForAdmin, setUserRole, banUser, unbanUser } from "../services/userService.js";
 import { recordListen, recordGuestListen, getActivitySummary } from '../services/activityService.js';
 import { checkExistingAlbum } from "../services/albumService.js";
 import { sendWelcomeEmail } from '../utils/email/sendWelcomeEmail.js';
@@ -186,6 +186,38 @@ export async function revokeUserSessions(req, res) {
   } catch (err) {
     console.error("Revoke sessions error:", err);
     return res.status(500).json({ success: false, message: "Could not sign the user out!" });
+  }
+}
+
+
+// POST /api/users/:email/ban { reason, days: 1 | 7 | 30 | null } (admins)
+export async function banUserHandler(req, res) {
+  try {
+    const email = String(req.params.email || "").trim().toLowerCase();
+    const days = req.body?.days ?? null;
+    const result = await banUser(req.user, email, { reason: req.body?.reason, days });
+    if (result.status !== 200) {
+      return res.status(result.status).json({ success: false, message: result.message });
+    }
+    return res.json({ success: true, data: { ban: result.ban }, message: `${email} is banned.` });
+  } catch (err) {
+    console.error("Ban error:", err);
+    return res.status(500).json({ success: false, message: "Could not ban the user!" });
+  }
+}
+
+// DELETE /api/users/:email/ban (admins)
+export async function unbanUserHandler(req, res) {
+  try {
+    const email = String(req.params.email || "").trim().toLowerCase();
+    const result = await unbanUser(email);
+    if (result.status !== 200) {
+      return res.status(result.status).json({ success: false, message: result.message });
+    }
+    return res.json({ success: true, message: `${email} is no longer banned.` });
+  } catch (err) {
+    console.error("Unban error:", err);
+    return res.status(500).json({ success: false, message: "Could not lift the ban!" });
   }
 }
 

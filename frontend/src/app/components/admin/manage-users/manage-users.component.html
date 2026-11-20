@@ -25,6 +25,7 @@
         <button type="button" [class.on]="role() === 'all'" (click)="role.set('all')">All {{ counts().all }}</button>
         <button type="button" [class.on]="role() === 'admin'" (click)="role.set('admin')">Admins {{ counts().admin }}</button>
         <button type="button" [class.on]="role() === 'user'" (click)="role.set('user')">Users {{ counts().user }}</button>
+        <button type="button" [class.on]="role() === 'banned'" (click)="role.set('banned')">Banned {{ counts().banned }}</button>
       </div>
 
       <label class="sort">
@@ -44,7 +45,7 @@
 
     <div class="list">
       @for (u of shown(); track u.id) {
-        <article class="user" [class.me]="isMe(u)" [attr.aria-busy]="busy() === u.id">
+        <article class="user" [class.me]="isMe(u)" [class.banned]="!!u.ban" [attr.aria-busy]="busy() === u.id">
           <div class="who">
             <div class="avatar" aria-hidden="true">{{ (u.username || u.email)[0].toUpperCase() }}</div>
             <div class="names">
@@ -52,6 +53,9 @@
                 {{ u.username }}
                 @if (u.role === 'admin') {
                   <span class="badge admin">Admin</span>
+                }
+                @if (u.ban) {
+                  <span class="badge banned">Banned</span>
                 }
                 @if (isMe(u)) {
                   <span class="badge me">You</span>
@@ -73,7 +77,12 @@
           </dl>
 
           <div class="seen">
-            @if (u.stats.activeSessions) {
+            @if (u.ban) {
+              <span class="ban-until">
+                {{ u.ban.until ? 'Banned until ' + (u.ban.until | date: 'd MMM y, HH:mm') : 'Banned permanently' }}
+              </span>
+              <span class="muted" [title]="'By ' + u.ban.by + ', ' + (u.ban.at | date: 'medium')">by {{ u.ban.by }}</span>
+            } @else if (u.stats.activeSessions) {
               <span class="online">Signed in on {{ u.stats.activeSessions }} device{{ u.stats.activeSessions === 1 ? '' : 's' }}</span>
               <span class="muted" [title]="u.stats.lastSeen | date: 'medium'">active {{ timeAgo(u.stats.lastSeen) }}</span>
             } @else {
@@ -84,6 +93,9 @@
           <div class="actions">
             @if (isMe(u)) {
               <span class="muted small">Manage your account from the account menu</span>
+            } @else if (u.ban) {
+              <button type="button" class="act" [disabled]="busy() === u.id" (click)="unban(u)">Unban</button>
+              <button type="button" class="act danger" [disabled]="busy() === u.id" (click)="remove(u)">Delete</button>
             } @else {
               <button type="button" class="act" [disabled]="busy() === u.id" (click)="toggleAdmin(u)">
                 {{ u.role === 'admin' ? 'Remove admin' : 'Make admin' }}
@@ -97,9 +109,52 @@
               >
                 Sign out
               </button>
+              <button
+                type="button"
+                class="act warn"
+                [class.on]="banFor() === u.id"
+                [disabled]="busy() === u.id || u.role === 'admin'"
+                [title]="u.role === 'admin' ? 'Remove the admin rights first' : 'Ban with a reason'"
+                [attr.aria-expanded]="banFor() === u.id"
+                (click)="banFor() === u.id ? closeBan() : openBan(u)"
+              >
+                Ban
+              </button>
               <button type="button" class="act danger" [disabled]="busy() === u.id" (click)="remove(u)">Delete</button>
             }
           </div>
+
+          @if (u.ban) {
+            <p class="ban-reason"><strong>Reason:</strong> {{ u.ban.reason }}</p>
+          }
+
+          @if (banFor() === u.id && !u.ban) {
+            <form class="ban-form" (submit)="$event.preventDefault(); ban(u)">
+              <label class="field">
+                Reason <span class="muted small">(the user sees it when signing in)</span>
+                <textarea
+                  rows="2"
+                  maxlength="300"
+                  placeholder="e.g. Spam in playlist names"
+                  [value]="banReason()"
+                  (input)="onBanReason($event)"
+                ></textarea>
+                <span class="muted small">{{ banReason().trim().length }}/300</span>
+              </label>
+              <label class="field duration">
+                For
+                <select (change)="onBanDays($event)">
+                  @for (d of banDurations; track d.value) {
+                    <option [value]="d.value" [selected]="banDays() === d.value">{{ d.label }}</option>
+                  }
+                </select>
+              </label>
+              <div class="ban-actions">
+                <button type="button" class="act" (click)="closeBan()">Cancel</button>
+                <button type="submit" class="act danger solid" [disabled]="!banReasonOk() || busy() === u.id">Ban {{ u.username }}</button>
+              </div>
+            </form>
+          }
         </article>
       }
     </div>

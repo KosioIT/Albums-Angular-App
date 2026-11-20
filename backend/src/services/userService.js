@@ -1,5 +1,7 @@
 import { db } from '../config/firebase/firebase.js';
+import { FieldValue } from 'firebase-admin/firestore';
 import { User } from '../models/User.js';
+import { revokeAllSessions } from './sessionService.js';
 
 const USERS = db.collection('users');
 
@@ -83,6 +85,7 @@ export async function listUsersForAdmin() {
       email: user.email,
       role: user.role,
       created_at: user.created_at,
+      ban: user.ban, // only one in force (see User.toPublic)
       stats: {
         ...user.stats,
         listens: a.listens,
@@ -106,7 +109,49 @@ export async function setUserRole(adminId, email, role) {
   const snap = await ref.get();
   if (!snap.exists) return { status: 404, message: 'User not found!' };
   if (snap.data().role === role) return { status: 200, role };
+  if (role === 'admin' && new User(snap.data(), snap.id).activeBan()) {
+    return { status: 400, message: 'Unban the user before making them an admin.' };
+  }
 
   await ref.update({ role, updated_at: new Date().toISOString() });
   return { status: 200, role }; // takes effect on the user's next request: the role is read from the database
+}
+
+export const BAN_DAYS = [1, 7, 30]; // or null: permanent
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/*
+  Bans a user: they are signed out everywhere and cannot sign in (they are told the reason) until
+  the ban runs out or an admin lifts it. Admins cannot ban themselves or another admin (remove the
+  rights first). days: 1, 7, 30 or null for a permanent ban.
+*/
+export async function banUser(admin, email, { reason, days } = {}) {
+  const text = typeof reason === 'string' ? reason.trim().replace(/\s+/g, ' ') : '';
+  if (text.length < 3 || text.length > 300) return { status: 400, message: 'Give a reason (3 to 300 characters).' };
+  if (days !== null && !BAN_DAYS.includes(days)) return { status: 400, message: 'Ban for 1, 7 or 30 days, or permanently.' };
+  if (email === admin.id) return { status: 400, message: 'You cannot ban yourself.' };
+
+  const ref = USERS.doc(email);
+  const snap = await ref.get();
+  if (!snap.exists) return { status: 404, message: 'User not found!' };
+  if (snap.data().role === 'admin') return { status: 400, message: 'Remove their admin rights before banning them.' };
+
+  const now = new Date();
+  const ban = {
+    reason: text,
+    until: days === null ? null : new Date(now.getTime() + days * DAY_MS).toISOString(),
+    by: admin.id,
+    at: now.toISOString(),
+  };
+  await ref.update({ ban, updated_at: now.toISOString() });
+  await revokeAllSessions(email); // out right away, on every device
+  return { status: 200, ban };
+}
+
+export async function unbanUser(email) {
+  const ref = USERS.doc(email);
+  const snap = await ref.get();
+  if (!snap.exists) return { status: 404, message: 'User not found!' };
+  await ref.update({ ban: FieldValue.delete(), updated_at: new Date().toISOString() });
+  return { status: 200 };
 }

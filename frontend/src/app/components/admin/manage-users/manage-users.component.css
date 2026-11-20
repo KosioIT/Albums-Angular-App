@@ -279,6 +279,92 @@ h2 {
   cursor: default;
 }
 
+/* Bans */
+.user.banned {
+  border-left-color: #c33;
+}
+
+.badge.banned {
+  background: #c33;
+  color: white;
+}
+
+.ban-until {
+  color: #ff8a8a;
+}
+
+.ban-reason {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(204, 51, 51, 0.15);
+  color: #eee;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.act.warn {
+  border-color: #d98a00;
+  color: #ffc04d;
+}
+
+.act.warn:hover:not(:disabled),
+.act.warn.on {
+  background: #d98a00;
+  color: black;
+}
+
+.act.danger.solid {
+  background: #c33;
+  color: white;
+}
+
+.ban-form {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 15px;
+}
+
+.ban-form .field:first-child {
+  flex: 1 1 320px;
+}
+
+.ban-form textarea,
+.ban-form select {
+  padding: 6px 10px;
+  border: 1px solid #666;
+  border-radius: 8px;
+  background: #222;
+  color: white;
+  font-size: 15px;
+  resize: vertical;
+}
+
+.ban-form textarea:focus,
+.ban-form select:focus {
+  outline: 2px solid #d98a00;
+  outline-offset: 1px;
+}
+
+.ban-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
 /* Narrower screens: the parts go under each other */
 @media (max-width: 900px) {
   .user {

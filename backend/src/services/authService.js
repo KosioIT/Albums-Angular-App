@@ -27,12 +27,12 @@ export async function refreshTokens(refreshToken) {
   if (!rotated) return null;
 
   const doc = await USERS.doc(rotated.userId).get();
-  if (!doc.exists) {
+  const user = doc.exists ? new User(doc.data(), doc.id) : null;
+  if (!user || user.activeBan()) { // deleted or banned meanwhile
     await deleteSession(rotated.sessionId);
     return null;
   }
 
-  const user = new User(doc.data(), doc.id);
   return {
     user,
     refreshToken: rotated.refreshToken,

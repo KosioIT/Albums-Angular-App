@@ -23,6 +23,9 @@ export class User extends BaseModel {
     this.resetCodeExpiry = data.resetCodeExpiry || null;
     this.resetCodeAttempts = data.resetCodeAttempts || 0;
 
+    // Ban set by an admin: { reason, until (ISO date, null = permanent), by (admin email), at }
+    this.ban = data.ban || null;
+
     // Timestamps
     this.created_at = data.created_at || new Date().toISOString();
     this.updated_at = data.updated_at || null;
@@ -41,14 +44,22 @@ export class User extends BaseModel {
 
   // Public representation without sensitive fields, plus simple stats
   toPublic() {
-    const { password, resetCode, resetCodeExpiry, resetCodeAttempts, ...safe } = this;
+    const { password, resetCode, resetCodeExpiry, resetCodeAttempts, ban, ...safe } = this;
     return {
       ...safe,
+      ban: this.activeBan(), // only a ban in force
       stats: {
         favoritesCount: this.favorites.length,
         likedCount: this.likedAlbums.length,
       },
     };
+  }
+
+  // The ban in force, or null (none, or a temporary one that has run out)
+  activeBan(now = Date.now()) {
+    const ban = this.ban;
+    if (!ban) return null;
+    return ban.until && Date.parse(ban.until) <= now ? null : ban;
   }
 
   getFavorites() {

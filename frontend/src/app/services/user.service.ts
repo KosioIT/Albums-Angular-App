@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AdminUser, UserProfile as User } from '../models/user';
+import { AdminUser, BanDays, UserBan, UserProfile as User } from '../models/user';
 import { api } from '../core/api';
 import { apiBody, apiRequest } from '../core/api-request';
 
@@ -29,6 +29,15 @@ export class UserService {
   // Signs the user out on every device
   revokeSessions(email: string): Observable<{ success: boolean; message: string }> {
     return apiBody(api.post(`/users/${encodeURIComponent(email)}/sessions/revoke`));
+  }
+
+  // Signs the user out everywhere and blocks signing in (they see the reason) until it runs out or is lifted
+  ban(email: string, reason: string, days: BanDays): Observable<{ ban: UserBan }> {
+    return apiRequest(api.post(`/users/${encodeURIComponent(email)}/ban`, { reason, days }));
+  }
+
+  unban(email: string): Observable<{ success: boolean; message: string }> {
+    return apiBody(api.delete(`/users/${encodeURIComponent(email)}/ban`));
   }
 
   // Also removes their likes from the albums, their playlists and their activity

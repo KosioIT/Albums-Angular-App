@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import { db } from '../config/firebase/firebase.js';
 import { User } from '../models/User.js';
 import { getSession } from '../services/sessionService.js';
+import { bannedResponse } from '../utils/ban.js';
 
 const USERS = db.collection('users');
 
@@ -26,6 +27,9 @@ export const protect = async (req, res, next) => {
 
     req.user = new User(doc.data(), doc.id); // role comes from the database
     req.auth = decoded;
+    // A ban also ends the sessions, so this only catches a token issued just before it
+    const ban = req.user.activeBan();
+    if (ban) return res.status(403).json(bannedResponse(ban));
     return next();
   } catch (err) {
     // A bad or expired token is the client's problem (401, the frontend refreshes);

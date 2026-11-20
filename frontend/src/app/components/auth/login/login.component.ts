@@ -7,6 +7,7 @@ import { LoginDTO } from '../../../dto/login.dto';
 import { CustomToastrService } from '../../../services/custom-toastr.service';
 import { ValidationMessageDirective } from '../../../directives/validation-message.directive';
 import { safeReturnUrl } from '../../../core/guards/auth.guards';
+import { ApiError } from '../../../errors/api-errors/normalizeApiError';
 
 @Component({
   selector: 'app-login',
@@ -54,7 +55,9 @@ export class LoginComponent implements OnInit {
       error: (err: Error) => {
         this.submitting = false;
         this.loginForm.get('password')?.reset('');
-        this.customToastr.showToast(err.message, 'error', 'Sign in failed');
+        // 403: the account is banned (the message says until when and why)
+        const banned = (err as ApiError).status === 403;
+        this.customToastr.showToast(err.message, 'error', banned ? 'Account banned' : 'Sign in failed');
       },
     });
   }

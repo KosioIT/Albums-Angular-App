@@ -4,9 +4,9 @@ import { Observable } from 'rxjs';
 import { UserService } from '../../../services/user.service';
 import { AuthService } from '../../../services/auth.service';
 import { CustomToastrService } from '../../../services/custom-toastr.service';
-import { AdminUser } from '../../../models/user';
+import { AdminUser, BanDays } from '../../../models/user';
 
-type RoleFilter = 'all' | 'admin' | 'user';
+type RoleFilter = 'all' | 'admin' | 'user' | 'banned';
 type SortBy = 'newest' | 'name' | 'active' | 'seen';
 
 // "today", "yesterday", "5 days ago", "3 months ago"
@@ -24,7 +24,7 @@ export function timeAgo(iso: string | null | undefined, now = Date.now()): strin
 
 /*
   Admin page with every user (/admin/users): search, filter by role, sort, and per user
-  make / remove admin, sign out on every device, delete. Nothing can be done to one's own account
+  make / remove admin, sign out on every device, ban (with a reason, for a while or for good) / unban, delete. Nothing can be done to one's own account
   here (the account menu has that), so an admin never locks themselves out.
 */
 @Component({
@@ -48,9 +48,25 @@ export class ManageUsersComponent {
   readonly role = signal<RoleFilter>('all');
   readonly sortBy = signal<SortBy>('newest');
 
+  // The ban form, open for one user at a time
+  readonly banFor = signal<string | null>(null);
+  readonly banReason = signal('');
+  readonly banDays = signal<string>('7'); // the select's value; '' = permanent
+  readonly banDurations = [
+    { value: '1', label: '1 day' },
+    { value: '7', label: '7 days' },
+    { value: '30', label: '30 days' },
+    { value: '', label: 'Permanently' },
+  ];
+
   readonly counts = computed(() => {
     const all = this.list() ?? [];
-    return { all: all.length, admin: all.filter((u) => u.role === 'admin').length, user: all.filter((u) => u.role !== 'admin').length };
+    return {
+      all: all.length,
+      admin: all.filter((u) => u.role === 'admin').length,
+      user: all.filter((u) => u.role !== 'admin').length,
+      banned: all.filter((u) => u.ban).length,
+    };
   });
 
   readonly shown = computed(() => {
@@ -58,7 +74,8 @@ export class ManageUsersComponent {
     const role = this.role();
     const rows = (this.list() ?? []).filter(
       (u) =>
-        (role === 'all' || (role === 'admin' ? u.role === 'admin' : u.role !== 'admin')) &&
+        (role === 'all' ||
+          (role === 'banned' ? !!u.ban : role === 'admin' ? u.role === 'admin' : u.role !== 'admin')) &&
         (!q || u.username?.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)),
     );
     const activity = (u: AdminUser) => u.stats.listens + u.stats.downloads + u.stats.likedCount;
@@ -136,13 +153,58 @@ export class ManageUsersComponent {
     });
   }
 
-  private run<T>(user: AdminUser, request: Observable<T>, done: () => void): void {
+  openBan(user: AdminUser): void {
+    this.banFor.set(user.id);
+    this.banReason.set('');
+    this.banDays.set('7');
+  }
+
+  closeBan(): void {
+    this.banFor.set(null);
+  }
+
+  onBanReason(event: Event): void {
+    this.banReason.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  onBanDays(event: Event): void {
+    this.banDays.set((event.target as HTMLSelectElement).value);
+  }
+
+  banReasonOk(): boolean {
+    const length = this.banReason().trim().length;
+    return length >= 3 && length <= 300;
+  }
+
+  ban(user: AdminUser): void {
+    if (!this.banReasonOk()) return;
+    const days = (this.banDays() ? Number(this.banDays()) : null) as BanDays;
+    this.run(user, this.users.ban(user.email, this.banReason().trim(), days), (result) => {
+      this.patch(user, { ban: result.ban, stats: { ...user.stats, activeSessions: 0 } });
+      this.closeBan();
+      this.toastr.showToast(
+        `${user.username} is banned ${days ? `for ${days} day${days === 1 ? '' : 's'}` : 'permanently'} and was signed out.`,
+        'success',
+        'User banned',
+      );
+    });
+  }
+
+  unban(user: AdminUser): void {
+    if (!confirm(`Lift the ban on ${user.username}? They will be able to sign in again.`)) return;
+    this.run(user, this.users.unban(user.email), () => {
+      this.patch(user, { ban: null });
+      this.toastr.showToast(`${user.username} can sign in again.`, 'success', 'Ban lifted');
+    });
+  }
+
+  private run<T>(user: AdminUser, request: Observable<T>, done: (result: T) => void): void {
     if (this.busy()) return;
     this.busy.set(user.id);
     request.subscribe({
-      next: () => {
+      next: (result) => {
         this.busy.set(null);
-        done();
+        done(result);
       },
       error: (err: Error) => {
         this.busy.set(null);
