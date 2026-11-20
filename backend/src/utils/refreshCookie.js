@@ -6,7 +6,10 @@ function cookieOptions() {
   const sameSite = process.env.COOKIE_SAMESITE || "strict";
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production" || sameSite === "none",
+    // Secure cookies need https (localhost aside); COOKIE_SECURE=false allows plain http, e.g. Docker on a classroom network
+    secure: process.env.COOKIE_SECURE
+      ? process.env.COOKIE_SECURE === "true"
+      : process.env.NODE_ENV === "production" || sameSite === "none",
     sameSite,
     path: "/api/auth", // sent only to the auth endpoints
   };

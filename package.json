@@ -12,7 +12,10 @@
     "dev:backend": "npm run dev --prefix backend",
     "dev:frontend": "npm start --prefix frontend",
     "build": "npm run build --prefix frontend",
-    "test": "npm test --prefix frontend -- --watch=false"
+    "test": "npm test --prefix frontend -- --watch=false",
+    "docker": "docker compose up --build -d",
+    "docker:logs": "docker compose logs -f",
+    "docker:stop": "docker compose down"
   },
   "devDependencies": {
     "concurrently": "^10.0.7"

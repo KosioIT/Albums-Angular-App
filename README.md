@@ -145,6 +145,39 @@ npm run r2:cleanup
 ```
 lists those archives and how much space they take; `npm run r2:cleanup -- --delete` removes them.
 
+## Running with Docker
+
+The whole app in two containers: the API (Node) and the website (Nginx, which also forwards `/api` to
+the API, so the browser sees one site). Needs [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+(or Docker Engine with Compose) and, as for `npm run dev`:
+
+- `backend/.env` (JWT secret, email, R2 settings);
+- `backend/src/config/firebase/serviceAccountKey.json`.
+
+They are given to the API container when it starts and are never copied into the images. The database
+(Firestore), the songs (R2) and the previews (Deezer) are online, so the computer needs internet.
+
+```bash
+npm run docker
+```
+builds the images and starts them in the background; open **http://localhost:4200** (the same address
+as `npm run dev`, so the R2 CORS rule and the email links work as they are; stop `npm run dev` first,
+both use port 4200).
+
+```bash
+npm run docker:logs
+```
+shows what the containers print (Ctrl+C stops following, the app keeps running).
+
+```bash
+npm run docker:stop
+```
+stops and removes the containers. After pulling new code, `npm run docker` builds the new version.
+
+To open the site from another computer on the same network use `http://<this computer's IP>:4200`:
+everything works, except uploading songs on the admin Songs page, unless that address is added to the
+R2 CORS rule (`AllowedOrigins`).
+
 ## Admin decisions are voted on
 
 Banning, unbanning, giving or removing admin rights and deleting an account are proposed on

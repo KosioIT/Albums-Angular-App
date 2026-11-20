@@ -26,6 +26,9 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// For Docker's health check (and anyone who wants to know the API is up)
+app.get('/api/health', (_req, res) => res.json({ ok: true }));
+
 // Auth routes (register, login, password reset)
 app.use('/api/auth', authRoutes);
 

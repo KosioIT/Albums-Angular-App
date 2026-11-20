@@ -1,0 +1,37 @@
+# The whole app in two containers:
+#   docker compose up --build      then open http://localhost:4200
+#
+# Needs (not in Git, never copied into the images):
+#   backend/.env                                     JWT_SECRET, SMTP_*, R2_* ... as for "npm run dev"
+#   backend/src/config/firebase/serviceAccountKey.json
+# The database (Firestore) and the files (R2) are in the cloud, so the computer needs internet.
+services:
+  api:
+    build: ./backend
+    env_file: ./backend/.env
+    environment:
+      NODE_ENV: production
+      API_PORT: "3000"
+      TRUST_PROXY: "1" # behind Nginx: rate limits and guest listens per visitor
+      COOKIE_SECURE: "false" # plain http (localhost or a classroom network); set "true" behind https
+      CLIENT_ORIGIN: http://localhost:4200
+      APP_URL: http://localhost:4200 # links in the emails
+    volumes:
+      # long form: a missing key stops "docker compose up" with a clear error instead of mounting a folder
+      - type: bind
+        source: ./backend/src/config/firebase/serviceAccountKey.json
+        target: /app/src/config/firebase/serviceAccountKey.json
+        read_only: true
+        bind:
+          create_host_path: false
+    restart: unless-stopped
+
+  web:
+    build: ./frontend
+    ports:
+      # 4200, like "npm run dev": the R2 CORS rule and the email links already use it
+      - "4200:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped

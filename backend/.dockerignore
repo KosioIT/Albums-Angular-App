@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log*
+# secrets: given to the container at start, never baked into the image
+.env
+.env.*
+!.env.production.example
+src/config/firebase/serviceAccountKey.json
+*.zip
+*.rar
+Dockerfile
+.dockerignore
