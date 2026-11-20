@@ -24,8 +24,8 @@
         <img src="assets/images/music_btn-green.png" alt="" />
         <span class="value">{{ s.totals.totalListens | number }}</span>
         <span class="label">
-          listens · {{ s.totals.listens | number }} members, {{ s.totals.guestListens | number }} guests
-          ({{ guestShare(s) }}%)
+          listens · {{ s.totals.listens | number }} by signed-in users, {{ s.totals.guestListens | number }} by guests
+          ({{ guestShare(s) }}% guests)
         </span>
       </div>
       <div class="tile">

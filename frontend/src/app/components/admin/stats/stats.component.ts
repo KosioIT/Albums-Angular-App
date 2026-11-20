@@ -49,7 +49,7 @@ export class StatsComponent implements OnInit {
     });
   }
 
-  // Share of guest listens, for the "members / guests" line
+  // Share of guest listens, for the "by signed-in users / by guests" line
   guestShare(stats: SiteStats): number {
     const { totalListens, guestListens } = stats.totals;
     return totalListens ? Math.round((guestListens / totalListens) * 100) : 0;
