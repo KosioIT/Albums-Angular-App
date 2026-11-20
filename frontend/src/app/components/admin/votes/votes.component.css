@@ -1,0 +1,310 @@
+.votes-page {
+  max-width: 900px;
+  margin: 40px auto 120px; /* room for the player bar */
+  padding: 0 16px;
+  color: white;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+h2 {
+  color: gold;
+  font-size: 32px;
+  margin: 0;
+}
+
+h3 {
+  color: gold;
+  font-size: 24px;
+  margin: 26px 0 10px;
+}
+
+h4 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.refresh {
+  border: 2px solid lime;
+  border-radius: 20px;
+  padding: 2px 14px;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.refresh:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.rules {
+  margin: 0 auto;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ddd;
+  font-size: 15px;
+}
+
+.rules a {
+  color: lime;
+}
+
+.note {
+  text-align: center;
+  font-size: 18px;
+  color: #ddd;
+}
+
+.note.error {
+  color: yellow;
+}
+
+.muted {
+  color: #999;
+}
+
+/* An open proposal */
+.vote {
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.6);
+  border-left: 4px solid #666;
+}
+
+.vote.waiting {
+  border-left-color: #dc3545; /* waits for this admin */
+}
+
+.vote[aria-busy='true'] {
+  opacity: 0.6;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.left {
+  color: #ffc04d;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.reason {
+  margin: 6px 0 2px;
+  font-size: 17px;
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  margin: 0 0 10px;
+  color: #bbb;
+  font-size: 14px;
+}
+
+.suspended {
+  color: #ff8a8a;
+}
+
+.tally {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.bar {
+  position: relative;
+  flex: 1 1 200px;
+  height: 10px;
+  border-radius: 5px;
+  background: #444;
+  overflow: hidden;
+  display: flex;
+}
+
+.bar .yes {
+  background: lime;
+}
+
+.bar .no {
+  background: #dc3545;
+  margin-left: auto; /* "no" grows from the right */
+  order: 2;
+}
+
+.bar .line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: white;
+}
+
+.numbers {
+  font-size: 14px;
+  color: #ccc;
+  white-space: nowrap;
+}
+
+.numbers .y {
+  color: lime;
+}
+
+.numbers .n {
+  color: #ff8a8a;
+}
+
+.ballots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ballots li {
+  padding: 1px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  border: 1px solid #666;
+  color: #ccc;
+}
+
+.ballots li.yes {
+  border-color: lime;
+  color: lime;
+}
+
+.ballots li.no {
+  border-color: #dc3545;
+  color: #ff8a8a;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.act {
+  border-radius: 16px;
+  padding: 4px 16px;
+  font-size: 15px;
+  cursor: pointer;
+  color: white;
+  background: transparent;
+  border: 1px solid #888;
+}
+
+.act.yes {
+  border-color: lime;
+  background: green;
+}
+
+.act.no {
+  border-color: #dc3545;
+  background: #a52834;
+}
+
+.act:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Results */
+.history {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.history li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.history li:last-child {
+  border-bottom: none;
+}
+
+.status {
+  flex-shrink: 0;
+  min-width: 82px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 13px;
+  text-align: center;
+  background: #555;
+}
+
+.status.passed {
+  background: green;
+}
+
+.status.rejected {
+  background: #a52834;
+}
+
+.status.expired,
+.status.cancelled {
+  background: #555;
+  color: #ddd;
+}
+
+.what {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+}
+
+.what .muted {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.err {
+  color: yellow;
+  font-size: 13px;
+}
+
+.when {
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+@media (max-width: 560px) {
+  .history li {
+    flex-wrap: wrap;
+  }
+
+  .when {
+    order: -1;
+    margin-left: auto;
+  }
+}

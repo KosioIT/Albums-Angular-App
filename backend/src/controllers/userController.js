@@ -4,7 +4,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { User } from "../models/User.js";
 import { Album } from "../models/Album.js";
 import { validateFavoriteOperation } from "../utils/favoritesUtils.js";
-import { getUserBy, checkExistingCredential, listUsersForAdmin, setUserRole, banUser, unbanUser } from "../services/userService.js";
+import { getUserBy, checkExistingCredential, listUsersForAdmin } from "../services/userService.js";
 import { recordListen, recordGuestListen, getActivitySummary } from '../services/activityService.js';
 import { checkExistingAlbum } from "../services/albumService.js";
 import { sendWelcomeEmail } from '../utils/email/sendWelcomeEmail.js';
@@ -112,65 +112,6 @@ export async function registerUser(req, res) {
   }
 }
 
-//Delete user by email
-export async function deleteUser(req, res) {
-  try {
-    const email = String(req.query.email || "").trim().toLowerCase();
-    if (!email) {
-      return res.status(400).json({ success: false, message: "Email query parameter is required!" });
-    }
-    if (email === req.user.id) {
-      return res.status(400).json({ success: false, message: "You cannot delete your own account!" });
-    }
-
-    const ref = USERS.doc(email);
-    const snap = await ref.get();
-    if (!snap.exists) {
-      return res.status(404).json({ success: false, message: "User not found!" });
-    }
-
-    await revokeAllSessions(email); // first, so the user cannot act while the data is removed
-
-    // Take this user's likes out of the album counters (skip albums that no longer exist)
-    const liked = snap.data().likedAlbums || [];
-    if (liked.length) {
-      const albums = await db.getAll(...liked.map((id) => ALBUMS.doc(id)));
-      const batch = db.batch();
-      albums
-        .filter((a) => a.exists)
-        .forEach((a) => batch.update(a.ref, { likes: FieldValue.increment(-1) }));
-      await batch.commit(); // one batch holds up to 500 writes, plenty for now
-    }
-
-    // Their playlists go too
-    const owned = await db.collection("playlists").where("ownerId", "==", email).get();
-    await Promise.all(owned.docs.map((d) => d.ref.delete()));
-
-    await db.recursiveDelete(ref); // the user and the "activity" subcollection
-
-    return res.json({ success: true, message: `User ${email} deleted successfully!` });
-  } catch (err) {
-    console.error("Delete user error:", err);
-    return res.status(500).json({ success: false, message: "Could not delete user!" });
-  }
-}
-
-
-// PATCH /api/users/:email/role { role: "user" | "admin" } (admins, not on themselves)
-export async function changeUserRole(req, res) {
-  try {
-    const email = String(req.params.email || "").trim().toLowerCase();
-    const result = await setUserRole(req.user.id, email, req.body?.role);
-    if (result.status !== 200) {
-      return res.status(result.status).json({ success: false, message: result.message });
-    }
-    return res.json({ success: true, data: { role: result.role }, message: `${email} is now ${result.role === "admin" ? "an admin" : "a regular user"}.` });
-  } catch (err) {
-    console.error("Change role error:", err);
-    return res.status(500).json({ success: false, message: "Could not change the role!" });
-  }
-}
-
 // POST /api/users/:email/sessions/revoke (admins): signs the user out on every device
 export async function revokeUserSessions(req, res) {
   try {
@@ -190,36 +131,7 @@ export async function revokeUserSessions(req, res) {
 }
 
 
-// POST /api/users/:email/ban { reason, days: 1 | 7 | 30 | null } (admins)
-export async function banUserHandler(req, res) {
-  try {
-    const email = String(req.params.email || "").trim().toLowerCase();
-    const days = req.body?.days ?? null;
-    const result = await banUser(req.user, email, { reason: req.body?.reason, days });
-    if (result.status !== 200) {
-      return res.status(result.status).json({ success: false, message: result.message });
-    }
-    return res.json({ success: true, data: { ban: result.ban }, message: `${email} is banned.` });
-  } catch (err) {
-    console.error("Ban error:", err);
-    return res.status(500).json({ success: false, message: "Could not ban the user!" });
-  }
-}
-
-// DELETE /api/users/:email/ban (admins)
-export async function unbanUserHandler(req, res) {
-  try {
-    const email = String(req.params.email || "").trim().toLowerCase();
-    const result = await unbanUser(email);
-    if (result.status !== 200) {
-      return res.status(result.status).json({ success: false, message: result.message });
-    }
-    return res.json({ success: true, message: `${email} is no longer banned.` });
-  } catch (err) {
-    console.error("Unban error:", err);
-    return res.status(500).json({ success: false, message: "Could not lift the ban!" });
-  }
-}
+// Banning, unbanning, roles and deleting go through a vote of the admins: see voteService
 
 
 /* ----- ALBUMS-RELATED OPERATIONS ----- */

@@ -145,6 +145,26 @@ npm run r2:cleanup
 ```
 lists those archives and how much space they take; `npm run r2:cleanup -- --delete` removes them.
 
+## Admin decisions are voted on
+
+Banning, unbanning, giving or removing admin rights and deleting an account are proposed on
+*Admin → Manage users* and voted on by the admins on *Admin → Votes* (the menu shows how many wait for
+your vote):
+
+- the voters are the admins at the moment of the proposal, except the user it is about; the proposer's
+  vote counts as "yes";
+- it passes with more than half of the voters; a tie fails, and it fails at once when a majority is no
+  longer possible; votes are final;
+- it is open for 3 days, then it expires; the proposer can withdraw it;
+- one open proposal per user at a time;
+- for a ban or a deletion the proposer can suspend the user for 24 hours right away; the suspension is
+  lifted if the proposal fails, expires or is withdrawn;
+- with a single admin there is nobody else to vote, so it happens right away;
+- admins cannot be banned or deleted (their rights have to be removed first), and nobody can propose
+  anything about themselves.
+
+Signing a user out on every device needs no vote: it is not a punishment, they can sign in again.
+
 ## MongoDB Setup
 This project uses MongoDB as its database. To run it locally:
 

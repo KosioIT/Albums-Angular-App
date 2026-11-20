@@ -13,6 +13,7 @@ import { SessionsComponent } from './components/account/sessions/sessions.compon
 import { ActivityComponent } from './components/account/activity/activity.component';
 import { StatsComponent } from './components/admin/stats/stats.component';
 import { AlbumSongsComponent } from './components/admin/album-songs/album-songs.component';
+import { VotesComponent } from './components/admin/votes/votes.component';
 import { PublicPlaylistsComponent } from './components/playlists/public-playlists/public-playlists.component';
 import { MyPlaylistsComponent } from './components/playlists/my-playlists/my-playlists.component';
 import { PlaylistDetailComponent } from './components/playlists/playlist-detail/playlist-detail.component';
@@ -39,6 +40,7 @@ export const routes: Routes = [
   { path: 'admin/users', component: ManageUsersComponent, canActivate: [adminGuard] },
   { path: 'admin/add-album', component: AlbumCreateComponent, canActivate: [adminGuard] },
   { path: 'admin/stats', component: StatsComponent, canActivate: [adminGuard] },
+  { path: 'admin/votes', component: VotesComponent, canActivate: [adminGuard] },
 
   { path: '**', redirectTo: '', pathMatch: 'full' },
 ];

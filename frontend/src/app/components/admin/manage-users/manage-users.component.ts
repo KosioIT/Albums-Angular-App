@@ -1,10 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { Observable } from 'rxjs';
+import { RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { UserService } from '../../../services/user.service';
 import { AuthService } from '../../../services/auth.service';
+import { VoteService } from '../../../services/vote.service';
 import { CustomToastrService } from '../../../services/custom-toastr.service';
 import { AdminUser, BanDays } from '../../../models/user';
+import { Vote, VoteAction, voteTitle } from '../../../models/vote';
 
 type RoleFilter = 'all' | 'admin' | 'user' | 'banned';
 type SortBy = 'newest' | 'name' | 'active' | 'seen';
@@ -22,24 +25,37 @@ export function timeAgo(iso: string | null | undefined, now = Date.now()): strin
   return years <= 1 ? 'a year ago' : `${years} years ago`;
 }
 
+// The proposal form, open for one user at a time
+interface Draft {
+  user: AdminUser;
+  action: VoteAction;
+  reason: string;
+  days: string; // the select's value; '' = permanent
+  suspend: boolean;
+}
+
 /*
-  Admin page with every user (/admin/users): search, filter by role, sort, and per user
-  make / remove admin, sign out on every device, ban (with a reason, for a while or for good) / unban, delete. Nothing can be done to one's own account
-  here (the account menu has that), so an admin never locks themselves out.
+  Admin page with every user (/admin/users): search, filter, sort, sign a user out everywhere, and
+  propose a ban, an unban, admin rights or deleting the account. Those are voted on by the admins
+  (see /admin/votes); with a single admin they happen right away. Nothing can be done to one's own
+  account here (the account menu has that), so an admin never locks themselves out.
 */
 @Component({
   selector: 'app-manage-users',
-  imports: [DatePipe, DecimalPipe],
+  imports: [DatePipe, DecimalPipe, RouterLink],
   templateUrl: './manage-users.component.html',
   styleUrl: './manage-users.component.css',
 })
 export class ManageUsersComponent {
   private users = inject(UserService);
   private auth = inject(AuthService);
+  private votes = inject(VoteService);
   private toastr = inject(CustomToastrService);
 
   readonly timeAgo = timeAgo;
+  readonly voteTitle = voteTitle;
   readonly list = signal<AdminUser[] | null>(null);
+  readonly openVotes = signal<Map<string, Vote>>(new Map()); // target email -> its open vote
   readonly error = signal<string | null>(null);
   readonly loading = signal(false);
   readonly busy = signal<string | null>(null); // email of the user an action is running for
@@ -48,10 +64,7 @@ export class ManageUsersComponent {
   readonly role = signal<RoleFilter>('all');
   readonly sortBy = signal<SortBy>('newest');
 
-  // The ban form, open for one user at a time
-  readonly banFor = signal<string | null>(null);
-  readonly banReason = signal('');
-  readonly banDays = signal<string>('7'); // the select's value; '' = permanent
+  readonly draft = signal<Draft | null>(null);
   readonly banDurations = [
     { value: '1', label: '1 day' },
     { value: '7', label: '7 days' },
@@ -95,9 +108,10 @@ export class ManageUsersComponent {
   load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.users.getAll().subscribe({
-      next: (list) => {
-        this.list.set(list);
+    forkJoin({ users: this.users.getAll(), votes: this.votes.list() }).subscribe({
+      next: ({ users, votes }) => {
+        this.list.set(users);
+        this.openVotes.set(new Map(votes.open.map((v) => [v.target, v])));
         this.loading.set(false);
       },
       error: (err: Error) => {
@@ -111,6 +125,20 @@ export class ManageUsersComponent {
     return user.id === this.auth.currentUser?.id;
   }
 
+  // Who would vote on a proposal about this user: every admin except them
+  voters(user: AdminUser): number {
+    return (this.list() ?? []).filter((u) => u.role === 'admin' && u.id !== user.id).length;
+  }
+
+  // With a single voter (this admin) a proposal is decided at once
+  immediate(user: AdminUser): boolean {
+    return this.voters(user) <= 1;
+  }
+
+  needed(user: AdminUser): number {
+    return Math.floor(this.voters(user) / 2) + 1;
+  }
+
   // ===== Filters (from the template's inputs) =====
 
   onQuery(event: Event): void {
@@ -121,99 +149,112 @@ export class ManageUsersComponent {
     this.sortBy.set((event.target as HTMLSelectElement).value as SortBy);
   }
 
-  // ===== Actions =====
+  // ===== Proposals =====
 
-  toggleAdmin(user: AdminUser): void {
-    const role = user.role === 'admin' ? 'user' : 'admin';
-    const question =
-      role === 'admin'
-        ? `Make ${user.username} an admin? They will be able to manage albums and users.`
-        : `Remove admin rights from ${user.username}?`;
-    if (!confirm(question)) return;
-
-    this.run(user, this.users.setRole(user.email, role), () => {
-      this.patch(user, { role });
-      this.toastr.showToast(`${user.username} is now ${role === 'admin' ? 'an admin' : 'a regular user'}.`, 'success', 'Role changed');
-    });
+  openDraft(user: AdminUser, action: VoteAction): void {
+    const current = this.draft();
+    if (current?.user.id === user.id && current.action === action) {
+      this.draft.set(null); // the same button closes it
+      return;
+    }
+    this.draft.set({ user, action, reason: '', days: '7', suspend: false });
   }
 
-  signOut(user: AdminUser): void {
-    if (!confirm(`Sign ${user.username} out on every device? They can sign in again.`)) return;
-    this.run(user, this.users.revokeSessions(user.email), () => {
-      this.patch(user, { stats: { ...user.stats, activeSessions: 0 } });
-      this.toastr.showToast(`${user.username} was signed out everywhere.`, 'success', 'Signed out');
-    });
+  closeDraft(): void {
+    this.draft.set(null);
   }
 
-  remove(user: AdminUser): void {
-    if (!confirm(`Delete ${user.username} (${user.email})? Their likes, playlists and activity are removed too. This cannot be undone.`)) return;
-    this.run(user, this.users.delete(user.email), () => {
-      this.list.update((list) => (list ?? []).filter((u) => u.id !== user.id));
-      this.toastr.showToast(`${user.username} was deleted.`, 'success', 'User deleted');
-    });
+  editDraft(change: Partial<Draft>): void {
+    this.draft.update((d) => (d ? { ...d, ...change } : d));
   }
 
-  openBan(user: AdminUser): void {
-    this.banFor.set(user.id);
-    this.banReason.set('');
-    this.banDays.set('7');
+  draftTitle(d: Draft): string {
+    return voteTitle({ action: d.action, targetName: d.user.username, days: this.draftDays(d) });
   }
 
-  closeBan(): void {
-    this.banFor.set(null);
+  private draftDays(d: Draft): BanDays {
+    return (d.days ? Number(d.days) : null) as BanDays;
   }
 
-  onBanReason(event: Event): void {
-    this.banReason.set((event.target as HTMLTextAreaElement).value);
-  }
-
-  onBanDays(event: Event): void {
-    this.banDays.set((event.target as HTMLSelectElement).value);
-  }
-
-  banReasonOk(): boolean {
-    const length = this.banReason().trim().length;
+  reasonOk(d: Draft): boolean {
+    const length = d.reason.trim().length;
     return length >= 3 && length <= 300;
   }
 
-  ban(user: AdminUser): void {
-    if (!this.banReasonOk()) return;
-    const days = (this.banDays() ? Number(this.banDays()) : null) as BanDays;
-    this.run(user, this.users.ban(user.email, this.banReason().trim(), days), (result) => {
-      this.patch(user, { ban: result.ban, stats: { ...user.stats, activeSessions: 0 } });
-      this.closeBan();
-      this.toastr.showToast(
-        `${user.username} is banned ${days ? `for ${days} day${days === 1 ? '' : 's'}` : 'permanently'} and was signed out.`,
-        'success',
-        'User banned',
-      );
-    });
+  // Only someone who can still sign in (a banned user already cannot; a suspension would replace the ban)
+  canSuspend(d: Draft): boolean {
+    return (d.action === 'ban' || d.action === 'delete') && !this.immediate(d.user) && !d.user.ban;
   }
 
-  unban(user: AdminUser): void {
-    if (!confirm(`Lift the ban on ${user.username}? They will be able to sign in again.`)) return;
-    this.run(user, this.users.unban(user.email), () => {
-      this.patch(user, { ban: null });
-      this.toastr.showToast(`${user.username} can sign in again.`, 'success', 'Ban lifted');
-    });
+  submitLabel(d: Draft): string {
+    if (!this.immediate(d.user)) return 'Propose';
+    const labels: Record<VoteAction, string> = {
+      ban: 'Ban now',
+      unban: 'Unban now',
+      make_admin: 'Make admin now',
+      remove_admin: 'Remove admin now',
+      delete: 'Delete now',
+    };
+    return labels[d.action];
   }
 
-  private run<T>(user: AdminUser, request: Observable<T>, done: (result: T) => void): void {
-    if (this.busy()) return;
+  submit(d: Draft): void {
+    if (!this.reasonOk(d) || this.busy()) return;
+    if (d.action === 'delete' && this.immediate(d.user)) {
+      if (!confirm(`Delete ${d.user.username} (${d.user.email})? Their likes, playlists and activity are removed too. This cannot be undone.`)) return;
+    }
+    this.busy.set(d.user.id);
+    this.votes
+      .propose({
+        action: d.action,
+        target: d.user.email,
+        reason: d.reason.trim(),
+        days: d.action === 'ban' ? this.draftDays(d) : undefined,
+        suspend: this.canSuspend(d) && d.suspend,
+      })
+      .subscribe({
+        next: (vote) => {
+          this.busy.set(null);
+          this.draft.set(null);
+          if (vote.status === 'passed' && !vote.error) {
+            this.toastr.showToast(`"${voteTitle(vote)}" is done.`, 'success', 'Done');
+          } else if (vote.error) {
+            this.toastr.showToast(vote.error, 'error', 'Not carried out');
+          } else {
+            const more = vote.needed - vote.yes;
+            this.toastr.showToast(
+              `The other admins can vote on it for 3 days. ${more} more "yes" vote${more === 1 ? '' : 's'} needed.`,
+              'success',
+              'Proposal made',
+              'Go to votes',
+              '/admin/votes',
+            );
+          }
+          this.load();
+        },
+        error: (err: Error) => {
+          this.busy.set(null);
+          this.toastr.showToast(err.message, 'error', 'Could not propose it');
+        },
+      });
+  }
+
+  // Signing out is not a punishment (they can sign in again), so it needs no vote
+  signOut(user: AdminUser): void {
+    if (!confirm(`Sign ${user.username} out on every device? They can sign in again.`)) return;
     this.busy.set(user.id);
-    request.subscribe({
-      next: (result) => {
+    this.users.revokeSessions(user.email).subscribe({
+      next: () => {
         this.busy.set(null);
-        done(result);
+        this.list.update((list) =>
+          (list ?? []).map((u) => (u.id === user.id ? { ...u, stats: { ...u.stats, activeSessions: 0 } } : u)),
+        );
+        this.toastr.showToast(`${user.username} was signed out everywhere.`, 'success', 'Signed out');
       },
       error: (err: Error) => {
         this.busy.set(null);
         this.toastr.showToast(err.message, 'error', 'Something went wrong');
       },
     });
-  }
-
-  private patch(user: AdminUser, change: Partial<AdminUser>): void {
-    this.list.update((list) => (list ?? []).map((u) => (u.id === user.id ? { ...u, ...change } : u)));
   }
 }

@@ -48,6 +48,8 @@ export interface UserBan {
   until: string | null; // null = permanent
   by: string; // the admin's email
   at: string;
+  suspension?: boolean; // a 24-hour suspension while the admins vote on a ban or deletion
+  voteId?: string | null;
 }
 
 export type BanDays = 1 | 7 | 30 | null; // null = permanent

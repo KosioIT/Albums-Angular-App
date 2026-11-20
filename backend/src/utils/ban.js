@@ -3,6 +3,9 @@ export function banMessage(ban) {
     const until = ban.until
         ? `until ${new Date(ban.until).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })} (UTC)`
         : 'permanently';
+    if (ban.suspension) {
+        return `Your account is suspended ${until} while the admins decide whether to ban or delete it. Reason: ${ban.reason}`;
+    }
     return `Your account is banned ${until}. Reason: ${ban.reason}`;
 }
 
@@ -11,5 +14,5 @@ export const bannedResponse = (ban) => ({
     success: false,
     banned: true,
     message: banMessage(ban),
-    ban: { reason: ban.reason, until: ban.until ?? null },
+    ban: { reason: ban.reason, until: ban.until ?? null, suspension: !!ban.suspension },
 });

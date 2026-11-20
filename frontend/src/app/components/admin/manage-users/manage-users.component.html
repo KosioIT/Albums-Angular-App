@@ -55,7 +55,7 @@
                   <span class="badge admin">Admin</span>
                 }
                 @if (u.ban) {
-                  <span class="badge banned">Banned</span>
+                  <span class="badge banned">{{ u.ban.suspension ? 'Suspended' : 'Banned' }}</span>
                 }
                 @if (isMe(u)) {
                   <span class="badge me">You</span>
@@ -79,7 +79,11 @@
           <div class="seen">
             @if (u.ban) {
               <span class="ban-until">
-                {{ u.ban.until ? 'Banned until ' + (u.ban.until | date: 'd MMM y, HH:mm') : 'Banned permanently' }}
+                @if (u.ban.suspension) {
+                  Suspended until {{ u.ban.until | date: 'd MMM, HH:mm' }} (vote open)
+                } @else {
+                  {{ u.ban.until ? 'Banned until ' + (u.ban.until | date: 'd MMM y, HH:mm') : 'Banned permanently' }}
+                }
               </span>
               <span class="muted" [title]="'By ' + u.ban.by + ', ' + (u.ban.at | date: 'medium')">by {{ u.ban.by }}</span>
             } @else if (u.stats.activeSessions) {
@@ -93,34 +97,29 @@
           <div class="actions">
             @if (isMe(u)) {
               <span class="muted small">Manage your account from the account menu</span>
-            } @else if (u.ban) {
-              <button type="button" class="act" [disabled]="busy() === u.id" (click)="unban(u)">Unban</button>
-              <button type="button" class="act danger" [disabled]="busy() === u.id" (click)="remove(u)">Delete</button>
             } @else {
-              <button type="button" class="act" [disabled]="busy() === u.id" (click)="toggleAdmin(u)">
-                {{ u.role === 'admin' ? 'Remove admin' : 'Make admin' }}
-              </button>
               <button
                 type="button"
                 class="act"
                 [disabled]="busy() === u.id || !u.stats.activeSessions"
-                [title]="u.stats.activeSessions ? 'Sign out on every device' : 'Not signed in anywhere'"
+                [title]="u.stats.activeSessions ? 'Sign out on every device (no vote needed)' : 'Not signed in anywhere'"
                 (click)="signOut(u)"
               >
                 Sign out
               </button>
-              <button
-                type="button"
-                class="act warn"
-                [class.on]="banFor() === u.id"
-                [disabled]="busy() === u.id || u.role === 'admin'"
-                [title]="u.role === 'admin' ? 'Remove the admin rights first' : 'Ban with a reason'"
-                [attr.aria-expanded]="banFor() === u.id"
-                (click)="banFor() === u.id ? closeBan() : openBan(u)"
-              >
-                Ban
-              </button>
-              <button type="button" class="act danger" [disabled]="busy() === u.id" (click)="remove(u)">Delete</button>
+              @if (!openVotes().get(u.id)) {
+                @if (u.role === 'admin') {
+                  <button type="button" class="act" [class.on]="draft()?.user?.id === u.id && draft()?.action === 'remove_admin'" (click)="openDraft(u, 'remove_admin')">Remove admin</button>
+                } @else if (u.ban && !u.ban.suspension) {
+                  <button type="button" class="act" [class.on]="draft()?.user?.id === u.id && draft()?.action === 'unban'" (click)="openDraft(u, 'unban')">Unban</button>
+                } @else if (!u.ban) {
+                  <button type="button" class="act" [class.on]="draft()?.user?.id === u.id && draft()?.action === 'make_admin'" (click)="openDraft(u, 'make_admin')">Make admin</button>
+                  <button type="button" class="act warn" [class.on]="draft()?.user?.id === u.id && draft()?.action === 'ban'" (click)="openDraft(u, 'ban')">Ban</button>
+                }
+                @if (u.role !== 'admin') {
+                  <button type="button" class="act danger" [class.on]="draft()?.user?.id === u.id && draft()?.action === 'delete'" (click)="openDraft(u, 'delete')">Delete</button>
+                }
+              }
             }
           </div>
 
@@ -128,32 +127,64 @@
             <p class="ban-reason"><strong>Reason:</strong> {{ u.ban.reason }}</p>
           }
 
-          @if (banFor() === u.id && !u.ban) {
-            <form class="ban-form" (submit)="$event.preventDefault(); ban(u)">
-              <label class="field">
-                Reason <span class="muted small">(the user sees it when signing in)</span>
-                <textarea
-                  rows="2"
-                  maxlength="300"
-                  placeholder="e.g. Spam in playlist names"
-                  [value]="banReason()"
-                  (input)="onBanReason($event)"
-                ></textarea>
-                <span class="muted small">{{ banReason().trim().length }}/300</span>
-              </label>
-              <label class="field duration">
-                For
-                <select (change)="onBanDays($event)">
-                  @for (d of banDurations; track d.value) {
-                    <option [value]="d.value" [selected]="banDays() === d.value">{{ d.label }}</option>
+          <!-- An open vote about this user: nothing else can be proposed until it ends -->
+          @if (openVotes().get(u.id); as v) {
+            <a class="vote-open" routerLink="/admin/votes">
+              <span class="vote-label">Vote open</span>
+              {{ voteTitle(v) }} · {{ v.yes }} of {{ v.needed }} "yes" votes
+              <span class="go">Vote ›</span>
+            </a>
+          }
+
+          @if (draft(); as d) {
+            @if (d.user.id === u.id) {
+              <form class="ban-form" (submit)="$event.preventDefault(); submit(d)">
+                <p class="draft-title">
+                  <strong>{{ draftTitle(d) }}</strong>
+                  @if (immediate(u)) {
+                    <span class="muted small">You are the only admin who votes on this, so it happens right away.</span>
+                  } @else {
+                    <span class="muted small">
+                      The admins vote on it for 3 days: it needs {{ needed(u) }} of {{ voters(u) }} "yes" votes (yours counts).
+                    </span>
                   }
-                </select>
-              </label>
-              <div class="ban-actions">
-                <button type="button" class="act" (click)="closeBan()">Cancel</button>
-                <button type="submit" class="act danger solid" [disabled]="!banReasonOk() || busy() === u.id">Ban {{ u.username }}</button>
-              </div>
-            </form>
+                </p>
+                <label class="field">
+                  Reason
+                  @if (d.action === 'ban') {
+                    <span class="muted small">(the user sees it when signing in)</span>
+                  }
+                  <textarea
+                    rows="2"
+                    maxlength="300"
+                    [placeholder]="d.action === 'ban' ? 'e.g. Spam in playlist names' : 'Why?'"
+                    [value]="d.reason"
+                    (input)="editDraft({ reason: $any($event.target).value })"
+                  ></textarea>
+                  <span class="muted small">{{ d.reason.trim().length }}/300</span>
+                </label>
+                @if (d.action === 'ban') {
+                  <label class="field duration">
+                    For
+                    <select (change)="editDraft({ days: $any($event.target).value })">
+                      @for (o of banDurations; track o.value) {
+                        <option [value]="o.value" [selected]="d.days === o.value">{{ o.label }}</option>
+                      }
+                    </select>
+                  </label>
+                }
+                @if (canSuspend(d)) {
+                  <label class="check">
+                    <input type="checkbox" [checked]="d.suspend" (change)="editDraft({ suspend: $any($event.target).checked })" />
+                    Suspend {{ u.username }} for 24 hours now, while the admins vote
+                  </label>
+                }
+                <div class="ban-actions">
+                  <button type="button" class="act" (click)="closeDraft()">Cancel</button>
+                  <button type="submit" class="act danger solid" [disabled]="!reasonOk(d) || busy() === u.id">{{ submitLabel(d) }}</button>
+                </div>
+              </form>
+            }
           }
         </article>
       }

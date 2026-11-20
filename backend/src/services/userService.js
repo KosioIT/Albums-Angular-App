@@ -98,60 +98,86 @@ export async function listUsersForAdmin() {
   });
 }
 
-export const ROLES = ['user', 'admin'];
-
-// Changes a user's role; the caller (an admin) cannot change their own, so there is always an admin left
-export async function setUserRole(adminId, email, role) {
-  if (!ROLES.includes(role)) return { status: 400, message: 'Role must be "user" or "admin".' };
-  if (email === adminId) return { status: 400, message: 'You cannot change your own role.' };
-
-  const ref = USERS.doc(email);
-  const snap = await ref.get();
-  if (!snap.exists) return { status: 404, message: 'User not found!' };
-  if (snap.data().role === role) return { status: 200, role };
-  if (role === 'admin' && new User(snap.data(), snap.id).activeBan()) {
-    return { status: 400, message: 'Unban the user before making them an admin.' };
-  }
-
-  await ref.update({ role, updated_at: new Date().toISOString() });
-  return { status: 200, role }; // takes effect on the user's next request: the role is read from the database
-}
+/*
+  What happens to a user once the admins voted for it (see voteService, which checks who may
+  propose what). Each one takes effect on the user's next request: the server reads the role and
+  the ban from the database every time.
+*/
 
 export const BAN_DAYS = [1, 7, 30]; // or null: permanent
 const DAY_MS = 24 * 60 * 60 * 1000;
+export const SUSPENSION_MS = DAY_MS;
 
-/*
-  Bans a user: they are signed out everywhere and cannot sign in (they are told the reason) until
-  the ban runs out or an admin lifts it. Admins cannot ban themselves or another admin (remove the
-  rights first). days: 1, 7, 30 or null for a permanent ban.
-*/
-export async function banUser(admin, email, { reason, days } = {}) {
-  const text = typeof reason === 'string' ? reason.trim().replace(/\s+/g, ' ') : '';
-  if (text.length < 3 || text.length > 300) return { status: 400, message: 'Give a reason (3 to 300 characters).' };
-  if (days !== null && !BAN_DAYS.includes(days)) return { status: 400, message: 'Ban for 1, 7 or 30 days, or permanently.' };
-  if (email === admin.id) return { status: 400, message: 'You cannot ban yourself.' };
+export async function setRole(email, role) {
+  await USERS.doc(email).update({ role, updated_at: new Date().toISOString() });
+}
 
-  const ref = USERS.doc(email);
-  const snap = await ref.get();
-  if (!snap.exists) return { status: 404, message: 'User not found!' };
-  if (snap.data().role === 'admin') return { status: 400, message: 'Remove their admin rights before banning them.' };
-
+// days: 1, 7, 30 or null (permanent); by: the admin who proposed it
+export async function banUser(email, { reason, days, by, voteId = null }) {
   const now = new Date();
   const ban = {
-    reason: text,
-    until: days === null ? null : new Date(now.getTime() + days * DAY_MS).toISOString(),
-    by: admin.id,
+    reason,
+    until: days == null ? null : new Date(now.getTime() + days * DAY_MS).toISOString(),
+    by,
     at: now.toISOString(),
+    voteId,
   };
-  await ref.update({ ban, updated_at: now.toISOString() });
+  await USERS.doc(email).update({ ban, updated_at: now.toISOString() });
   await revokeAllSessions(email); // out right away, on every device
-  return { status: 200, ban };
+  return ban;
 }
 
 export async function unbanUser(email) {
+  await USERS.doc(email).update({ ban: FieldValue.delete(), updated_at: new Date().toISOString() });
+}
+
+/*
+  Suspension while the admins vote on banning or deleting someone: a 24-hour ban marked with the
+  vote, lifted as soon as the vote fails (see liftSuspension); a ban that passes replaces it.
+*/
+export async function suspendUser(email, { reason, by, voteId }) {
+  const now = new Date();
+  const ban = {
+    reason,
+    until: new Date(now.getTime() + SUSPENSION_MS).toISOString(),
+    by,
+    at: now.toISOString(),
+    voteId,
+    suspension: true,
+  };
+  await USERS.doc(email).update({ ban, updated_at: now.toISOString() });
+  await revokeAllSessions(email);
+  return ban;
+}
+
+// Lifts the suspension of this vote only (not a ban set since)
+export async function liftSuspension(email, voteId) {
+  const snap = await USERS.doc(email).get();
+  const ban = snap.exists ? snap.data().ban : null;
+  if (ban?.suspension && ban.voteId === voteId) await unbanUser(email);
+}
+
+/*
+  Deletes a user and what is theirs: sessions, their likes in the album counters, playlists,
+  the user document and its "activity" subcollection.
+*/
+export async function deleteUserAccount(email) {
   const ref = USERS.doc(email);
   const snap = await ref.get();
-  if (!snap.exists) return { status: 404, message: 'User not found!' };
-  await ref.update({ ban: FieldValue.delete(), updated_at: new Date().toISOString() });
-  return { status: 200 };
+  if (!snap.exists) return;
+
+  await revokeAllSessions(email); // first, so the user cannot act while the data is removed
+
+  const liked = snap.data().likedAlbums || [];
+  if (liked.length) {
+    const albums = await db.getAll(...liked.map((id) => db.collection('albums').doc(id)));
+    const batch = db.batch();
+    albums.filter((a) => a.exists).forEach((a) => batch.update(a.ref, { likes: FieldValue.increment(-1) }));
+    await batch.commit(); // one batch holds up to 500 writes, plenty for now
+  }
+
+  const owned = await db.collection('playlists').where('ownerId', '==', email).get();
+  await Promise.all(owned.docs.map((d) => d.ref.delete()));
+
+  await db.recursiveDelete(ref);
 }

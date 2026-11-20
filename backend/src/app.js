@@ -6,6 +6,7 @@ import albumsRoutes from './routes/albumRoutes.js';
 import favoriteRoutes from './routes/favoriteRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import playlistRoutes from './routes/playlistRoutes.js';
+import voteRoutes from './routes/voteRoutes.js';
 import cookieParser from 'cookie-parser';
 
 const app = express();
@@ -42,6 +43,9 @@ app.use('/api/playlists', playlistRoutes);
 
 // Site statistics (admins only)
 app.use('/api/stats', statsRoutes);
+
+// Admin votes on users (ban, unban, admin rights, delete)
+app.use('/api/votes', voteRoutes);
 
 // Test route
 app.get('/', (_req, res) => res.send('API is running...'));

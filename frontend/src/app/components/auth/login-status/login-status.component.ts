@@ -4,6 +4,7 @@ import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { User } from '../../../models/user';
 import { AuthService } from '../../../services/auth.service';
 import { DropdownService } from '../../../services/dropdown.service';
+import { VoteService } from '../../../services/vote.service';
 import { filter } from 'rxjs/operators';
 
 // Dropdown keys in DropdownService
@@ -46,6 +47,7 @@ export class LoginStatusComponent implements OnDestroy {
     { label: 'Manage albums', link: '/admin/albums' },
     { label: 'Add album', link: '/admin/add-album' },
     { label: 'Manage users', link: '/admin/users' },
+    { label: 'Votes', link: '/admin/votes' }, // with the number waiting for this admin's vote
     { label: 'Statistics', link: '/admin/stats' },
   ];
 
@@ -66,14 +68,21 @@ export class LoginStatusComponent implements OnDestroy {
 
   private routerSub = this.router.events
     .pipe(filter((e) => e instanceof NavigationEnd))
-    .subscribe(() => this.closeAll());
+    .subscribe(() => {
+      this.closeAll();
+      this.votes.refreshWaiting(); // cheap, and keeps the badge right as admins move around
+    });
 
   constructor(
     public authService: AuthService,
     private router: Router,
     private dropdownService: DropdownService,
+    public votes: VoteService,
   ) {
-    this.authService.user$.subscribe((user) => (this.user = user));
+    this.authService.user$.subscribe((user) => {
+      this.user = user;
+      this.votes.refreshWaiting();
+    });
   }
 
   // Desktop: hover opens a menu. Phones: a tap toggles it

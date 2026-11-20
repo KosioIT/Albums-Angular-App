@@ -1,0 +1,92 @@
+<div class="votes-page">
+  <div class="head">
+    <h2>Votes</h2>
+    <button type="button" class="refresh" (click)="load()" [disabled]="loading()">
+      {{ loading() ? 'Loading...' : 'Refresh' }}
+    </button>
+  </div>
+
+  <p class="rules">
+    Banning, unbanning, admin rights and deleting accounts are decided by the admins together: a proposal passes
+    with more than half of the voters (a tie fails) and is open for 3 days. New proposals are made on
+    <a routerLink="/admin/users">Manage users</a>.
+  </p>
+
+  @if (error()) {
+    <p class="note error">{{ error() }}</p>
+  }
+
+  @if (open(); as open) {
+    <h3>Open <span class="muted">({{ open.length }})</span></h3>
+    @if (open.length === 0) {
+      <p class="note">Nothing to vote on right now.</p>
+    }
+
+    @for (v of open; track v.id) {
+      <article class="vote" [class.waiting]="v.canVote" [attr.aria-busy]="busy() === v.id">
+        <div class="top">
+          <h4>{{ title(v) }}</h4>
+          <span class="left" [title]="'Ends ' + (v.expiresAt | date: 'medium')">{{ timeLeft(v.expiresAt) }}</span>
+        </div>
+        <p class="reason">“{{ v.reason }}”</p>
+        <p class="meta">
+          Proposed by <strong>{{ v.proposedByName }}</strong> · {{ v.createdAt | date: 'd MMM, HH:mm' }}
+          @if (v.suspend) {
+            · <span class="suspended">{{ v.targetName }} is suspended meanwhile (24 hours)</span>
+          }
+        </p>
+
+        <div class="tally" [attr.aria-label]="v.yes + ' yes, ' + v.no + ' no, ' + v.needed + ' needed'">
+          <div class="bar">
+            <span class="yes" [style.width.%]="(v.yes / v.voters.length) * 100"></span>
+            <span class="no" [style.width.%]="(v.no / v.voters.length) * 100"></span>
+            <span class="line" [style.left.%]="(v.needed / v.voters.length) * 100" title="Needed to pass"></span>
+          </div>
+          <span class="numbers"><b class="y">{{ v.yes }} yes</b> · <b class="n">{{ v.no }} no</b> · {{ v.needed }} of {{ v.voters.length }} needed</span>
+        </div>
+
+        <ul class="ballots">
+          @for (b of ballots(v); track b.email) {
+            <li [class]="b.vote ?? 'pending'" [title]="b.vote ? 'Voted ' + b.vote : 'Has not voted yet'">
+              {{ b.vote === 'yes' ? '✔' : b.vote === 'no' ? '✘' : '…' }} {{ b.email }}
+            </li>
+          }
+        </ul>
+
+        <div class="actions">
+          @if (v.canVote) {
+            <button type="button" class="act yes" [disabled]="busy() === v.id" (click)="vote(v, 'yes')">Vote yes</button>
+            <button type="button" class="act no" [disabled]="busy() === v.id" (click)="vote(v, 'no')">Vote no</button>
+          } @else if (v.myVote) {
+            <span class="muted">You voted {{ v.myVote }}</span>
+          }
+          @if (v.canCancel) {
+            <button type="button" class="act plain" [disabled]="busy() === v.id" (click)="cancel(v)">Withdraw</button>
+          }
+        </div>
+      </article>
+    }
+
+    <h3>Results</h3>
+    @if (closed().length === 0) {
+      <p class="note">No votes have ended yet.</p>
+    }
+    <ul class="history">
+      @for (v of closed(); track v.id) {
+        <li>
+          <span class="status" [class]="'status ' + v.status">{{ statusLabel[v.status] }}</span>
+          <span class="what">
+            <strong>{{ title(v) }}</strong>
+            <span class="muted">“{{ v.reason }}” · by {{ v.proposedByName }} · {{ v.yes }} yes, {{ v.no }} no of {{ v.voters.length }}</span>
+            @if (v.error) {
+              <span class="err">Not carried out: {{ v.error }}</span>
+            }
+          </span>
+          <span class="when muted">{{ v.closedAt | date: 'd MMM y' }}</span>
+        </li>
+      }
+    </ul>
+  } @else if (!error()) {
+    <p class="note">Loading…</p>
+  }
+</div>

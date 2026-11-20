@@ -17,10 +17,18 @@
       (keydown.space)="onKeyToggle(ADMIN, $event)"
     >
       Admin
+      @if (votes.waiting()) {
+        <span class="count" [attr.aria-label]="votes.waiting() + ' votes waiting for you'">{{ votes.waiting() }}</span>
+      }
     </a>
     <div class="dropdown-menu menu-end" [class.show]="adminOpen$ | async">
       @for (item of adminItems; track item.label) {
-        <a class="dropdown-item" [routerLink]="item.link">{{ item.label }}</a>
+        <a class="dropdown-item" [routerLink]="item.link">
+          {{ item.label }}
+          @if (item.link === '/admin/votes' && votes.waiting()) {
+            <span class="count">{{ votes.waiting() }}</span>
+          }
+        </a>
       }
     </div>
   </li>
