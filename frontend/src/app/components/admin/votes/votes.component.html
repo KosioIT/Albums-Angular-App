@@ -8,7 +8,8 @@
 
   <p class="rules">
     Banning, unbanning, admin rights and deleting accounts are decided by the admins together: a proposal passes
-    with more than half of the voters (a tie fails) and is open for 3 days. New proposals are made on
+    with "yes" from more than half of all the admins (a tie fails; an admin it is about counts but does not vote) and is
+    open for 3 days. New proposals are made on
     <a routerLink="/admin/users">Manage users</a>.
   </p>
 
@@ -42,7 +43,7 @@
             <span class="no" [style.width.%]="(v.no / v.voters.length) * 100"></span>
             <span class="line" [style.left.%]="(v.needed / v.voters.length) * 100" title="Needed to pass"></span>
           </div>
-          <span class="numbers"><b class="y">{{ v.yes }} yes</b> · <b class="n">{{ v.no }} no</b> · {{ v.needed }} of {{ v.voters.length }} needed</span>
+          <span class="numbers"><b class="y">{{ v.yes }} yes</b> · <b class="n">{{ v.no }} no</b> · {{ v.needed }} of {{ v.admins }} admins needed</span>
         </div>
 
         <ul class="ballots">

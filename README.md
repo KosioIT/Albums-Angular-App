@@ -153,8 +153,10 @@ your vote):
 
 - the voters are the admins at the moment of the proposal, except the user it is about; the proposer's
   vote counts as "yes";
-- it passes with more than half of the voters; a tie fails, and it fails at once when a majority is no
-  longer possible; votes are final;
+- it passes with "yes" from more than half of **all** the admins; an admin it is about counts but cannot
+  vote, so with two admins neither can remove the other alone (it cannot even be proposed until there
+  is a third admin); a tie fails, and it fails at once when a majority is no longer possible; votes are
+  final;
 - it is open for 3 days, then it expires; the proposer can withdraw it;
 - one open proposal per user at a time;
 - for a ban or a deletion the proposer can suspend the user for 24 hours right away; the suspension is

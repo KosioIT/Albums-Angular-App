@@ -9,11 +9,12 @@ import {
     ban, unban, make_admin, remove_admin, delete
 
   - An admin proposes one, with a reason (and a duration for a ban). It counts as their "yes".
-  - The voters are the admins at that moment, except the user it is about. Their list is kept with
-    the proposal, so later changes of roles do not move the goalposts.
-  - It passes with a majority: more than half of the voters. A tie fails. As soon as enough "no"
-    votes make a majority impossible, it fails at once. With only one voter (a single admin) the
-    proposal passes right away, as before.
+  - The voters are the admins at that moment, except the user it is about. Their list (and the number
+    of admins) is kept with the proposal, so later changes of roles do not move the goalposts.
+  - It passes with "yes" votes from more than half of ALL the admins, the one it is about included
+    (they cannot vote, but they count): so with two admins neither can remove the other alone. A tie
+    fails. As soon as enough "no" votes make it impossible, it fails at once. When there are not
+    enough voters to ever reach it, it cannot be proposed. With a single admin it passes right away.
   - Open for 3 days; after that it expires. The proposer can withdraw it.
   - One open proposal per user at a time. Votes are final.
   - For a ban or a deletion the proposer can suspend the user for 24 hours at once (spam can not
@@ -38,7 +39,9 @@ export class VoteError extends Error {
     }
 }
 
-const needed = (voters) => Math.floor(voters.length / 2) + 1;
+// "Yes" votes needed: more than half of all the admins (kept with the proposal; older ones: of the voters)
+const majorityOf = (admins) => Math.floor(admins / 2) + 1;
+const needed = (p) => p.needed ?? majorityOf(p.voters.length);
 const tally = (p) => {
     const values = Object.entries(p.votes || {}).filter(([email]) => p.voters.includes(email)).map(([, v]) => v);
     return { yes: values.filter((v) => v === 'yes').length, no: values.filter((v) => v === 'no').length };
@@ -47,7 +50,7 @@ const tally = (p) => {
 // The outcome so far: 'passed', 'rejected' or null (still open)
 export function outcome(p) {
     const { yes, no } = tally(p);
-    const need = needed(p.voters);
+    const need = needed(p);
     if (yes >= need) return 'passed';
     if (p.voters.length - no < need) return 'rejected'; // even every remaining vote cannot make it
     return null;
@@ -103,7 +106,8 @@ function view(id, p, me) {
         votes: p.votes,
         yes,
         no,
-        needed: needed(p.voters),
+        needed: needed(p),
+        admins: p.admins ?? p.voters.length, // all the admins when it was proposed
         status: p.status,
         createdAt: p.createdAt,
         expiresAt: p.expiresAt,
@@ -216,8 +220,15 @@ export async function propose(admin, { action, target, reason, days = null, susp
         throw new VoteError(409, 'There is already an open vote about this user. Vote on it or wait for it to end.');
     }
 
-    const voters = (await adminEmails()).filter((e) => e !== email);
-    if (!voters.includes(admin.id)) voters.push(admin.id);
+    const admins = await adminEmails();
+    if (!admins.includes(admin.id)) admins.push(admin.id);
+    const voters = admins.filter((e) => e !== email);
+    const need = majorityOf(admins.length);
+    if (voters.length < need) {
+        throw new VoteError(400,
+            `This needs ${need} "yes" votes from the ${admins.length} admins, but only ${voters.length} of them can vote on it ` +
+            `(${user.username} cannot). Make another admin first.`);
+    }
     const now = new Date();
     const p = {
         action,
@@ -229,6 +240,8 @@ export async function propose(admin, { action, target, reason, days = null, susp
         proposedBy: admin.id,
         proposedByName: admin.username,
         voters,
+        admins: admins.length,
+        needed: need,
         votes: { [admin.id]: 'yes' },
         status: 'open',
         createdAt: now.toISOString(),

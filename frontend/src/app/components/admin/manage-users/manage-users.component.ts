@@ -125,18 +125,28 @@ export class ManageUsersComponent {
     return user.id === this.auth.currentUser?.id;
   }
 
+  admins(): number {
+    return (this.list() ?? []).filter((u) => u.role === 'admin').length;
+  }
+
   // Who would vote on a proposal about this user: every admin except them
   voters(user: AdminUser): number {
     return (this.list() ?? []).filter((u) => u.role === 'admin' && u.id !== user.id).length;
   }
 
-  // With a single voter (this admin) a proposal is decided at once
-  immediate(user: AdminUser): boolean {
-    return this.voters(user) <= 1;
+  // "Yes" votes needed: more than half of ALL the admins (one being voted on counts, but cannot vote)
+  needed(): number {
+    return Math.floor(this.admins() / 2) + 1;
   }
 
-  needed(user: AdminUser): number {
-    return Math.floor(this.voters(user) / 2) + 1;
+  // Not enough voters to ever reach it (e.g. two admins, removing one of them)
+  possible(user: AdminUser): boolean {
+    return this.voters(user) >= this.needed();
+  }
+
+  // A single admin decides at once
+  immediate(_user?: AdminUser): boolean {
+    return this.needed() <= 1;
   }
 
   // ===== Filters (from the template's inputs) =====

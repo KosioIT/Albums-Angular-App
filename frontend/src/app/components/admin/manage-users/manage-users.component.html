@@ -109,7 +109,14 @@
               </button>
               @if (!openVotes().get(u.id)) {
                 @if (u.role === 'admin') {
-                  <button type="button" class="act" [class.on]="draft()?.user?.id === u.id && draft()?.action === 'remove_admin'" (click)="openDraft(u, 'remove_admin')">Remove admin</button>
+                  <button
+                    type="button"
+                    class="act"
+                    [class.on]="draft()?.user?.id === u.id && draft()?.action === 'remove_admin'"
+                    [disabled]="!possible(u)"
+                    [title]="possible(u) ? 'Propose removing the admin rights' : 'Needs ' + needed() + ' yes votes of ' + admins() + ' admins, but only ' + voters(u) + ' can vote: make another admin first'"
+                    (click)="openDraft(u, 'remove_admin')"
+                  >Remove admin</button>
                 } @else if (u.ban && !u.ban.suspension) {
                   <button type="button" class="act" [class.on]="draft()?.user?.id === u.id && draft()?.action === 'unban'" (click)="openDraft(u, 'unban')">Unban</button>
                 } @else if (!u.ban) {
@@ -145,7 +152,9 @@
                     <span class="muted small">You are the only admin who votes on this, so it happens right away.</span>
                   } @else {
                     <span class="muted small">
-                      The admins vote on it for 3 days: it needs {{ needed(u) }} of {{ voters(u) }} "yes" votes (yours counts).
+                      The admins vote on it for 3 days: it needs "yes" from {{ needed() }} of the {{ admins() }} admins (yours counts){{
+                        u.role === 'admin' ? '; ' + u.username + ' counts but does not vote' : ''
+                      }}.
                     </span>
                   }
                 </p>

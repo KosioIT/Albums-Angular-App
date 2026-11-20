@@ -17,7 +17,8 @@ export interface Vote {
   votes: Record<string, 'yes' | 'no'>;
   yes: number;
   no: number;
-  needed: number; // "yes" votes to pass
+  needed: number; // "yes" votes to pass: more than half of all the admins
+  admins: number; // all the admins when it was proposed (the one it is about included)
   status: VoteStatus;
   createdAt: string;
   expiresAt: string;
